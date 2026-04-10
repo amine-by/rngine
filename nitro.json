@@ -1,0 +1,23 @@
+{
+  "cxxNamespace": ["rngine"],
+  "ios": {
+    "iosModuleName": "Rngine"
+  },
+  "android": {
+    "androidNamespace": ["rngine"],
+    "androidCxxLibName": "rngine"
+  },
+  "autolinking": {
+    "Rngine": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridRngine"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridRngine"
+      }
+    }
+  },
+  "ignorePaths": ["node_modules"]
+}
