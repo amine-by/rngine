@@ -4,25 +4,21 @@ React native library for building 2d games
 
 ## Installation
 
-
 ```sh
 npm install rngine react-native-nitro-modules
 
 > `react-native-nitro-modules` is required as this library relies on [Nitro Modules](https://nitro.margelo.com/).
 ```
 
-
 ## Usage
 
-
 ```js
-import { RngineView } from "rngine";
+import { GameEngine } from 'rngine';
 
 // ...
 
-<RngineView color="tomato" />
+<GameEngine color="tomato" />;
 ```
-
 
 ## Contributing
 

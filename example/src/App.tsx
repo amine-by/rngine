@@ -1,23 +1,12 @@
-import { View, StyleSheet } from 'react-native';
-import { RngineView } from 'rngine';
+import { StyleSheet } from 'react-native';
+import { GameEngine, createGameLoop } from 'rngine';
+
+createGameLoop();
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <RngineView color="#32a852" style={styles.box} />
-    </View>
-  );
+  return <GameEngine style={styles.gameEngine} />;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
+  gameEngine: { flex: 1 },
 });

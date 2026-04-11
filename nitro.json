@@ -8,14 +8,24 @@
     "androidCxxLibName": "rngine"
   },
   "autolinking": {
-    "Rngine": {
+    "GameEngine": {
       "ios": {
         "language": "swift",
-        "implementationClassName": "HybridRngine"
+        "implementationClassName": "GameEngine"
       },
       "android": {
         "language": "kotlin",
-        "implementationClassName": "HybridRngine"
+        "implementationClassName": "GameEngine"
+      }
+    },
+    "GameLoop": {
+      "ios": {
+        "language": "c++",
+        "implementationClassName": "GameLoop"
+      },
+      "android": {
+        "language": "c++",
+        "implementationClassName": "GameLoop"
       }
     }
   },
