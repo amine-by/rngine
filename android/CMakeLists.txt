@@ -6,7 +6,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
 # Define C++ library and add all sources
-add_library(${PACKAGE_NAME} SHARED src/main/cpp/cpp-adapter.cpp ../shared/GameLoop.cpp)
+add_library(${PACKAGE_NAME} SHARED src/main/cpp/cpp-adapter.cpp src/main/cpp/GameLoopJNI.cpp ../shared/GameLoop.cpp)
 
 # Add Nitrogen specs :)
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/rngine+autolinking.cmake)

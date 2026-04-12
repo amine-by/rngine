@@ -17,16 +17,6 @@
         "language": "kotlin",
         "implementationClassName": "GameEngine"
       }
-    },
-    "GameLoop": {
-      "ios": {
-        "language": "c++",
-        "implementationClassName": "GameLoop"
-      },
-      "android": {
-        "language": "c++",
-        "implementationClassName": "GameLoop"
-      }
     }
   },
   "ignorePaths": ["node_modules"]

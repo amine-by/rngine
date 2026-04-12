@@ -3,9 +3,9 @@
 #include <chrono>
 #include <cinttypes>
 
-namespace margelo::nitro::rngine {
+namespace rngine {
 
-GameLoop::GameLoop() : HybridObject(TAG) {
+GameLoop::GameLoop() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop",
                       "Constructor - Starting game thread");
 
@@ -105,4 +105,4 @@ void GameLoop::updateStats(double deltaTime) {
                       _stats.fps, _stats.deltaTime, _stats.totalFrames);
 }
 
-} // namespace margelo::nitro::rngine
+} // namespace rngine

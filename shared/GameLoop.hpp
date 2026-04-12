@@ -1,18 +1,17 @@
 #pragma once
 
-#include <HybridGameLoopSpec.hpp>
 #include <atomic>
 #include <memory>
 #include <thread>
 
-namespace margelo::nitro::rngine {
+namespace rngine {
 
-class GameLoop : public HybridGameLoopSpec {
+class GameLoop {
 public:
   GameLoop();
-  ~GameLoop() override;
-  void pause() override;
-  void resume() override;
+  ~GameLoop();
+  void pause();
+  void resume();
 
 private:
   std::atomic<bool> _isRunning{true};
@@ -36,4 +35,4 @@ private:
 
   void updateStats(double deltaTime);
 };
-} // namespace margelo::nitro::rngine
+} // namespace rngine
