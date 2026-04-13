@@ -9,7 +9,13 @@ export default function App() {
   };
   return (
     <View style={styles.container}>
-      <GameEngine isPaused={isPaused} style={styles.gameEngine} />
+      <GameEngine
+        isPaused={isPaused}
+        initialEntities={[
+          { id: 'entity1', x: 5, y: 10, width: 200, height: 200 },
+        ]}
+        style={styles.gameEngine}
+      />
       <TouchableOpacity
         style={styles.pauseToggleButton}
         onPress={onTogglePause}
@@ -27,6 +33,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     top: '50%',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
   },
   gameEngine: { flex: 1 },
 });

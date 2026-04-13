@@ -5,9 +5,11 @@
 
 namespace rngine {
 
-GameLoop::GameLoop() {
+GameLoop::GameLoop(std::vector<Entity> entities)
+    : _entities(std::move(entities)) {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop",
-                      "Constructor - Starting game thread");
+                      "Constructor - Starting game thread with %zu entities",
+                      _entities.size());
 
   _gameThread = std::make_unique<std::thread>(&GameLoop::runGameLoop, this);
 }
@@ -91,18 +93,19 @@ void GameLoop::updateStats(double deltaTime) {
   frameCount++;
 
   if (timeAccumulator >= 1.0) {
-    _stats.fps = frameCount;
-    _stats.deltaTime = deltaTime;
+    _gameStats.fps = frameCount;
+    _gameStats.deltaTime = deltaTime;
 
     timeAccumulator = 0.0;
     frameCount = 0;
   }
 
-  _stats.totalFrames++;
+  _gameStats.totalFrames++;
 
   __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
                       "FPS: %.2f, Delta: %.4f, Total Frames: %" PRIu64,
-                      _stats.fps, _stats.deltaTime, _stats.totalFrames);
+                      _gameStats.fps, _gameStats.deltaTime,
+                      _gameStats.totalFrames);
 }
 
 } // namespace rngine
