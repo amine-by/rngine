@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.SurfaceView
 import android.view.View
 import java.nio.ByteBuffer
@@ -43,7 +44,6 @@ class GameView(
     val entities = EntitySerializer.decode(getEntitiesSnapshot())
 
     entities.forEach { entity ->
-      android.util.Log.i("Entity: ", entity.toString())
       val x = entity.x.toFloat()
       val y = entity.y.toFloat()
       val width = entity.width.toFloat()

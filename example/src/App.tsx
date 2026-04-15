@@ -12,8 +12,42 @@ export default function App() {
       <GameEngine
         isPaused={isPaused}
         initialEntities={[
-          { id: 'entity1', x: 100, y: 100, width: 50, height: 50 },
-          { id: 'entity2', x: 200, y: 100, width: 50, height: 50 },
+          {
+            id: 'entity1',
+            x: 100,
+            y: 100,
+            width: 50,
+            height: 50,
+            xv: 0,
+            yv: 0,
+          },
+          {
+            id: 'entity2',
+            x: 200,
+            y: 100,
+            width: 50,
+            height: 50,
+            xv: 100,
+            yv: 0,
+          },
+          {
+            id: 'entity3',
+            x: 100,
+            y: 200,
+            width: 50,
+            height: 50,
+            xv: 0,
+            yv: 100,
+          },
+          {
+            id: 'entity4',
+            x: 200,
+            y: 200,
+            width: 50,
+            height: 50,
+            xv: 100,
+            yv: 100,
+          },
         ]}
         style={styles.gameEngine}
       />
@@ -21,7 +55,7 @@ export default function App() {
         style={styles.pauseToggleButton}
         onPress={onTogglePause}
       >
-        <Text>Toggle Pause</Text>
+        <Text>{isPaused ? 'Resume' : 'Pause'}</Text>
       </TouchableOpacity>
     </View>
   );

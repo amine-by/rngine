@@ -4,8 +4,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 object EntitySerializer {
-  private const val ENTITY_ID_SIZE = 37
-  private const val ENTITY_BUFFER_SIZE = 69
+  private const val ENTITY_ID_SIZE = 40
+  private const val ENTITY_BUFFER_SIZE = ENTITY_ID_SIZE + 8 * 6
 
   fun encode(entities: Array<Entity>): ByteBuffer {
     val buffer = ByteBuffer
@@ -19,6 +19,8 @@ object EntitySerializer {
       buffer.putDouble(entity.y)
       buffer.putDouble(entity.width)
       buffer.putDouble(entity.height)
+      buffer.putDouble(entity.xv)
+      buffer.putDouble(entity.yv)
     }
 
     buffer.rewind()
@@ -40,8 +42,10 @@ object EntitySerializer {
       val y = buffer.double
       val width = buffer.double
       val height = buffer.double
+      val xv = buffer.double
+      val yv = buffer.double
 
-      entities.add(Entity(id, x, y, width, height))
+      entities.add(Entity(id, x, y, width, height, xv, yv))
     }
     return entities
   }

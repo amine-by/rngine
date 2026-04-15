@@ -17,7 +17,7 @@ import { GameEngine } from 'rngine';
 
 // ...
 
-<GameEngine color="tomato" />;
+<GameEngine />;
 ```
 
 ## Contributing

@@ -27,5 +27,6 @@ private:
   void runGameLoop();
   void update(double deltaTime);
   void updateStats(double deltaTime);
+  void updateEntities(double deltaTime);
 };
 } // namespace rngine

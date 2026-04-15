@@ -1,8 +1,8 @@
 #pragma once
 
 namespace rngine {
-static constexpr int ENTITY_ID_SIZE = 37;
-static constexpr int ENTITY_BUFFER_SIZE = ENTITY_ID_SIZE + sizeof(double) * 4;
+static constexpr int ENTITY_ID_SIZE = 40;
+static constexpr int ENTITY_BUFFER_SIZE = ENTITY_ID_SIZE + sizeof(double) * 6;
 
 struct Entity {
   char id[ENTITY_ID_SIZE];
@@ -10,5 +10,7 @@ struct Entity {
   double y;
   double width;
   double height;
+  double xv;
+  double yv;
 };
 } // namespace rngine

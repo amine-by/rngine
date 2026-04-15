@@ -10,6 +10,8 @@ type Entity = {
   y: number;
   width: number;
   height: number;
+  xv: number;
+  yv: number;
 };
 
 export interface GameEngineProps extends HybridViewProps {

@@ -1,5 +1,6 @@
 package com.margelo.nitro.rngine
 
+import android.util.Log
 import com.facebook.react.uimanager.ThemedReactContext
 import java.nio.ByteBuffer
 
@@ -37,6 +38,7 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
           try {
             Thread.sleep(16)
           } catch (e: InterruptedException) {
+            Log.e("GameEngine", "Render thread interrupted", e)
             break
           }
         }

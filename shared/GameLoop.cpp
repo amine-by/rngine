@@ -83,7 +83,7 @@ void GameLoop::runGameLoop() {
 
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
-  // TODO: Add game logic here!
+  updateEntities(deltaTime);
 }
 
 void GameLoop::updateStats(double deltaTime) {
@@ -109,4 +109,10 @@ void GameLoop::updateStats(double deltaTime) {
                       _gameStats.totalFrames);
 }
 
+void GameLoop::updateEntities(double deltaTime) {
+    for (auto &entity : _entities) {
+    entity.x += entity.xv * deltaTime;
+    entity.y += entity.yv * deltaTime;
+  }
+}
 } // namespace rngine
