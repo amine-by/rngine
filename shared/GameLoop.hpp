@@ -13,6 +13,7 @@ public:
   ~GameLoop();
   void pause();
   void resume();
+  std::vector<Entity> getEntitiesSnapshot();
 
 private:
   std::vector<Entity> _entities;

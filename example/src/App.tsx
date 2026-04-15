@@ -12,7 +12,8 @@ export default function App() {
       <GameEngine
         isPaused={isPaused}
         initialEntities={[
-          { id: 'entity1', x: 5, y: 10, width: 200, height: 200 },
+          { id: 'entity1', x: 100, y: 100, width: 50, height: 50 },
+          { id: 'entity2', x: 200, y: 100, width: 50, height: 50 },
         ]}
         style={styles.gameEngine}
       />

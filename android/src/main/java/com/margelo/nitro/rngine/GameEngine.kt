@@ -2,13 +2,16 @@ package com.margelo.nitro.rngine
 
 import com.facebook.react.uimanager.ThemedReactContext
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
   private external fun createLoop(buffer: ByteBuffer, count: Int)
   private external fun destroyLoop()
   private external fun pauseLoop()
   private external fun resumeLoop()
+
+  private var renderThread: Thread? = null
+
+  @Volatile
   override var isPaused: Boolean = true
     set(value) {
       field = value
@@ -24,24 +27,28 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
     context
   ).apply {
     onAttached = {
-      val buffer = ByteBuffer
-        .allocateDirect(initialEntities.size * 69)
-        .order(ByteOrder.nativeOrder())
-      initialEntities.forEach { entity ->
-        val idBytes = entity.id.toByteArray(Charsets.UTF_8).copyOf(37)
-        buffer.put(idBytes)
-        buffer.putDouble(entity.x)
-        buffer.putDouble(entity.y)
-        buffer.putDouble(entity.width)
-        buffer.putDouble(entity.height)
-      }
-      buffer.rewind()
+      val initialEntitiesBuffer = EntitySerializer.encode(initialEntities)
 
-      createLoop(buffer, initialEntities.size)
+      createLoop(initialEntitiesBuffer, initialEntities.size)
+
+      renderThread = Thread {
+        while (!isPaused) {
+          drawFrame()
+          try {
+            Thread.sleep(16)
+          } catch (e: InterruptedException) {
+            break
+          }
+        }
+      }
+      renderThread?.start()
+
       if (!isPaused) resumeLoop()
     }
     onDetached = {
       destroyLoop()
+      renderThread?.interrupt()
+      renderThread = null
     }
   }
 }

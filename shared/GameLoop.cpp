@@ -10,7 +10,6 @@ GameLoop::GameLoop(std::vector<Entity> entities)
   __android_log_print(ANDROID_LOG_INFO, "GameLoop",
                       "Constructor - Starting game thread with %zu entities",
                       _entities.size());
-
   _gameThread = std::make_unique<std::thread>(&GameLoop::runGameLoop, this);
 }
 
@@ -47,6 +46,8 @@ void GameLoop::resume() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Resume");
   _isPaused.store(false);
 }
+
+std::vector<Entity> GameLoop::getEntitiesSnapshot() { return _entities; }
 
 void GameLoop::runGameLoop() {
   using namespace std::chrono;
