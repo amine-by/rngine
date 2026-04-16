@@ -12,7 +12,6 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
 
   private var renderThread: Thread? = null
 
-  @Volatile
   override var isPaused: Boolean = true
     set(value) {
       field = value
@@ -33,7 +32,7 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
       createLoop(initialEntitiesBuffer, initialEntities.size)
 
       renderThread = Thread {
-        while (!isPaused) {
+        while (!Thread.currentThread().isInterrupted) {
           drawFrame()
           try {
             Thread.sleep(16)
