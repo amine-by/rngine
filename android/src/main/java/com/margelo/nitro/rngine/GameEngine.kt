@@ -5,20 +5,20 @@ import com.facebook.react.uimanager.ThemedReactContext
 import java.nio.ByteBuffer
 
 class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
-  private external fun createLoop(buffer: ByteBuffer, count: Int)
-  private external fun destroyLoop()
+  private external fun initializeLoop(buffer: ByteBuffer, count: Int)
   private external fun pauseLoop()
   private external fun resumeLoop()
-
   private var renderThread: Thread? = null
 
   override var isPaused: Boolean = true
     set(value) {
       field = value
-      if (value)
-        pauseLoop()
-      else
-        resumeLoop()
+      if (renderThread != null) {
+        if (value)
+          pauseLoop()
+        else
+          resumeLoop()
+      }
     }
 
   override var initialEntities: Array<Entity> = emptyArray()
@@ -29,7 +29,7 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
     onAttached = {
       val initialEntitiesBuffer = EntitySerializer.encode(initialEntities)
 
-      createLoop(initialEntitiesBuffer, initialEntities.size)
+      initializeLoop(initialEntitiesBuffer, initialEntities.size)
 
       renderThread = Thread {
         while (!Thread.currentThread().isInterrupted) {
@@ -42,12 +42,12 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
           }
         }
       }
+
       renderThread?.start()
 
       if (!isPaused) resumeLoop()
     }
     onDetached = {
-      destroyLoop()
       renderThread?.interrupt()
       renderThread = null
     }

@@ -1,12 +1,9 @@
 #include "GameLoop.hpp"
 #include <jni.h>
 
-// one global instance — or you can manage a pointer per Kotlin object
-static rngine::GameLoop *instance = nullptr;
-
 extern "C" {
 
-JNIEXPORT void JNICALL Java_com_margelo_nitro_rngine_GameEngine_createLoop(
+JNIEXPORT void JNICALL Java_com_margelo_nitro_rngine_GameEngine_initializeLoop(
     JNIEnv *env, jobject, jobject byteBuffer, jint count) {
   auto *data = static_cast<uint8_t *>(env->GetDirectBufferAddress(byteBuffer));
 
@@ -32,34 +29,23 @@ JNIEXPORT void JNICALL Java_com_margelo_nitro_rngine_GameEngine_createLoop(
     entities.push_back(entity);
   }
 
-  instance = new rngine::GameLoop(std::move(entities));
-}
-
-JNIEXPORT void JNICALL
-Java_com_margelo_nitro_rngine_GameEngine_destroyLoop(JNIEnv *, jobject) {
-  delete instance;
-  instance = nullptr;
+  rngine::GameLoop::getInstance().initialize(std::move(entities));
 }
 
 JNIEXPORT void JNICALL
 Java_com_margelo_nitro_rngine_GameEngine_pauseLoop(JNIEnv *, jobject) {
-  if (instance)
-    instance->pause();
+  rngine::GameLoop::getInstance().pause();
 }
 
 JNIEXPORT void JNICALL
 Java_com_margelo_nitro_rngine_GameEngine_resumeLoop(JNIEnv *, jobject) {
-  if (instance)
-    instance->resume();
+  rngine::GameLoop::getInstance().resume();
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_margelo_nitro_rngine_GameView_getEntitiesSnapshot(JNIEnv *env,
                                                            jobject) {
-  if (!instance)
-    return env->NewDirectByteBuffer(nullptr, 0);
-
-  auto snapshot = instance->getEntitiesSnapshot();
+  auto snapshot = rngine::GameLoop::getInstance().getEntitiesSnapshot();
   const size_t size = snapshot.size() * rngine::ENTITY_BUFFER_SIZE;
 
   static std::vector<uint8_t> buffer;

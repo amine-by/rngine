@@ -9,14 +9,24 @@
 namespace rngine {
 class GameLoop {
 public:
-  GameLoop(std::vector<Entity> _entities);
+  static GameLoop &getInstance();
+
+  GameLoop(const GameLoop &) = delete;
+  GameLoop &operator=(const GameLoop &) = delete;
+  GameLoop(GameLoop &&) = delete;
+  GameLoop &operator=(GameLoop &&) = delete;
+
   ~GameLoop();
+
+  void initialize(std::vector<Entity> entities);
   void pause();
   void resume();
   std::vector<Entity> getEntitiesSnapshot();
 
 private:
-  std::vector<Entity> _entities;
+  explicit GameLoop();
+  std::mutex _mutex;
+  std::vector<Entity> _entities{};
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};
   GameStats _gameStats;

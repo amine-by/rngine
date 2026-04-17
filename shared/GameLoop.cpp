@@ -5,11 +5,14 @@
 
 namespace rngine {
 
-GameLoop::GameLoop(std::vector<Entity> entities)
-    : _entities(std::move(entities)) {
+GameLoop &GameLoop::getInstance() {
+  static GameLoop instance;
+  return instance;
+}
+
+GameLoop::GameLoop() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop",
-                      "Constructor - Starting game thread with %zu entities",
-                      _entities.size());
+                      "Constructor - Starting game thread");
   _gameThread = std::make_unique<std::thread>(&GameLoop::runGameLoop, this);
 }
 
@@ -23,6 +26,13 @@ GameLoop::~GameLoop() {
     _gameThread->join();
   }
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Destructor - Complete");
+}
+
+void GameLoop::initialize(std::vector<Entity> entities) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  _entities = std::move(entities);
+  __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Initialized %zu entities",
+                      _entities.size());
 }
 
 void GameLoop::pause() {
@@ -47,7 +57,10 @@ void GameLoop::resume() {
   _isPaused.store(false);
 }
 
-std::vector<Entity> GameLoop::getEntitiesSnapshot() { return _entities; }
+std::vector<Entity> GameLoop::getEntitiesSnapshot() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  return _entities;
+}
 
 void GameLoop::runGameLoop() {
   using namespace std::chrono;
@@ -97,20 +110,22 @@ void GameLoop::updateStats(double deltaTime) {
     _gameStats.fps = frameCount;
     _gameStats.deltaTime = deltaTime;
 
+    __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
+                        "FPS: %.2f, Delta: %.4f, Total Frames: %" PRIu64,
+                        _gameStats.fps, _gameStats.deltaTime,
+                        _gameStats.totalFrames);
+
     timeAccumulator = 0.0;
     frameCount = 0;
   }
 
   _gameStats.totalFrames++;
-
-  __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
-                      "FPS: %.2f, Delta: %.4f, Total Frames: %" PRIu64,
-                      _gameStats.fps, _gameStats.deltaTime,
-                      _gameStats.totalFrames);
 }
 
 void GameLoop::updateEntities(double deltaTime) {
-    for (auto &entity : _entities) {
+  std::lock_guard<std::mutex> lock(_mutex);
+
+  for (auto &entity : _entities) {
     entity.x += entity.xv * deltaTime;
     entity.y += entity.yv * deltaTime;
   }

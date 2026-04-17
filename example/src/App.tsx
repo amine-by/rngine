@@ -4,7 +4,7 @@ import { GameEngine } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
 export default function App() {
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
   const onTogglePause = () => {
     setIsPaused((prev) => !prev);
   };
@@ -19,8 +19,8 @@ export default function App() {
             y: 300,
             width: 50,
             height: 50,
-            xv: 0,
-            yv: 0,
+            xv: 100,
+            yv: 100,
           },
         ]}
         style={styles.gameEngine}
