@@ -17,6 +17,16 @@
         "language": "kotlin",
         "implementationClassName": "GameEngine"
       }
+    },
+    "GameMethods": {
+      "ios": {
+        "language": "c++",
+        "implementationClassName": "GameMethods"
+      },
+      "android": {
+        "language": "c++",
+        "implementationClassName": "GameMethods"
+      }
     }
   },
   "ignorePaths": ["node_modules"]

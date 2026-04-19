@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GameEngine } from 'rngine';
+import { GameEngine, gameMethods } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
 export default function App() {
-  const [isPaused, setIsPaused] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   const onTogglePause = () => {
     setIsPaused((prev) => !prev);
+  };
+  const move = (xv: number, yv: number) => {
+    if (isPaused) return;
+    gameMethods?.setV('entity1', xv, yv);
   };
   return (
     <View style={styles.container}>
@@ -19,8 +23,8 @@ export default function App() {
             y: 300,
             width: 50,
             height: 50,
-            xv: 100,
-            yv: 100,
+            xv: 0,
+            yv: 0,
           },
         ]}
         style={styles.gameEngine}
@@ -29,12 +33,36 @@ export default function App() {
         {isPaused ? 'Resume' : 'Pause'}
       </ControlButton>
       <View style={styles.controlsContainer}>
-        <ControlButton>Left</ControlButton>
+        <ControlButton
+          onPress={() => {
+            move(-100, 0);
+          }}
+        >
+          Left
+        </ControlButton>
         <View style={styles.verticalControlsContainer}>
-          <ControlButton>Up</ControlButton>
-          <ControlButton>Down</ControlButton>
+          <ControlButton
+            onPress={() => {
+              move(0, -100);
+            }}
+          >
+            Up
+          </ControlButton>
+          <ControlButton
+            onPress={() => {
+              move(0, 100);
+            }}
+          >
+            Down
+          </ControlButton>
         </View>
-        <ControlButton>Right</ControlButton>
+        <ControlButton
+          onPress={() => {
+            move(100, 0);
+          }}
+        >
+          Right
+        </ControlButton>
       </View>
     </View>
   );

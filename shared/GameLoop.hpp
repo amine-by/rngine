@@ -22,6 +22,7 @@ public:
   void pause();
   void resume();
   std::vector<Entity> getEntitiesSnapshot();
+  Entity *getEntityById(const std::string &id);
 
 private:
   explicit GameLoop();

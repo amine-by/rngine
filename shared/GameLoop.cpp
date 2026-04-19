@@ -1,4 +1,5 @@
 #include "GameLoop.hpp"
+#include "Entity.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
@@ -97,6 +98,17 @@ void GameLoop::runGameLoop() {
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
+}
+
+Entity *GameLoop::getEntityById(const std::string &id) {
+  std::lock_guard<std::mutex> lock(_mutex);
+
+  for (auto &entity : _entities) {
+    if (std::strncmp(entity.id, id.c_str(), ENTITY_ID_SIZE) == 0) {
+      return &entity;
+    }
+  }
+  return nullptr;
 }
 
 void GameLoop::updateStats(double deltaTime) {
