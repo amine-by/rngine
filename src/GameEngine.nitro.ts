@@ -3,16 +3,7 @@ import type {
   HybridViewMethods,
   HybridViewProps,
 } from 'react-native-nitro-modules';
-
-type Entity = {
-  id: string;
-  px: number;
-  py: number;
-  width: number;
-  height: number;
-  vx: number;
-  vy: number;
-};
+import type { Entity } from './types';
 
 export interface GameEngineProps extends HybridViewProps {
   isPaused: boolean;

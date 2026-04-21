@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GameEngine, setV } from 'rngine';
+import { GameEngine, setV, setP } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
 export default function App() {
@@ -11,6 +11,11 @@ export default function App() {
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
     setV('entity1', vx, vy);
+  };
+
+  const reposition = () => {
+    if (isPaused) return;
+    setP('entity1', 300, 300);
   };
   return (
     <View style={styles.container}>
@@ -29,10 +34,13 @@ export default function App() {
         ]}
         style={styles.gameEngine}
       />
-      <ControlButton style={styles.pauseToggleButton} onPress={onTogglePause}>
-        {isPaused ? 'Resume' : 'Pause'}
-      </ControlButton>
-      <View style={styles.controlsContainer}>
+      <View style={styles.systemButtonsContainer}>
+        <ControlButton onPress={onTogglePause}>
+          {isPaused ? 'Resume' : 'Pause'}
+        </ControlButton>
+        <ControlButton onPress={reposition}>Repo</ControlButton>
+      </View>
+      <View style={styles.dPadContainer}>
         <ControlButton
           onPress={() => {
             move(-500, 0);
@@ -70,12 +78,13 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  pauseToggleButton: {
+  systemButtonsContainer: {
     position: 'absolute',
-    top: 50,
-    right: 25,
+    bottom: 100,
+    left: 25,
+    gap: 10,
   },
-  controlsContainer: {
+  dPadContainer: {
     position: 'absolute',
     flexDirection: 'row',
     bottom: 100,
