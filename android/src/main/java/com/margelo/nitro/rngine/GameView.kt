@@ -43,16 +43,16 @@ class GameView(
     val entities = EntitySerializer.decode(getEntitiesSnapshot())
 
     entities.forEach { entity ->
-      val x = entity.x.toFloat()
-      val y = entity.y.toFloat()
+      val px = entity.px.toFloat()
+      val py = entity.py.toFloat()
       val width = entity.width.toFloat()
       val height = entity.height.toFloat()
 
       canvas.drawRect(
-        x,
-        y,
-        x + width,
-        y + height,
+        px,
+        py,
+        px + width,
+        py + height,
         paint
       )
     }

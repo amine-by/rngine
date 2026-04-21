@@ -6,11 +6,11 @@ static constexpr int ENTITY_BUFFER_SIZE = ENTITY_ID_SIZE + sizeof(double) * 6;
 
 struct Entity {
   char id[ENTITY_ID_SIZE];
-  double x;
-  double y;
+  double px;
+  double py;
   double width;
   double height;
-  double xv;
-  double yv;
+  double vx;
+  double vy;
 };
 } // namespace rngine

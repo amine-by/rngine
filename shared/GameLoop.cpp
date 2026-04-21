@@ -138,8 +138,8 @@ void GameLoop::updateEntities(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
 
   for (auto &entity : _entities) {
-    entity.x += entity.xv * deltaTime;
-    entity.y += entity.yv * deltaTime;
+    entity.px += entity.vx * deltaTime;
+    entity.py += entity.vy * deltaTime;
   }
 }
 } // namespace rngine

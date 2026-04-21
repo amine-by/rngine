@@ -4,5 +4,5 @@ export interface GameMethods extends HybridObject<{
   ios: 'c++';
   android: 'c++';
 }> {
-  setV(id: string, xv: number, yv: number): void;
+  setV(id: string, vx: number, vy: number): void;
 }

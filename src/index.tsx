@@ -1,4 +1,4 @@
 import GameEngine from './GameEngine';
-import gameMethods from './GameMethods';
+import { setV } from './GameMethods';
 
-export { GameEngine, gameMethods };
+export { GameEngine, setV };

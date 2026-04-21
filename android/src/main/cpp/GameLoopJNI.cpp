@@ -14,17 +14,17 @@ JNIEXPORT void JNICALL Java_com_margelo_nitro_rngine_GameEngine_initializeLoop(
     rngine::Entity entity;
     memcpy(entity.id, data, rngine::ENTITY_ID_SIZE);
     data += rngine::ENTITY_ID_SIZE;
-    memcpy(&entity.x, data, sizeof(double));
+    memcpy(&entity.px, data, sizeof(double));
     data += sizeof(double);
-    memcpy(&entity.y, data, sizeof(double));
+    memcpy(&entity.py, data, sizeof(double));
     data += sizeof(double);
     memcpy(&entity.width, data, sizeof(double));
     data += sizeof(double);
     memcpy(&entity.height, data, sizeof(double));
     data += sizeof(double);
-    memcpy(&entity.xv, data, sizeof(double));
+    memcpy(&entity.vx, data, sizeof(double));
     data += sizeof(double);
-    memcpy(&entity.yv, data, sizeof(double));
+    memcpy(&entity.vy, data, sizeof(double));
     data += sizeof(double);
     entities.push_back(entity);
   }
@@ -56,17 +56,17 @@ Java_com_margelo_nitro_rngine_GameView_getEntitiesSnapshot(JNIEnv *env,
   for (const auto &entity : snapshot) {
     memcpy(data, entity.id, rngine::ENTITY_ID_SIZE);
     data += rngine::ENTITY_ID_SIZE;
-    memcpy(data, &entity.x, sizeof(double));
+    memcpy(data, &entity.px, sizeof(double));
     data += sizeof(double);
-    memcpy(data, &entity.y, sizeof(double));
+    memcpy(data, &entity.py, sizeof(double));
     data += sizeof(double);
     memcpy(data, &entity.width, sizeof(double));
     data += sizeof(double);
     memcpy(data, &entity.height, sizeof(double));
     data += sizeof(double);
-    memcpy(data, &entity.xv, sizeof(double));
+    memcpy(data, &entity.vx, sizeof(double));
     data += sizeof(double);
-    memcpy(data, &entity.yv, sizeof(double));
+    memcpy(data, &entity.vy, sizeof(double));
     data += sizeof(double);
   }
 

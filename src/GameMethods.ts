@@ -1,4 +1,8 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { GameMethods } from './GameMethods.nitro';
 
-export default NitroModules.createHybridObject<GameMethods>('GameMethods');
+const gameMethods = NitroModules.createHybridObject<GameMethods>('GameMethods');
+
+export const setV = (id: string, vx: number, vy: number) => {
+  gameMethods?.setV(id, vx, vy);
+};

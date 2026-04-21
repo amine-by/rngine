@@ -6,12 +6,12 @@ import type {
 
 type Entity = {
   id: string;
-  x: number;
-  y: number;
+  px: number;
+  py: number;
   width: number;
   height: number;
-  xv: number;
-  yv: number;
+  vx: number;
+  vy: number;
 };
 
 export interface GameEngineProps extends HybridViewProps {

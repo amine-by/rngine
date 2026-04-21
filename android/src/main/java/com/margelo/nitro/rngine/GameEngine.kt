@@ -1,6 +1,8 @@
 package com.margelo.nitro.rngine
 
-import android.util.Log
+import android.os.Handler
+import android.os.HandlerThread
+import android.view.Choreographer
 import com.facebook.react.uimanager.ThemedReactContext
 import java.nio.ByteBuffer
 
@@ -8,16 +10,28 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
   private external fun initializeLoop(buffer: ByteBuffer, count: Int)
   private external fun pauseLoop()
   private external fun resumeLoop()
-  private var renderThread: Thread? = null
+
+  private var renderThread: HandlerThread? = null
+  private var renderHandler: Handler? = null
+
+  private val frameCallback = object : Choreographer.FrameCallback {
+    override fun doFrame(frameTimeNanos: Long) {
+      if (!isPaused) {
+        renderHandler?.post { view.drawFrame() }
+        Choreographer.getInstance().postFrameCallback(this)
+      }
+    }
+  }
 
   override var isPaused: Boolean = true
     set(value) {
       field = value
-      if (renderThread != null) {
-        if (value)
-          pauseLoop()
-        else
-          resumeLoop()
+      if (value) {
+        Choreographer.getInstance().removeFrameCallback(frameCallback)
+        pauseLoop()
+      } else {
+        Choreographer.getInstance().postFrameCallback(frameCallback)
+        resumeLoop()
       }
     }
 
@@ -31,25 +45,19 @@ class GameEngine(val context: ThemedReactContext) : HybridGameEngineSpec() {
 
       initializeLoop(initialEntitiesBuffer, initialEntities.size)
 
-      renderThread = Thread {
-        while (!Thread.currentThread().isInterrupted) {
-          drawFrame()
-          try {
-            Thread.sleep(16)
-          } catch (e: InterruptedException) {
-            Log.e("GameEngine", "Render thread interrupted", e)
-            break
-          }
-        }
+      renderThread = HandlerThread("RenderThread").also { it.start() }
+      renderHandler = Handler(renderThread!!.looper)
+
+      if (!isPaused) {
+        Choreographer.getInstance().postFrameCallback(frameCallback)
+        resumeLoop()
       }
-
-      renderThread?.start()
-
-      if (!isPaused) resumeLoop()
     }
     onDetached = {
-      renderThread?.interrupt()
+      Choreographer.getInstance().removeFrameCallback(frameCallback)
+      renderThread?.quitSafely()
       renderThread = null
+      renderHandler = null
     }
   }
 }

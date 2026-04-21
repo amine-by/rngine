@@ -6,6 +6,6 @@ namespace margelo::nitro::rngine {
 class GameMethods : public HybridGameMethodsSpec {
 public:
   GameMethods() : HybridObject(TAG) {}
-  void setV(const std::string &id, double xv, double yv) override;
+  void setV(const std::string &id, double vx, double vy) override;
 };
 } // namespace margelo::nitro::rngine

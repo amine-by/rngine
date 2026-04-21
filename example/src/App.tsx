@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GameEngine, gameMethods } from 'rngine';
+import { GameEngine, setV } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
 export default function App() {
@@ -8,9 +8,9 @@ export default function App() {
   const onTogglePause = () => {
     setIsPaused((prev) => !prev);
   };
-  const move = (xv: number, yv: number) => {
+  const move = (vx: number, vy: number) => {
     if (isPaused) return;
-    gameMethods?.setV('entity1', xv, yv);
+    setV('entity1', vx, vy);
   };
   return (
     <View style={styles.container}>
@@ -19,12 +19,12 @@ export default function App() {
         initialEntities={[
           {
             id: 'entity1',
-            x: 300,
-            y: 300,
+            px: 300,
+            py: 300,
             width: 50,
             height: 50,
-            xv: 0,
-            yv: 0,
+            vx: 0,
+            vy: 0,
           },
         ]}
         style={styles.gameEngine}
@@ -35,7 +35,7 @@ export default function App() {
       <View style={styles.controlsContainer}>
         <ControlButton
           onPress={() => {
-            move(-100, 0);
+            move(-500, 0);
           }}
         >
           Left
@@ -43,14 +43,14 @@ export default function App() {
         <View style={styles.verticalControlsContainer}>
           <ControlButton
             onPress={() => {
-              move(0, -100);
+              move(0, -500);
             }}
           >
             Up
           </ControlButton>
           <ControlButton
             onPress={() => {
-              move(0, 100);
+              move(0, 500);
             }}
           >
             Down
@@ -58,7 +58,7 @@ export default function App() {
         </View>
         <ControlButton
           onPress={() => {
-            move(100, 0);
+            move(500, 0);
           }}
         >
           Right
