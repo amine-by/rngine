@@ -16,6 +16,14 @@ export const resume = () => {
   gameMethods?.resume();
 };
 
+export const spawn = (entity: Entity) => {
+  gameMethods?.spawn(entity);
+};
+
+export const despawn = (id: string) => {
+  gameMethods?.despawn(id);
+};
+
 export const setP = (id: string, px: number, py: number) => {
   gameMethods?.setP(id, px, py);
 };

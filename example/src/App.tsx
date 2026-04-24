@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GameEngine, initialize, pause, resume, setV, setP } from 'rngine';
+import {
+  GameEngine,
+  initialize,
+  pause,
+  resume,
+  setV,
+  setP,
+  spawn,
+  despawn,
+} from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
 initialize(false, [
@@ -28,6 +37,25 @@ export default function App() {
       return !prev;
     });
   };
+
+  const spawnEntity2 = () => {
+    if (isPaused) return;
+    spawn({
+      id: 'entity2',
+      px: 500,
+      py: 300,
+      width: 50,
+      height: 50,
+      vx: 0,
+      vy: 0,
+    });
+  };
+
+  const despawnEntity2 = () => {
+    if (isPaused) return;
+    despawn('entity2');
+  };
+
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
     setV('entity1', vx, vy);
@@ -45,6 +73,8 @@ export default function App() {
           {isPaused ? 'Resume' : 'Pause'}
         </ControlButton>
         <ControlButton onPress={reposition}>Repo</ControlButton>
+        <ControlButton onPress={spawnEntity2}>Spawn</ControlButton>
+        <ControlButton onPress={despawnEntity2}>Despawn</ControlButton>
       </View>
       <View style={styles.dPadContainer}>
         <ControlButton

@@ -37,6 +37,36 @@ void GameMethods::resume() {
   isPaused.store(false);
 }
 
+void GameMethods::spawn(const Entity &entity) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  if (instance.findEntityInternal(entity.id) != nullptr) {
+    __android_log_print(ANDROID_LOG_WARN, "GameMethods",
+                        "spawn: entity already exists for id=%s",
+                        entity.id.c_str());
+    return;
+  }
+  instance.getEntitiesInternal().push_back(entity);
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "spawn: spawned entity id=%s", entity.id.c_str());
+}
+
+void GameMethods::despawn(const std::string &id) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  auto &entities = instance.getEntitiesInternal();
+  auto it = std::find_if(entities.begin(), entities.end(),
+                         [&id](const Entity &e) { return e.id == id; });
+  if (it == entities.end()) {
+    __android_log_print(ANDROID_LOG_WARN, "GameMethods",
+                        "despawn: entity not found for id=%s", id.c_str());
+    return;
+  }
+  entities.erase(it);
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "despawn: despawned entity id=%s", id.c_str());
+}
+
 void GameMethods::setP(const std::string &id, double px, double py) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
