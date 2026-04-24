@@ -2,11 +2,12 @@
 
 #include "Entity.hpp"
 #include "GameStats.hpp"
+#include "Rect.hpp"
 #include <atomic>
 #include <memory>
 #include <thread>
 
-namespace rngine {
+namespace margelo::nitro::rngine {
 class GameLoop {
 public:
   static GameLoop &getInstance();
@@ -18,11 +19,12 @@ public:
 
   ~GameLoop();
 
-  void initialize(std::vector<Entity> entities);
-  void pause();
-  void resume();
-  std::vector<Entity> getEntitiesSnapshot();
-  Entity *getEntityById(const std::string &id);
+  std::vector<Entity> &getEntitiesInternal() { return _entities; };
+  std::atomic<bool> &isPausedInternal() { return _isPaused; };
+  std::mutex &getMutexInternal() { return _mutex; };
+
+  Entity *findEntityInternal(const std::string &id);
+  std::vector<Rect> getRectsSnapshot();
 
 private:
   explicit GameLoop();
@@ -40,4 +42,4 @@ private:
   void updateStats(double deltaTime);
   void updateEntities(double deltaTime);
 };
-} // namespace rngine
+} // namespace margelo::nitro::rngine

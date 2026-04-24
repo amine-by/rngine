@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cinttypes>
 
-namespace rngine {
+namespace margelo::nitro::rngine {
 
 GameLoop &GameLoop::getInstance() {
   static GameLoop instance;
@@ -29,38 +29,19 @@ GameLoop::~GameLoop() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Destructor - Complete");
 }
 
-void GameLoop::initialize(std::vector<Entity> entities) {
+std::vector<Rect> GameLoop::getRectsSnapshot() {
   std::lock_guard<std::mutex> lock(_mutex);
-  _entities = std::move(entities);
-  __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Initialized %zu entities",
-                      _entities.size());
-}
-
-void GameLoop::pause() {
-  if (_isPaused) {
-    __android_log_print(ANDROID_LOG_INFO, "GameLoop",
-                        "Already paused, ignoring");
-    return;
+  std::vector<Rect> rects;
+  rects.reserve(_entities.size());
+  for (const auto &entity : _entities) {
+    rects.push_back({
+        entity.px,                // left
+        entity.px + entity.width, // right
+        entity.py,                // top
+        entity.py + entity.height // bottom
+    });
   }
-
-  __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Pause");
-  _isPaused.store(true);
-}
-
-void GameLoop::resume() {
-  if (!_isPaused) {
-    __android_log_print(ANDROID_LOG_INFO, "GameLoop",
-                        "Already running, ignoring");
-    return;
-  }
-
-  __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Resume");
-  _isPaused.store(false);
-}
-
-std::vector<Entity> GameLoop::getEntitiesSnapshot() {
-  std::lock_guard<std::mutex> lock(_mutex);
-  return _entities;
+  return rects;
 }
 
 void GameLoop::runGameLoop() {
@@ -100,11 +81,9 @@ void GameLoop::update(double deltaTime) {
   updateEntities(deltaTime);
 }
 
-Entity *GameLoop::getEntityById(const std::string &id) {
-  std::lock_guard<std::mutex> lock(_mutex);
-
+Entity *GameLoop::findEntityInternal(const std::string &id) {
   for (auto &entity : _entities) {
-    if (std::strncmp(entity.id, id.c_str(), ENTITY_ID_SIZE) == 0) {
+    if (entity.id == id) {
       return &entity;
     }
   }
@@ -119,7 +98,7 @@ void GameLoop::updateStats(double deltaTime) {
   frameCount++;
 
   if (timeAccumulator >= 1.0) {
-    _gameStats.fps = frameCount;
+    _gameStats.fps = static_cast<double>(frameCount);
     _gameStats.deltaTime = deltaTime;
 
     __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
@@ -142,4 +121,4 @@ void GameLoop::updateEntities(double deltaTime) {
     entity.py += entity.vy * deltaTime;
   }
 }
-} // namespace rngine
+} // namespace margelo::nitro::rngine

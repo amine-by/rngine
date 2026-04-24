@@ -1,4 +1,4 @@
 import GameEngine from './GameEngine';
-import { setP, setV } from './GameMethods';
+import { initialize, pause, resume, setP, setV } from './GameMethods';
 
-export { GameEngine, setP, setV };
+export { GameEngine, initialize, pause, resume, setP, setV };

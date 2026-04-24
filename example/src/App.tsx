@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GameEngine, setV, setP } from 'rngine';
+import { GameEngine, initialize, pause, resume, setV, setP } from 'rngine';
 import { ControlButton } from './components/ControlButton';
+
+initialize(false, [
+  {
+    id: 'entity1',
+    px: 300,
+    py: 300,
+    width: 50,
+    height: 50,
+    vx: 0,
+    vy: 0,
+  },
+]);
 
 export default function App() {
   const [isPaused, setIsPaused] = useState(false);
+
   const onTogglePause = () => {
-    setIsPaused((prev) => !prev);
+    setIsPaused((prev) => {
+      if (prev) {
+        resume();
+      } else {
+        pause();
+      }
+      return !prev;
+    });
   };
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
@@ -19,21 +39,7 @@ export default function App() {
   };
   return (
     <View style={styles.container}>
-      <GameEngine
-        isPaused={isPaused}
-        initialEntities={[
-          {
-            id: 'entity1',
-            px: 300,
-            py: 300,
-            width: 50,
-            height: 50,
-            vx: 0,
-            vy: 0,
-          },
-        ]}
-        style={styles.gameEngine}
-      />
+      <GameEngine style={styles.gameEngine} />
       <View style={styles.systemButtonsContainer}>
         <ControlButton onPress={onTogglePause}>
           {isPaused ? 'Resume' : 'Pause'}
