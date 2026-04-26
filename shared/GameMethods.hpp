@@ -6,7 +6,8 @@ namespace margelo::nitro::rngine {
 class GameMethods : public HybridGameMethodsSpec {
 public:
   GameMethods() : HybridObject(TAG) {}
-  void initialize(bool isPaused, const std::vector<Entity> &entities) override;
+  void initialize(bool isPaused, const std::vector<Entity> &entities,
+                  const std::vector<System> &systems) override;
   void pause() override;
   void resume() override;
   void spawn(const Entity &entity) override;

@@ -76,9 +76,24 @@ void GameLoop::runGameLoop() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Game loop thread stopped");
 }
 
+void GameLoop::runSystems() {
+  for (auto &system : _systems) {
+    std::vector<Entity> entities;
+
+    for (const auto &id : system.ids) {
+      Entity *entity = findEntityInternal(id);
+      if (entity)
+        entities.push_back(*entity);
+    }
+
+    system.onTick(entities);
+  }
+}
+
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
+  runSystems();
 }
 
 Entity *GameLoop::findEntityInternal(const std::string &id) {

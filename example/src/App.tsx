@@ -12,17 +12,28 @@ import {
 } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
-initialize(false, [
-  {
-    id: 'entity1',
-    px: 300,
-    py: 300,
-    width: 50,
-    height: 50,
-    vx: 0,
-    vy: 0,
-  },
-]);
+initialize(
+  false,
+  [
+    {
+      id: 'entity1',
+      px: 300,
+      py: 300,
+      width: 50,
+      height: 50,
+      vx: 0,
+      vy: 0,
+    },
+  ],
+  [
+    {
+      ids: ['entity2'],
+      onTick: (entities) => {
+        console.log(entities);
+      },
+    },
+  ]
+);
 
 export default function App() {
   const [isPaused, setIsPaused] = useState(false);

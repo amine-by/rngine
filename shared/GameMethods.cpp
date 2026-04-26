@@ -3,15 +3,18 @@
 #include <android/log.h>
 
 namespace margelo::nitro::rngine {
-void GameMethods::initialize(bool isPaused,
-                             const std::vector<Entity> &entities) {
+void GameMethods::initialize(bool isPaused, const std::vector<Entity> &entities,
+                             const std::vector<System> &systems) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   instance.isPausedInternal().store(isPaused);
   instance.getEntitiesInternal() = entities;
-  __android_log_print(
-      ANDROID_LOG_INFO, "GameMethods", "Initialized %zu entities. Status: %s",
-      instance.getEntitiesInternal().size(), isPaused ? "PAUSED" : "RUNNING");
+  instance.getSystemsInternal() = systems;
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "Initialized %zu entities and %zu systems. Status: %s",
+                      instance.getEntitiesInternal().size(),
+                      instance.getSystemsInternal().size(),
+                      isPaused ? "PAUSED" : "RUNNING");
 }
 
 void GameMethods::pause() {

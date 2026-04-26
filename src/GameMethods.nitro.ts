@@ -1,11 +1,11 @@
 import type { HybridObject } from 'react-native-nitro-modules';
-import type { Entity } from './types';
+import type { Entity, System } from './types';
 
 export interface GameMethods extends HybridObject<{
   ios: 'c++';
   android: 'c++';
 }> {
-  initialize(isPaused: boolean, entities: Entity[]): void;
+  initialize(isPaused: boolean, entities: Entity[], systems: System[]): void;
   pause(): void;
   resume(): void;
   spawn(entity: Entity): void;

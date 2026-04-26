@@ -3,6 +3,7 @@
 #include "Entity.hpp"
 #include "GameStats.hpp"
 #include "Rect.hpp"
+#include "System.hpp"
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -19,9 +20,10 @@ public:
 
   ~GameLoop();
 
-  std::vector<Entity> &getEntitiesInternal() { return _entities; };
-  std::atomic<bool> &isPausedInternal() { return _isPaused; };
   std::mutex &getMutexInternal() { return _mutex; };
+  std::vector<Entity> &getEntitiesInternal() { return _entities; };
+  std::vector<System> &getSystemsInternal() { return _systems; };
+  std::atomic<bool> &isPausedInternal() { return _isPaused; };
 
   Entity *findEntityInternal(const std::string &id);
   std::vector<Rect> getRectsSnapshot();
@@ -30,6 +32,7 @@ private:
   explicit GameLoop();
   std::mutex _mutex;
   std::vector<Entity> _entities{};
+  std::vector<System> _systems{};
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};
   GameStats _gameStats;
@@ -38,6 +41,7 @@ private:
   static constexpr double TARGET_DELTA_TIME = 1.0 / 60.0;
 
   void runGameLoop();
+  void runSystems();
   void update(double deltaTime);
   void updateStats(double deltaTime);
   void updateEntities(double deltaTime);

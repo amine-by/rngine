@@ -7,3 +7,8 @@ export type Entity = {
   vx: number;
   vy: number;
 };
+
+export type System = {
+  ids: string[];
+  onTick: (entities: Entity[]) => void;
+};
