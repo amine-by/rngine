@@ -4,6 +4,7 @@ export type Entity = {
   py: number;
   width: number;
   height: number;
+  color: string;
   vx: number;
   vy: number;
 };

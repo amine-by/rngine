@@ -1,5 +1,6 @@
 #include "GameLoop.hpp"
 #include "Entity.hpp"
+#include "ColorUtils.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
@@ -38,7 +39,8 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
         entity.px,                // left
         entity.px + entity.width, // right
         entity.py,                // top
-        entity.py + entity.height // bottom
+        entity.py + entity.height, // bottom
+        parseHexColor(entity.color)
     });
   }
   return rects;

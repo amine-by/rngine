@@ -21,6 +21,7 @@ initialize(
       py: 300,
       width: 50,
       height: 50,
+      color: '#00ff00',
       vx: 0,
       vy: 0,
     },
@@ -57,6 +58,7 @@ export default function App() {
       py: 300,
       width: 50,
       height: 50,
+      color: '#ff0000',
       vx: 0,
       vy: 0,
     });

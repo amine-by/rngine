@@ -22,6 +22,8 @@ Java_com_margelo_nitro_rngine_GameView_getRectsSnapshot(JNIEnv *env, jobject) {
     data += sizeof(double);
     memcpy(data, &rect.bottom, sizeof(double));
     data += sizeof(double);
+    memcpy(data, &rect.color,  sizeof(uint32_t));
+    data += sizeof(uint32_t);
   }
 
   return env->NewDirectByteBuffer(buffer.data(), (jlong)size);

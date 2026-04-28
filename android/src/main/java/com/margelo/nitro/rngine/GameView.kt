@@ -23,7 +23,7 @@ class GameView(
   var onDetached: () -> Unit = {}
 
   private val paint = Paint().apply {
-    color = Color.RED
+    color = Color.TRANSPARENT
     style = Paint.Style.FILL
   }
 
@@ -41,6 +41,7 @@ class GameView(
     canvas.drawColor(Color.WHITE)
     val rects = RectSerializer.decode(getRectsSnapshot())
     rects.forEach { rect ->
+      paint.color = rect.color
       canvas.drawRect(
         rect.left.toFloat(),
         rect.top.toFloat(),
