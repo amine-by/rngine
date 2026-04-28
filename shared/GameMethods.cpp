@@ -7,8 +7,14 @@ void GameMethods::initialize(bool isPaused, const std::vector<Entity> &entities,
                              const std::vector<System> &systems) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  auto &entitiesInternal = instance.getEntitiesInternal();
+
   instance.isPausedInternal().store(isPaused);
-  instance.getEntitiesInternal() = entities;
+
+  for (auto &entity : entities) {
+    entitiesInternal[entity.id] = entity;
+  }
+
   instance.getSystemsInternal() = systems;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "Initialized %zu entities and %zu systems. Status: %s",
@@ -43,13 +49,14 @@ void GameMethods::resume() {
 void GameMethods::spawn(const Entity &entity) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  if (instance.findEntityInternal(entity.id) != nullptr) {
+  auto &entitiesInternal = instance.getEntitiesInternal();
+  if (entitiesInternal.count(entity.id)) {
     __android_log_print(ANDROID_LOG_WARN, "GameMethods",
                         "spawn: entity already exists for id=%s",
                         entity.id.c_str());
     return;
   }
-  instance.getEntitiesInternal().push_back(entity);
+  entitiesInternal[entity.id] = entity;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "spawn: spawned entity id=%s", entity.id.c_str());
 }
@@ -58,46 +65,54 @@ void GameMethods::despawn(const std::string &id) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entities = instance.getEntitiesInternal();
-  auto it = std::find_if(entities.begin(), entities.end(),
-                         [&id](const Entity &e) { return e.id == id; });
-  if (it == entities.end()) {
+
+  auto resolved = instance.resolveEntitiesInternal(id);
+  if (resolved.empty()) {
     __android_log_print(ANDROID_LOG_WARN, "GameMethods",
-                        "despawn: entity not found for id=%s", id.c_str());
+                        "despawn: no entities found for id=%s", id.c_str());
     return;
   }
-  entities.erase(it);
-  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "despawn: despawned entity id=%s", id.c_str());
+
+  for (auto *entity : resolved) {
+    __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                        "despawn: despawned entity id=%s", entity->id.c_str());
+    entities.erase(entity->id);
+  }
 }
 
 void GameMethods::setP(const std::string &id, double px, double py) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  auto &entitiesInternal = instance.getEntitiesInternal();
+  auto it = entitiesInternal.find(id);
 
-  auto *entity = instance.findEntityInternal(id);
-  if (entity == nullptr) {
+  if (it == entitiesInternal.end()) {
     __android_log_print(ANDROID_LOG_WARN, "GameMethods",
                         "setP: entity not found for id=%s", id.c_str());
     return;
   }
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setP: entity found, setting px=%f py=%f", px, py);
-  entity->px = px;
-  entity->py = py;
+  it->second.px = px;
+  it->second.py = py;
 }
 
 void GameMethods::setV(const std::string &id, double vx, double vy) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  auto *entity = instance.findEntityInternal(id);
-  if (entity == nullptr) {
+  auto resolvedEntitiesInternals = instance.resolveEntitiesInternal(id);
+
+  if (resolvedEntitiesInternals.empty()) {
     __android_log_print(ANDROID_LOG_WARN, "GameMethods",
                         "setV: entity not found for id=%s", id.c_str());
     return;
   }
+  for (auto *entity : resolvedEntitiesInternals) {
+    entity->vx = vx;
+    entity->vy = vy;
+  }
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setV: entity found, setting vx=%f vy=%f", vx, vy);
-  entity->vx = vx;
-  entity->vy = vy;
+                      "setV: set vx=%f vy=%f for %zu entities matching id=%s",
+                      vx, vy, resolvedEntitiesInternals.size(), id.c_str());
 }
 } // namespace margelo::nitro::rngine

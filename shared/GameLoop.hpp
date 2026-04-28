@@ -21,17 +21,17 @@ public:
   ~GameLoop();
 
   std::mutex &getMutexInternal() { return _mutex; };
-  std::vector<Entity> &getEntitiesInternal() { return _entities; };
+  std::map<string, Entity> &getEntitiesInternal() { return _entities; };
   std::vector<System> &getSystemsInternal() { return _systems; };
   std::atomic<bool> &isPausedInternal() { return _isPaused; };
 
-  Entity *findEntityInternal(const std::string &id);
+  std::vector<Entity *> resolveEntitiesInternal(const std::string &prefix);
   std::vector<Rect> getRectsSnapshot();
 
 private:
   explicit GameLoop();
   std::mutex _mutex;
-  std::vector<Entity> _entities{};
+  std::map<std::string, Entity> _entities;
   std::vector<System> _systems{};
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};

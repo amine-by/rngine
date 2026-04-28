@@ -1,6 +1,6 @@
 #include "GameLoop.hpp"
-#include "Entity.hpp"
 #include "ColorUtils.hpp"
+#include "Entity.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
@@ -30,18 +30,33 @@ GameLoop::~GameLoop() {
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Destructor - Complete");
 }
 
+std::vector<Entity *>
+GameLoop::resolveEntitiesInternal(const std::string &prefix) {
+  std::vector<Entity *> results;
+
+  auto exact = _entities.find(prefix);
+  if (exact != _entities.end()) {
+    results.push_back(&exact->second);
+    return results;
+  }
+
+  std::string pattern = prefix + "_";
+  for (auto it = _entities.lower_bound(pattern); it != _entities.end(); ++it) {
+    if (it->first.rfind(pattern, 0) != 0)
+      break;
+    results.push_back(&it->second);
+  }
+
+  return results;
+}
+
 std::vector<Rect> GameLoop::getRectsSnapshot() {
   std::lock_guard<std::mutex> lock(_mutex);
   std::vector<Rect> rects;
   rects.reserve(_entities.size());
-  for (const auto &entity : _entities) {
-    rects.push_back({
-        entity.px,                // left
-        entity.px + entity.width, // right
-        entity.py,                // top
-        entity.py + entity.height, // bottom
-        parseHexColor(entity.color)
-    });
+  for (const auto &[id, entity] : _entities) {
+    rects.push_back({entity.px, entity.px + entity.width, entity.py,
+                     entity.py + entity.height, parseHexColor(entity.color)});
   }
   return rects;
 }
@@ -83,8 +98,8 @@ void GameLoop::runSystems() {
     std::vector<Entity> entities;
 
     for (const auto &id : system.ids) {
-      Entity *entity = findEntityInternal(id);
-      if (entity)
+      auto resolvedEntitiesInternal = resolveEntitiesInternal(id);
+      for (auto *entity : resolvedEntitiesInternal)
         entities.push_back(*entity);
     }
 
@@ -96,15 +111,6 @@ void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
   runSystems();
-}
-
-Entity *GameLoop::findEntityInternal(const std::string &id) {
-  for (auto &entity : _entities) {
-    if (entity.id == id) {
-      return &entity;
-    }
-  }
-  return nullptr;
 }
 
 void GameLoop::updateStats(double deltaTime) {
@@ -133,7 +139,7 @@ void GameLoop::updateStats(double deltaTime) {
 void GameLoop::updateEntities(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
 
-  for (auto &entity : _entities) {
+  for (auto &[id, entity] : _entities) {
     entity.px += entity.vx * deltaTime;
     entity.py += entity.vy * deltaTime;
   }

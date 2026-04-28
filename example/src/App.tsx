@@ -16,7 +16,7 @@ initialize(
   false,
   [
     {
-      id: 'entity1',
+      id: 'entity_1',
       px: 300,
       py: 300,
       width: 50,
@@ -28,7 +28,7 @@ initialize(
   ],
   [
     {
-      ids: ['entity2'],
+      ids: ['entity'],
       onTick: (entities) => {
         console.log(entities);
       },
@@ -53,7 +53,7 @@ export default function App() {
   const spawnEntity2 = () => {
     if (isPaused) return;
     spawn({
-      id: 'entity2',
+      id: 'entity_2',
       px: 500,
       py: 300,
       width: 50,
@@ -64,19 +64,19 @@ export default function App() {
     });
   };
 
-  const despawnEntity2 = () => {
+  const despawnAll = () => {
     if (isPaused) return;
-    despawn('entity2');
+    despawn('entity');
   };
 
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
-    setV('entity1', vx, vy);
+    setV('entity', vx, vy);
   };
 
   const reposition = () => {
     if (isPaused) return;
-    setP('entity1', 300, 300);
+    setP('entity_1', 300, 300);
   };
   return (
     <View style={styles.container}>
@@ -87,7 +87,7 @@ export default function App() {
         </ControlButton>
         <ControlButton onPress={reposition}>Repo</ControlButton>
         <ControlButton onPress={spawnEntity2}>Spawn</ControlButton>
-        <ControlButton onPress={despawnEntity2}>Despawn</ControlButton>
+        <ControlButton onPress={despawnAll}>Despawn</ControlButton>
       </View>
       <View style={styles.dPadContainer}>
         <ControlButton
