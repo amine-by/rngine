@@ -1,15 +1,17 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { GameMethods } from './GameMethods.nitro';
-import type { Entity, System } from './types';
+import type { Entity, System, World } from './types';
 
 const gameMethods = NitroModules.createHybridObject<GameMethods>('GameMethods');
 
 export const initialize = (
   isPaused: boolean,
+  tickRate: number,
+  world: World,
   entities: Entity[],
   systems: System[]
 ) => {
-  gameMethods?.initialize(isPaused, entities, systems);
+  gameMethods?.initialize(isPaused, tickRate, world, entities, systems);
 };
 
 export const pause = () => {

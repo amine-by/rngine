@@ -1,3 +1,9 @@
+export type World = {
+  width: number;
+  height: number;
+  color: string;
+};
+
 export type Entity = {
   id: string;
   px: number;

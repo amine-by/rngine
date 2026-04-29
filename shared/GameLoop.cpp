@@ -53,7 +53,11 @@ GameLoop::resolveEntitiesInternal(const std::string &prefix) {
 std::vector<Rect> GameLoop::getRectsSnapshot() {
   std::lock_guard<std::mutex> lock(_mutex);
   std::vector<Rect> rects;
-  rects.reserve(_entities.size());
+  rects.reserve(_entities.size() + 1);
+
+  rects.push_back(
+      {0, _world.width, 0, _world.height, parseHexColor(_world.color)});
+
   for (const auto &[id, entity] : _entities) {
     rects.push_back({entity.px, entity.px + entity.width, entity.py,
                      entity.py + entity.height, parseHexColor(entity.color)});
@@ -63,6 +67,7 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
 
 void GameLoop::runGameLoop() {
   using namespace std::chrono;
+  double targetDeltaTime = 1.0 / _tickRate;
 
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Game loop thread started");
 
@@ -81,9 +86,9 @@ void GameLoop::runGameLoop() {
     if (!_isPaused) {
       accumulator += frameTime;
 
-      while (accumulator >= TARGET_DELTA_TIME) {
-        update(TARGET_DELTA_TIME);
-        accumulator -= TARGET_DELTA_TIME;
+      while (accumulator >= targetDeltaTime) {
+        update(targetDeltaTime);
+        accumulator -= targetDeltaTime;
       }
     }
 
@@ -121,19 +126,19 @@ void GameLoop::updateStats(double deltaTime) {
   frameCount++;
 
   if (timeAccumulator >= 1.0) {
-    _gameStats.fps = static_cast<double>(frameCount);
+    _gameStats.tickRate = static_cast<double>(frameCount);
     _gameStats.deltaTime = deltaTime;
 
     __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
-                        "FPS: %.2f, Delta: %.4f, Total Frames: %" PRIu64,
-                        _gameStats.fps, _gameStats.deltaTime,
-                        _gameStats.totalFrames);
+                        "TickRate: %.2f, Delta: %.4f, Total Ticks: %" PRIu64,
+                        _gameStats.tickRate, _gameStats.deltaTime,
+                        _gameStats.totalTicks);
 
     timeAccumulator = 0.0;
     frameCount = 0;
   }
 
-  _gameStats.totalFrames++;
+  _gameStats.totalTicks++;
 }
 
 void GameLoop::updateEntities(double deltaTime) {

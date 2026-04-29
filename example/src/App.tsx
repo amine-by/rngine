@@ -14,6 +14,12 @@ import { ControlButton } from './components/ControlButton';
 
 initialize(
   false,
+  10,
+  {
+    width: 800,
+    height: 800,
+    color: '#ffffff',
+  },
   [
     {
       id: 'entity_1',

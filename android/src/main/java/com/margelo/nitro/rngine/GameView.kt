@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceView
 import android.view.View
 import java.nio.ByteBuffer
@@ -38,7 +37,7 @@ class GameView(
   fun drawFrame() {
     if (!holder.surface.isValid) return
     val canvas = holder.lockCanvas() ?: return
-    canvas.drawColor(Color.WHITE)
+
     val rects = RectSerializer.decode(getRectsSnapshot())
     rects.forEach { rect ->
       paint.color = rect.color

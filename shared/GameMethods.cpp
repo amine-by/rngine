@@ -3,13 +3,16 @@
 #include <android/log.h>
 
 namespace margelo::nitro::rngine {
-void GameMethods::initialize(bool isPaused, const std::vector<Entity> &entities,
+void GameMethods::initialize(bool isPaused, double tickRate, const World &world,
+                             const std::vector<Entity> &entities,
                              const std::vector<System> &systems) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
 
-  instance.isPausedInternal().store(isPaused);
+  instance.getIsPausedInternal().store(isPaused);
+  instance.setTickRate(tickRate);
+  instance.getWorldInternal() = world;
 
   for (auto &entity : entities) {
     entitiesInternal[entity.id] = entity;
@@ -17,14 +20,16 @@ void GameMethods::initialize(bool isPaused, const std::vector<Entity> &entities,
 
   instance.getSystemsInternal() = systems;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "Initialized %zu entities and %zu systems. Status: %s",
+                      "initialize: %zu entities, %zu systems, tickRate: %.1f, "
+                      "world: %.0fx%.0f, status: %s",
                       instance.getEntitiesInternal().size(),
-                      instance.getSystemsInternal().size(),
-                      isPaused ? "PAUSED" : "RUNNING");
+                      instance.getSystemsInternal().size(), tickRate,
+                      world.width, world.height,
+                      isPaused ? "paused" : "running");
 }
 
 void GameMethods::pause() {
-  auto &isPaused = GameLoop::getInstance().isPausedInternal();
+  auto &isPaused = GameLoop::getInstance().getIsPausedInternal();
   if (isPaused) {
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                         "Already paused, ignoring");
@@ -36,7 +41,7 @@ void GameMethods::pause() {
 }
 
 void GameMethods::resume() {
-  auto &isPaused = GameLoop::getInstance().isPausedInternal();
+  auto &isPaused = GameLoop::getInstance().getIsPausedInternal();
   if (!isPaused) {
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                         "Already running, ignoring");
