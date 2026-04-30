@@ -39,13 +39,22 @@ class GameView(
     val canvas = holder.lockCanvas() ?: return
 
     val rects = RectSerializer.decode(getRectsSnapshot())
+
+    val worldRect = rects.first()
+    val scaleX = canvas.width / worldRect.right.toFloat()
+    val scaleY = canvas.height / worldRect.bottom.toFloat()
+    val scale = minOf(scaleX, scaleY)
+
+    val offsetX = (canvas.width - worldRect.right.toFloat() * scale) / 2f
+    val offsetY = (canvas.height - worldRect.bottom.toFloat() * scale) / 2f
+
     rects.forEach { rect ->
       paint.color = rect.color
       canvas.drawRect(
-        rect.left.toFloat(),
-        rect.top.toFloat(),
-        rect.right.toFloat(),
-        rect.bottom.toFloat(),
+        rect.left.toFloat() * scale + offsetX,
+        rect.top.toFloat() * scale + offsetY,
+        rect.right.toFloat() * scale + offsetX,
+        rect.bottom.toFloat() * scale + offsetY,
         paint
       )
     }

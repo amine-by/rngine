@@ -14,10 +14,10 @@ import { ControlButton } from './components/ControlButton';
 
 initialize(
   false,
-  10,
+  60,
   {
     width: 800,
-    height: 800,
+    height: 1000,
     color: '#ffffff',
   },
   [
