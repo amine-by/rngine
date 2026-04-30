@@ -2,25 +2,24 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   GameEngine,
-  initialize,
+  configure,
   pause,
   resume,
-  setV,
-  setP,
+  setVelocity,
+  setPosition,
   spawn,
   despawn,
 } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
-initialize(
-  false,
-  60,
-  {
+configure({
+  tickRate: 60,
+  world: {
     width: 800,
     height: 1000,
     color: '#ffffff',
   },
-  [
+  entities: [
     {
       id: 'entity_1',
       px: 300,
@@ -32,15 +31,16 @@ initialize(
       vy: 0,
     },
   ],
-  [
+  systems: [
     {
       ids: ['entity'],
       onTick: (entities) => {
         console.log(entities);
       },
     },
-  ]
-);
+  ],
+  paused: false,
+});
 
 export default function App() {
   const [isPaused, setIsPaused] = useState(false);
@@ -56,18 +56,30 @@ export default function App() {
     });
   };
 
-  const spawnEntity2 = () => {
+  const spawn2 = () => {
     if (isPaused) return;
-    spawn({
-      id: 'entity_2',
-      px: 500,
-      py: 300,
-      width: 50,
-      height: 50,
-      color: '#ff0000',
-      vx: 0,
-      vy: 0,
-    });
+    spawn([
+      {
+        id: 'entity_2',
+        px: 500,
+        py: 300,
+        width: 50,
+        height: 50,
+        color: '#ff0000',
+        vx: 0,
+        vy: 0,
+      },
+      {
+        id: 'entity_3',
+        px: 300,
+        py: 500,
+        width: 50,
+        height: 50,
+        color: '#0000ff',
+        vx: 0,
+        vy: 0,
+      },
+    ]);
   };
 
   const despawnAll = () => {
@@ -77,12 +89,12 @@ export default function App() {
 
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
-    setV('entity', vx, vy);
+    setVelocity('entity', vx, vy);
   };
 
   const reposition = () => {
     if (isPaused) return;
-    setP('entity_1', 300, 300);
+    setPosition('entity_1', 300, 300);
   };
   return (
     <View style={styles.container}>
@@ -92,7 +104,7 @@ export default function App() {
           {isPaused ? 'Resume' : 'Pause'}
         </ControlButton>
         <ControlButton onPress={reposition}>Repo</ControlButton>
-        <ControlButton onPress={spawnEntity2}>Spawn</ControlButton>
+        <ControlButton onPress={spawn2}>Spawn</ControlButton>
         <ControlButton onPress={despawnAll}>Despawn</ControlButton>
       </View>
       <View style={styles.dPadContainer}>

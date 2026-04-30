@@ -1,12 +1,21 @@
 import GameEngine from './GameEngine';
 import {
-  initialize,
+  configure,
   pause,
   resume,
   spawn,
   despawn,
-  setP,
-  setV,
+  setPosition,
+  setVelocity,
 } from './GameMethods';
 
-export { GameEngine, initialize, pause, resume, spawn, despawn, setP, setV };
+export {
+  GameEngine,
+  configure,
+  pause,
+  resume,
+  spawn,
+  despawn,
+  setPosition,
+  setVelocity,
+};

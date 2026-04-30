@@ -3,29 +3,40 @@
 #include <android/log.h>
 
 namespace margelo::nitro::rngine {
-void GameMethods::initialize(bool isPaused, double tickRate, const World &world,
-                             const std::vector<Entity> &entities,
-                             const std::vector<System> &systems) {
+void GameMethods::setTickRate(double tickRate) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  instance.setTickRate(tickRate);
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "setTickRate: tickRate=%.1f", tickRate);
+}
+
+void GameMethods::setWorld(const World &world) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  instance.getWorldInternal() = world;
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "setWorld: width=%.0f height=%.0f", world.width,
+                      world.height);
+}
+
+void GameMethods::setEntities(const std::vector<Entity> &entities) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
-
-  instance.getIsPausedInternal().store(isPaused);
-  instance.setTickRate(tickRate);
-  instance.getWorldInternal() = world;
-
   for (auto &entity : entities) {
     entitiesInternal[entity.id] = entity;
   }
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "setEntities: loaded %zu entities", entities.size());
+}
 
+void GameMethods::setSystems(const std::vector<System> &systems) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   instance.getSystemsInternal() = systems;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "initialize: %zu entities, %zu systems, tickRate: %.1f, "
-                      "world: %.0fx%.0f, status: %s",
-                      instance.getEntitiesInternal().size(),
-                      instance.getSystemsInternal().size(), tickRate,
-                      world.width, world.height,
-                      isPaused ? "paused" : "running");
+                      "setSystems: loaded %zu systems", systems.size());
 }
 
 void GameMethods::pause() {
@@ -51,19 +62,22 @@ void GameMethods::resume() {
   isPaused.store(false);
 }
 
-void GameMethods::spawn(const Entity &entity) {
+void GameMethods::spawn(const std::vector<Entity> &entities) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
-  if (entitiesInternal.count(entity.id)) {
-    __android_log_print(ANDROID_LOG_WARN, "GameMethods",
-                        "spawn: entity already exists for id=%s",
-                        entity.id.c_str());
-    return;
+
+  for (const auto &entity : entities) {
+    if (entitiesInternal.count(entity.id)) {
+      __android_log_print(ANDROID_LOG_WARN, "GameMethods",
+                          "spawn: entity already exists for id=%s",
+                          entity.id.c_str());
+      continue;
+    }
+    entitiesInternal[entity.id] = entity;
+    __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                        "spawn: spawned entity id=%s", entity.id.c_str());
   }
-  entitiesInternal[entity.id] = entity;
-  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "spawn: spawned entity id=%s", entity.id.c_str());
 }
 
 void GameMethods::despawn(const std::string &id) {
