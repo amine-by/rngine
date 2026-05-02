@@ -17,7 +17,7 @@
     "lib",
     "android",
     "ios",
-    "cpp",
+    "shared",
     "nitrogen",
     "nitro.json",
     "*.podspec",
