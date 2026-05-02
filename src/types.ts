@@ -32,3 +32,19 @@ export type System = {
   /** Called every tick with the resolved entities. */
   onTick: (entities: Entity[]) => void;
 };
+
+export type Config = {
+  /** Number of game logic updates per second. */
+  tickRate: number;
+  /** World dimensions and background color. */
+  world: World;
+  /** Initial entities to spawn. */
+  entities?: Entity[];
+  /**
+   * Systems that define the game logic. Each system runs every tick
+   * and receives the entities matching its ids.
+   */
+  systems?: System[];
+  /** Whether to start paused. Defaults to true. */
+  paused?: boolean;
+};

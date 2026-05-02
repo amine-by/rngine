@@ -1,6 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { GameMethods } from './GameMethods.nitro';
-import type { Entity, System, World } from './types';
+import type { Config, Entity } from './types';
 
 const gameMethods = NitroModules.createHybridObject<GameMethods>('GameMethods');
 
@@ -11,26 +11,14 @@ export function configure({
   entities = [],
   systems = [],
   paused = true,
-}: {
-  /** Number of game logic updates per second. */
-  tickRate: number;
-  /** World dimensions and background color. */
-  world: World;
-  /** Initial entities to spawn. */
-  entities?: Entity[];
-  /**
-   * Systems that define the game logic. Each system runs every tick
-   * and receives the entities matching its ids.
-   */
-  systems?: System[];
-  /** Whether to start paused. Defaults to true. */
-  paused?: boolean;
-}) {
+}: Config) {
   gameMethods.setTickRate(tickRate);
   gameMethods.setWorld(world);
   gameMethods.setEntities(entities);
   gameMethods.setSystems(systems);
-  if (!paused) {
+  if (paused) {
+    gameMethods.pause();
+  } else {
     gameMethods.resume();
   }
 }
