@@ -36,7 +36,7 @@
   "scripts": {
     "example": "yarn workspace rngine-example",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build",
+    "prepare": "bob build && node scripts/nitrogen-patch.js",
     "nitrogen": "nitrogen",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
