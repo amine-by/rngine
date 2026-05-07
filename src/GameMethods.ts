@@ -37,6 +37,7 @@ export const spawn = (entities: Entity | Entity[]) => {
 /** Removes an entity or all entities matching the given id prefix from the world. */
 export const despawn = (id: string) => gameMethods.despawn(id);
 
+/** Updates one or more entities. Only the provided fields are changed. */
 export const update = (updates: EntityUpdate | EntityUpdate[]) => {
   gameMethods.update(Array.isArray(updates) ? updates : [updates]);
 };

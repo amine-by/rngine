@@ -34,13 +34,21 @@ export type System = {
 };
 
 export type EntityUpdate = {
+  /** Unique identifier or prefix of the entities to update. */
   id: string;
+  /** X position in game units. */
   px?: number;
+  /** Y position in game units. */
   py?: number;
+  /** Width in game units. */
   width?: number;
+  /** Height in game units. */
   height?: number;
+  /** Fill color as a hex string e.g. `'#00ff00'`. */
   color?: string;
+  /** Velocity on the X axis in game units per second. */
   vx?: number;
+  /** Velocity on the Y axis in game units per second. */
   vy?: number;
 };
 

@@ -1,4 +1,4 @@
-# rngine
+# Rngine
 
 A React Native game engine for building 2D games, powered by [Nitro Modules](https://nitro.margelo.com/) for high-performance C++ game logic.
 
@@ -13,7 +13,7 @@ npm install rngine react-native-nitro-modules
 ## Usage
 
 ```tsx
-import { GameEngine, configure, setVelocity } from 'rngine';
+import { GameEngine, configure, update } from 'rngine';
 
 configure({
   tickRate: 60,
@@ -26,8 +26,6 @@ configure({
       width: 40,
       height: 40,
       color: '#00ff00',
-      vx: 0,
-      vy: 0,
     },
     {
       id: 'enemy_1',
@@ -37,7 +35,6 @@ configure({
       height: 40,
       color: '#ff0000',
       vx: 1000,
-      vy: 0,
     },
     {
       id: 'enemy_2',
@@ -47,7 +44,6 @@ configure({
       height: 40,
       color: '#ff0000',
       vx: -1000,
-      vy: 0,
     },
   ],
   systems: [
@@ -58,7 +54,7 @@ configure({
         enemies.forEach((enemy) => {
           // reverse direction when reaching world edges
           if (enemy.px <= 0 || enemy.px + enemy.width >= 800) {
-            setVelocity(enemy.id, -enemy.vx, enemy.vy);
+            update({ id: enemy.id, vx: -enemy.vx });
           }
         });
       },
@@ -82,7 +78,7 @@ export default function App() {
 
 ## Entity Querying
 
-Entity ids use `_` as a hierarchy separator, which enables prefix matching in systems and functions like `setVelocity`. Querying `'enemy'` matches all entities whose id starts with `enemy_`. So `enemy_1`, `enemy_magician_1`, and `enemy_warrior_2` are all returned. Querying `'enemy_magician'` narrows it down to only magician entities. Querying `'enemy_magician_1'` is an exact match.
+Entity ids use `_` as a hierarchy separator, which enables prefix matching in systems and functions like `update`. Querying `'enemy'` matches all entities whose id starts with `enemy_`. So `enemy_1`, `enemy_magician_1`, and `enemy_warrior_2` are all returned. Querying `'enemy_magician'` narrows it down to only magician entities. Querying `'enemy_magician_1'` is an exact match.
 
 This makes it easy to build entity groups naturally through naming. No extra configuration needed.
 
@@ -105,8 +101,8 @@ Sets up the game engine. Call this before anything else.
 
 | param      | required | type       | default | description                           |
 | ---------- | -------- | ---------- | ------- | ------------------------------------- |
-| `tickRate` | ✓        | `number`   | —       | Game logic updates per second         |
-| `world`    | ✓        | `World`    | —       | World dimensions and background color |
+| `tickRate` | ✓        | `number`   | -       | Game logic updates per second         |
+| `world`    | ✓        | `World`    | -       | World dimensions and background color |
 | `entities` |          | `Entity[]` | `[]`    | Initial entities to spawn             |
 | `systems`  |          | `System[]` | `[]`    | Systems to run each tick              |
 | `paused`   |          | `boolean`  | `true`  | Whether to start paused               |
@@ -119,13 +115,10 @@ Spawns one or more entities into the world. Skips duplicates by id.
 
 Removes the entity with the given id, or all entities matching the given prefix.
 
-### `setPosition(id, px, py)`
+### `update(entityUpdate | entityUpdate[])`
 
-Sets the position of a single entity. Requires an exact id.
-
-### `setVelocity(id, vx, vy)`
-
-Sets the velocity of all entities matching the given id or prefix.
+Updates one or more entities. Only the provided fields are changed.
+Matches entities by exact id or prefix.
 
 ### `pause()`
 
