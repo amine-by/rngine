@@ -21,9 +21,9 @@ export type Entity = {
   /** Fill color as a hex string e.g. `'#00ff00'`. */
   color: string;
   /** Velocity on the X axis in game units per second. */
-  vx: number;
+  vx?: number;
   /** Velocity on the Y axis in game units per second. */
-  vy: number;
+  vy?: number;
 };
 
 export type System = {
@@ -31,6 +31,17 @@ export type System = {
   ids: string[];
   /** Called every tick with the resolved entities. */
   onTick: (entities: Entity[]) => void;
+};
+
+export type EntityUpdate = {
+  id: string;
+  px?: number;
+  py?: number;
+  width?: number;
+  height?: number;
+  color?: string;
+  vx?: number;
+  vy?: number;
 };
 
 export type Config = {

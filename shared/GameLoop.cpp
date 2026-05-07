@@ -64,12 +64,11 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
       continue;
     }
 
-    rects.push_back(
-        {std::clamp(entity.px, 0.0, _world.width),
-         std::clamp(entity.px + entity.width, 0.0, _world.width),
-         std::clamp(entity.py, 0.0, _world.height),
-         std::clamp(entity.py + entity.height, 0.0, _world.height),
-         parseHexColor(entity.color)});
+    rects.push_back({std::clamp(entity.px, 0.0, _world.width),
+                     std::clamp(entity.px + entity.width, 0.0, _world.width),
+                     std::clamp(entity.py, 0.0, _world.height),
+                     std::clamp(entity.py + entity.height, 0.0, _world.height),
+                     parseHexColor(entity.color)});
   }
   return rects;
 }
@@ -154,8 +153,12 @@ void GameLoop::updateEntities(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
 
   for (auto &[id, entity] : _entities) {
-    entity.px += entity.vx * deltaTime;
-    entity.py += entity.vy * deltaTime;
+    if (entity.vx) {
+      entity.px += *entity.vx * deltaTime;
+    }
+    if (entity.vy) {
+      entity.py += *entity.vy * deltaTime;
+    }
   }
 }
 } // namespace margelo::nitro::rngine

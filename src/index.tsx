@@ -5,17 +5,7 @@ import {
   resume,
   spawn,
   despawn,
-  setPosition,
-  setVelocity,
+  update,
 } from './GameMethods';
 
-export {
-  GameEngine,
-  configure,
-  pause,
-  resume,
-  spawn,
-  despawn,
-  setPosition,
-  setVelocity,
-};
+export { GameEngine, configure, pause, resume, spawn, despawn, update };

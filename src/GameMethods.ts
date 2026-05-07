@@ -1,6 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { GameMethods } from './GameMethods.nitro';
-import type { Config, Entity } from './types';
+import type { Config, Entity, EntityUpdate } from './types';
 
 const gameMethods = NitroModules.createHybridObject<GameMethods>('GameMethods');
 
@@ -37,10 +37,6 @@ export const spawn = (entities: Entity | Entity[]) => {
 /** Removes an entity or all entities matching the given id prefix from the world. */
 export const despawn = (id: string) => gameMethods.despawn(id);
 
-/** Sets the position of the entity with the exact given id. */
-export const setPosition = (id: string, px: number, py: number) =>
-  gameMethods.setP(id, px, py);
-
-/** Sets the velocity of all entities matching the given id or prefix. */
-export const setVelocity = (id: string, vx: number, vy: number) =>
-  gameMethods.setV(id, vx, vy);
+export const update = (updates: EntityUpdate | EntityUpdate[]) => {
+  gameMethods.update(Array.isArray(updates) ? updates : [updates]);
+};

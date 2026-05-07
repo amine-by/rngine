@@ -1,5 +1,5 @@
 import type { HybridObject } from 'react-native-nitro-modules';
-import type { Entity, System, World } from './types';
+import type { Entity, EntityUpdate, System, World } from './types';
 
 export interface GameMethods extends HybridObject<{
   ios: 'c++';
@@ -13,6 +13,5 @@ export interface GameMethods extends HybridObject<{
   resume(): void;
   spawn(entities: Entity[]): void;
   despawn(id: string): void;
-  setP(id: string, px: number, py: number): void;
-  setV(id: string, vx: number, vy: number): void;
+  update(updates: EntityUpdate[]): void;
 }

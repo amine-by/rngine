@@ -5,8 +5,7 @@ import {
   configure,
   pause,
   resume,
-  setVelocity,
-  setPosition,
+  update,
   spawn,
   despawn,
 } from 'rngine';
@@ -27,8 +26,6 @@ configure({
       width: 50,
       height: 50,
       color: '#00ff00',
-      vx: 0,
-      vy: 0,
     },
   ],
   systems: [
@@ -66,8 +63,6 @@ export default function App() {
         width: 50,
         height: 50,
         color: '#ff0000',
-        vx: 0,
-        vy: 0,
       },
       {
         id: 'entity_3',
@@ -76,8 +71,6 @@ export default function App() {
         width: 50,
         height: 50,
         color: '#0000ff',
-        vx: 0,
-        vy: 0,
       },
     ]);
   };
@@ -89,12 +82,13 @@ export default function App() {
 
   const move = (vx: number, vy: number) => {
     if (isPaused) return;
-    setVelocity('entity', vx, vy);
+    update({ id: 'entity', vx, vy });
   };
 
   const reposition = () => {
     if (isPaused) return;
-    setPosition('entity_1', 300, 300);
+
+    update({ id: 'entity_1', px: 300, py: 300 });
   };
   return (
     <View style={styles.container}>

@@ -14,7 +14,6 @@ public:
   void resume() override;
   void spawn(const std::vector<Entity> &entities) override;
   void despawn(const std::string &id) override;
-  void setP(const std::string &id, double px, double py) override;
-  void setV(const std::string &id, double vx, double vy) override;
+  void update(const std::vector<EntityUpdate> &updates) override;
 };
 } // namespace margelo::nitro::rngine
