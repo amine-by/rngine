@@ -3,8 +3,8 @@
 #include "Entity.hpp"
 #include "GameStats.hpp"
 #include "Rect.hpp"
+#include "Screen.hpp"
 #include "System.hpp"
-#include "World.hpp"
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -25,7 +25,7 @@ public:
   std::map<string, Entity> &getEntitiesInternal() { return _entities; };
   std::vector<System> &getSystemsInternal() { return _systems; };
   std::atomic<bool> &getIsPausedInternal() { return _isPaused; };
-  World &getWorldInternal() { return _world; };
+  Screen &getScreenInternal() { return _screen; };
 
   std::vector<Entity *> resolveEntitiesInternal(const std::string &prefix);
   std::vector<Rect> getRectsSnapshot();
@@ -40,7 +40,7 @@ private:
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};
   double _tickRate{60.0};
-  World _world;
+  Screen _screen;
   GameStats _gameStats;
   std::unique_ptr<std::thread> _gameThread;
 

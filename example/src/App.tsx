@@ -13,10 +13,10 @@ import { ControlButton } from './components/ControlButton';
 
 configure({
   tickRate: 60,
-  world: {
+  screen: {
     width: 800,
     height: 1000,
-    color: '#ffffff',
+    color: '#fff',
   },
   entities: [
     {

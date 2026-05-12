@@ -1,9 +1,9 @@
-export type World = {
-  /** Width of the world in game units. */
+export type Screen = {
+  /** Width of the screen in game units. */
   width: number;
-  /** Height of the world in game units. */
+  /** Height of the screen in game units. */
   height: number;
-  /** Background color of the world as a hex string e.g. `'#1a1a1a'`. */
+  /** Background color of the screen as a hex string e.g. `'#1a1a1a'`. */
   color: string;
 };
 
@@ -55,8 +55,8 @@ export type EntityUpdate = {
 export type Config = {
   /** Number of game logic updates per second. */
   tickRate: number;
-  /** World dimensions and background color. */
-  world: World;
+  /** Screen dimensions and background color. */
+  screen: Screen;
   /** Initial entities to spawn. */
   entities?: Entity[];
   /**

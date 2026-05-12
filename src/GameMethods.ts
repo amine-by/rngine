@@ -7,13 +7,13 @@ const gameMethods = NitroModules.createHybridObject<GameMethods>('GameMethods');
 /** Sets up the game engine with the given configuration. Call this before anything else. */
 export function configure({
   tickRate,
-  world,
+  screen,
   entities = [],
   systems = [],
   paused = true,
 }: Config) {
   gameMethods.setTickRate(tickRate);
-  gameMethods.setWorld(world);
+  gameMethods.setScreen(screen);
   gameMethods.setEntities(entities);
   gameMethods.setSystems(systems);
   if (paused) {

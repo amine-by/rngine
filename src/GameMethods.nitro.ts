@@ -1,12 +1,12 @@
 import type { HybridObject } from 'react-native-nitro-modules';
-import type { Entity, EntityUpdate, System, World } from './types';
+import type { Entity, EntityUpdate, System, Screen } from './types';
 
 export interface GameMethods extends HybridObject<{
   ios: 'c++';
   android: 'c++';
 }> {
   setTickRate(tickRate: number): void;
-  setWorld(world: World): void;
+  setScreen(screen: Screen): void;
   setEntities(entities: Entity[]): void;
   setSystems(systems: System[]): void;
   pause(): void;

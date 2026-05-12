@@ -17,7 +17,7 @@ import { GameEngine, configure, update } from 'rngine';
 
 configure({
   tickRate: 60,
-  world: { width: 800, height: 800, color: '#1a1a1a' },
+  screen: { width: 800, height: 800, color: '#1a1a1a' },
   entities: [
     {
       id: 'player',
@@ -52,7 +52,7 @@ configure({
       ids: ['enemy'],
       onTick: (enemies) => {
         enemies.forEach((enemy) => {
-          // reverse direction when reaching world edges
+          // reverse direction when reaching screen edges
           if (enemy.px <= 0 || enemy.px + enemy.width >= 800) {
             update({ id: enemy.id, vx: -enemy.vx });
           }
@@ -74,7 +74,7 @@ export default function App() {
 
 **Systems** define your game logic. Each system declares which entities it cares about via `ids` and runs every tick receiving those entities. See [`System`](./src/types.ts).
 
-**World** defines the game world dimensions and background color. Entities outside the world bounds are automatically clipped. See [`World`](./src/types.ts).
+**Screen** defines the viewport dimensions and background color. Entities outside the screen bounds are automatically clipped. See [`Screen`](./src/types.ts).
 
 ## Entity Querying
 
@@ -99,13 +99,13 @@ This makes it easy to build entity groups naturally through naming. No extra con
 
 Sets up the game engine. Call this before anything else.
 
-| param      | required | type       | default | description                           |
-| ---------- | -------- | ---------- | ------- | ------------------------------------- |
-| `tickRate` | ✓        | `number`   | -       | Game logic updates per second         |
-| `world`    | ✓        | `World`    | -       | World dimensions and background color |
-| `entities` |          | `Entity[]` | `[]`    | Initial entities to spawn             |
-| `systems`  |          | `System[]` | `[]`    | Systems to run each tick              |
-| `paused`   |          | `boolean`  | `true`  | Whether to start paused               |
+| param      | required | type       | default | description                            |
+| ---------- | -------- | ---------- | ------- | -------------------------------------- |
+| `tickRate` | ✓        | `number`   | -       | Game logic updates per second          |
+| `screen`   | ✓        | `Screen`   | -       | Screen dimensions and background color |
+| `entities` |          | `Entity[]` | `[]`    | Initial entities to spawn              |
+| `systems`  |          | `System[]` | `[]`    | Systems to run each tick               |
+| `paused`   |          | `boolean`  | `true`  | Whether to start paused                |
 
 ### `spawn(entity | entity[])`
 

@@ -56,18 +56,18 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
   rects.reserve(_entities.size() + 1);
 
   rects.push_back(
-      {0, _world.width, 0, _world.height, parseHexColor(_world.color)});
+      {0, _screen.width, 0, _screen.height, parseHexColor(_screen.color)});
 
   for (const auto &[id, entity] : _entities) {
-    if (entity.px + entity.width < 0 || entity.px > _world.width ||
-        entity.py + entity.height < 0 || entity.py > _world.height) {
+    if (entity.px + entity.width < 0 || entity.px > _screen.width ||
+        entity.py + entity.height < 0 || entity.py > _screen.height) {
       continue;
     }
 
-    rects.push_back({std::clamp(entity.px, 0.0, _world.width),
-                     std::clamp(entity.px + entity.width, 0.0, _world.width),
-                     std::clamp(entity.py, 0.0, _world.height),
-                     std::clamp(entity.py + entity.height, 0.0, _world.height),
+    rects.push_back({std::clamp(entity.px, 0.0, _screen.width),
+                     std::clamp(entity.px + entity.width, 0.0, _screen.width),
+                     std::clamp(entity.py, 0.0, _screen.height),
+                     std::clamp(entity.py + entity.height, 0.0, _screen.height),
                      parseHexColor(entity.color)});
   }
   return rects;

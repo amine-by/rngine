@@ -12,13 +12,13 @@ void GameMethods::setTickRate(double tickRate) {
                       "setTickRate: tickRate=%.1f", tickRate);
 }
 
-void GameMethods::setWorld(const World &world) {
+void GameMethods::setScreen(const Screen &screen) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  instance.getWorldInternal() = world;
+  instance.getScreenInternal() = screen;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setWorld: width=%.0f height=%.0f", world.width,
-                      world.height);
+                      "setWorld: width=%.0f height=%.0f", screen.width,
+                      screen.height);
 }
 
 void GameMethods::setEntities(const std::vector<Entity> &entities) {
