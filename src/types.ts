@@ -5,6 +5,7 @@ export type Screen = {
   height: number;
   /** Background color of the screen as a hex string e.g. `'#1a1a1a'`. */
   color: string;
+  asset?: number;
 };
 
 export type Entity = {
@@ -20,6 +21,7 @@ export type Entity = {
   height: number;
   /** Fill color as a hex string e.g. `'#00ff00'`. */
   color: string;
+  asset?: number;
   /** Velocity on the X axis in game units per second. */
   vx?: number;
   /** Velocity on the Y axis in game units per second. */
@@ -45,6 +47,7 @@ export type EntityUpdate = {
   /** Height in game units. */
   height?: number;
   /** Fill color as a hex string e.g. `'#00ff00'`. */
+  asset?: number;
   color?: string;
   /** Velocity on the X axis in game units per second. */
   vx?: number;

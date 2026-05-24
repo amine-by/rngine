@@ -8,6 +8,16 @@
     "androidCxxLibName": "rngine"
   },
   "autolinking": {
+    "GameAssets": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "GameAssets"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "GameAssets"
+      }
+    },
     "GameEngine": {
       "ios": {
         "language": "swift",

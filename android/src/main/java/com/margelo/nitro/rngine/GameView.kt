@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.SurfaceView
 import android.view.View
 import java.nio.ByteBuffer
+import androidx.core.graphics.withTranslation
 
 class GameView(
   context: Context,
@@ -49,14 +50,30 @@ class GameView(
     val offsetY = (canvas.height - worldRect.bottom.toFloat() * scale) / 2f
 
     rects.forEach { rect ->
+      val left = rect.left.toFloat() * scale + offsetX
+      val top = rect.top.toFloat() * scale + offsetY
+      val right = rect.right.toFloat() * scale + offsetX
+      val bottom = rect.bottom.toFloat() * scale + offsetY
+
       paint.color = rect.color
       canvas.drawRect(
-        rect.left.toFloat() * scale + offsetX,
-        rect.top.toFloat() * scale + offsetY,
-        rect.right.toFloat() * scale + offsetX,
-        rect.bottom.toFloat() * scale + offsetY,
+        left,
+        top,
+        right,
+        bottom,
         paint
       )
+
+      val picture = GameAssets.getPicture(rect.asset)
+      if (picture != null) {
+        canvas.withTranslation(left, top) {
+          scale(
+            (right - left) / picture.width,
+            (bottom - top) / picture.height
+          )
+          drawPicture(picture)
+        }
+      }
     }
     holder.unlockCanvasAndPost(canvas)
   }

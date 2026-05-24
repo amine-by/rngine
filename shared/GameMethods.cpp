@@ -122,6 +122,8 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
         entity->width = update.width.value();
       if (update.height.has_value())
         entity->height = update.height.value();
+      if (update.asset.has_value())
+        entity->asset = update.asset.value();
       if (update.color.has_value())
         entity->color = update.color.value();
       if (update.vx.has_value())

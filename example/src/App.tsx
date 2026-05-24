@@ -11,29 +11,26 @@ import {
 } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
+const backgroundAsset = require('../assets/background-test.svg');
+const asset = require('../assets/test.svg');
+
 configure({
   tickRate: 60,
   screen: {
     width: 800,
-    height: 1000,
+    height: 800,
     color: '#fff',
+    asset: backgroundAsset,
   },
   entities: [
     {
       id: 'entity_1',
       px: 300,
       py: 300,
-      width: 50,
-      height: 50,
+      width: 52,
+      height: 84,
       color: '#00ff00',
-    },
-  ],
-  systems: [
-    {
-      ids: ['entity'],
-      onTick: (entities) => {
-        console.log(entities);
-      },
+      asset,
     },
   ],
   paused: false,
@@ -60,17 +57,19 @@ export default function App() {
         id: 'entity_2',
         px: 500,
         py: 300,
-        width: 50,
-        height: 50,
+        width: 52,
+        height: 84,
         color: '#ff0000',
+        asset,
       },
       {
         id: 'entity_3',
         px: 300,
         py: 500,
-        width: 50,
-        height: 50,
+        width: 52,
+        height: 84,
         color: '#0000ff',
+        asset,
       },
     ]);
   };

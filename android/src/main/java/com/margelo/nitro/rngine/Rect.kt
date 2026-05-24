@@ -5,5 +5,6 @@ data class Rect(
   val right: Double,
   val top: Double,
   val bottom: Double,
-  val color: Int
+  val color: Int,
+  val asset: Double
 )
