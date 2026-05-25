@@ -19,7 +19,6 @@ configure({
   screen: {
     width: 800,
     height: 800,
-    color: '#fff',
     asset: backgroundAsset,
   },
   entities: [
@@ -29,7 +28,6 @@ configure({
       py: 300,
       width: 52,
       height: 84,
-      color: '#00ff00',
       asset,
     },
   ],
@@ -59,7 +57,6 @@ export default function App() {
         py: 300,
         width: 52,
         height: 84,
-        color: '#ff0000',
         asset,
       },
       {
@@ -68,7 +65,6 @@ export default function App() {
         py: 500,
         width: 52,
         height: 84,
-        color: '#0000ff',
         asset,
       },
     ]);

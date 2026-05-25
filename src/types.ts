@@ -4,7 +4,8 @@ export type Screen = {
   /** Height of the screen in game units. */
   height: number;
   /** Background color of the screen as a hex string e.g. `'#1a1a1a'`. */
-  color: string;
+  color?: string;
+  /** Asset to render, use `require` with the file path to get the id. */
   asset?: number;
 };
 
@@ -20,7 +21,8 @@ export type Entity = {
   /** Height in game units. */
   height: number;
   /** Fill color as a hex string e.g. `'#00ff00'`. */
-  color: string;
+  color?: string;
+  /** Asset to render, use `require` with the file path to get the id. */
   asset?: number;
   /** Velocity on the X axis in game units per second. */
   vx?: number;
@@ -47,8 +49,9 @@ export type EntityUpdate = {
   /** Height in game units. */
   height?: number;
   /** Fill color as a hex string e.g. `'#00ff00'`. */
-  asset?: number;
   color?: string;
+  /** Asset to render, use `require` with the file path to get the id. */
+  asset?: number;
   /** Velocity on the X axis in game units per second. */
   vx?: number;
   /** Velocity on the Y axis in game units per second. */

@@ -3,9 +3,12 @@
 
 namespace margelo::nitro::rngine {
 
-inline uint32_t parseHexColor(const std::string &color) {
-  if (!color.empty() && color[0] == '#') {
-    std::string hex = color.substr(1);
+inline uint32_t parseHexColor(const std::optional<std::string> &color) {
+  if (!color.has_value())
+    return 0x00000000;
+  const std::string &c = color.value();
+  if (!c.empty() && c[0] == '#') {
+    std::string hex = c.substr(1);
 
     if (hex.size() == 3 || hex.size() == 4) {
       std::string expanded;
