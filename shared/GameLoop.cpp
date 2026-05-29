@@ -66,15 +66,12 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
       continue;
     }
 
-    rects.push_back(
-        {static_cast<float>(std::clamp(entity.px, 0.0, _screen.width)),
-         static_cast<float>(
-             std::clamp(entity.px + entity.width, 0.0, _screen.width)),
-         static_cast<float>(std::clamp(entity.py, 0.0, _screen.height)),
-         static_cast<float>(
-             std::clamp(entity.py + entity.height, 0.0, _screen.height)),
-         parseHexColor(entity.color),
-         static_cast<uint32_t>(entity.asset.value_or(0))});
+    rects.push_back({static_cast<float>(entity.px),
+                     static_cast<float>(entity.px + entity.width),
+                     static_cast<float>(entity.py),
+                     static_cast<float>(entity.py + entity.height),
+                     parseHexColor(entity.color),
+                     static_cast<uint32_t>(entity.asset.value_or(0))});
   }
   return rects;
 }
