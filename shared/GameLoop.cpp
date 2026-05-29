@@ -55,8 +55,10 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
   std::vector<Rect> rects;
   rects.reserve(_entities.size() + 1);
 
-  rects.push_back({0, _screen.width, 0, _screen.height,
-                   parseHexColor(_screen.color), _screen.asset.value_or(0)});
+  rects.push_back({0, static_cast<float>(_screen.width), 0,
+                   static_cast<float>(_screen.height),
+                   parseHexColor(_screen.color),
+                   static_cast<uint32_t>(_screen.asset.value_or(0))});
 
   for (const auto &[id, entity] : _entities) {
     if (entity.px + entity.width < 0 || entity.px > _screen.width ||
@@ -64,11 +66,15 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
       continue;
     }
 
-    rects.push_back({std::clamp(entity.px, 0.0, _screen.width),
-                     std::clamp(entity.px + entity.width, 0.0, _screen.width),
-                     std::clamp(entity.py, 0.0, _screen.height),
-                     std::clamp(entity.py + entity.height, 0.0, _screen.height),
-                     parseHexColor(entity.color), entity.asset.value_or(0)});
+    rects.push_back(
+        {static_cast<float>(std::clamp(entity.px, 0.0, _screen.width)),
+         static_cast<float>(
+             std::clamp(entity.px + entity.width, 0.0, _screen.width)),
+         static_cast<float>(std::clamp(entity.py, 0.0, _screen.height)),
+         static_cast<float>(
+             std::clamp(entity.py + entity.height, 0.0, _screen.height)),
+         parseHexColor(entity.color),
+         static_cast<uint32_t>(entity.asset.value_or(0))});
   }
   return rects;
 }
