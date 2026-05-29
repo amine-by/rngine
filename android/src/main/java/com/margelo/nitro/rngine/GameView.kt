@@ -8,6 +8,7 @@ import android.view.SurfaceView
 import android.view.View
 import java.nio.ByteBuffer
 import androidx.core.graphics.withTranslation
+import androidx.core.graphics.withClip
 
 class GameView(
   context: Context,
@@ -55,23 +56,30 @@ class GameView(
       val right = rect.right * scale + offsetX
       val bottom = rect.bottom * scale + offsetY
 
+      val clampedLeft = left.coerceAtLeast(offsetX)
+      val clampedTop = top.coerceAtLeast(offsetY)
+      val clampedRight = right.coerceAtMost(offsetX + worldRect.right * scale)
+      val clampedBottom = bottom.coerceAtMost(offsetY + worldRect.bottom * scale)
+
       paint.color = rect.color
       canvas.drawRect(
-        left,
-        top,
-        right,
-        bottom,
+        clampedLeft,
+        clampedTop,
+        clampedRight,
+        clampedBottom,
         paint
       )
 
       val picture = GameAssets.getPicture(rect.asset)
       if (picture != null) {
-        canvas.withTranslation(left, top) {
-          scale(
-            (right - left) / picture.width,
-            (bottom - top) / picture.height
-          )
-          drawPicture(picture)
+        canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
+          withTranslation(left, top) {
+            scale(
+              (right - left) / picture.width,
+              (bottom - top) / picture.height
+            )
+            drawPicture(picture)
+          }
         }
       }
     }
