@@ -14,18 +14,18 @@ Java_com_margelo_nitro_rngine_GameView_getRectsSnapshot(JNIEnv *env, jobject) {
   uint8_t *data = buffer.data();
 
   for (const auto &rect : rects) {
-    memcpy(data, &rect.left, sizeof(double));
-    data += sizeof(double);
-    memcpy(data, &rect.right, sizeof(double));
-    data += sizeof(double);
-    memcpy(data, &rect.top, sizeof(double));
-    data += sizeof(double);
-    memcpy(data, &rect.bottom, sizeof(double));
-    data += sizeof(double);
+    memcpy(data, &rect.left, sizeof(float));
+    data += sizeof(float);
+    memcpy(data, &rect.right, sizeof(float));
+    data += sizeof(float);
+    memcpy(data, &rect.top, sizeof(float));
+    data += sizeof(float);
+    memcpy(data, &rect.bottom, sizeof(float));
+    data += sizeof(float);
     memcpy(data, &rect.color, sizeof(uint32_t));
     data += sizeof(uint32_t);
-    memcpy(data, &rect.asset, sizeof(double));
-    data += sizeof(double);
+    memcpy(data, &rect.asset, sizeof(uint32_t));
+    data += sizeof(uint32_t);
   }
 
   return env->NewDirectByteBuffer(buffer.data(), (jlong)size);

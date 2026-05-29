@@ -1,14 +1,14 @@
 #pragma once
 
 namespace margelo::nitro::rngine {
-static constexpr int RECT_SIZE = sizeof(double) * 5 + sizeof(uint32_t);
+static constexpr int RECT_SIZE = sizeof(float) * 4 + sizeof(uint32_t) * 2;
 
 struct Rect {
-  double left;
-  double right;
-  double top;
-  double bottom;
+  float left;
+  float right;
+  float top;
+  float bottom;
   uint32_t color;
-  double asset;
+  uint32_t asset;
 };
 } // namespace margelo::nitro::rngine
