@@ -28,6 +28,7 @@ public:
   Screen &getScreenInternal() { return _screen; };
 
   std::vector<Entity *> resolveEntitiesInternal(const std::string &prefix);
+  void registerLottieDuration(double, double);
   std::vector<Rect> getRectsSnapshot();
 
   void setTickRate(double tickRate) { _tickRate = tickRate; };
@@ -36,6 +37,7 @@ private:
   explicit GameLoop();
   std::mutex _mutex;
   std::map<std::string, Entity> _entities;
+  std::map<double, double> _lottieDurations;
   std::vector<System> _systems{};
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};

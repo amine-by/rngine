@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 object RectSerializer {
-  private const val RECT_SIZE = 4 * 4 + 4 * 2
+  private const val RECT_SIZE = 4 * 5 + 4 * 2
   fun decode(buffer: ByteBuffer): ArrayList<Rect> {
     buffer.order(ByteOrder.nativeOrder())
     val rects = ArrayList<Rect>()
@@ -14,10 +14,11 @@ object RectSerializer {
       val right = buffer.float
       val top = buffer.float
       val bottom = buffer.float
+      val progress = buffer.float
       val color = buffer.int
       val asset = buffer.int
 
-      rects.add(Rect(left, right, top, bottom, color, asset))
+      rects.add(Rect(left, right, top, bottom, progress, color, asset))
     }
     return rects
   }

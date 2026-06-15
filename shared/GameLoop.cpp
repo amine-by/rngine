@@ -50,6 +50,14 @@ GameLoop::resolveEntitiesInternal(const std::string &prefix) {
   return results;
 }
 
+void GameLoop::registerLottieDuration(double id, double duration) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  _lottieDurations[id] = duration;
+  __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
+                      "Registered lottie duration: id: %.0f, duration: %.4f",
+                      id, duration);
+}
+
 std::vector<Rect> GameLoop::getRectsSnapshot() {
   std::lock_guard<std::mutex> lock(_mutex);
   std::vector<Rect> rects;
@@ -57,8 +65,9 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
 
   rects.push_back({0, static_cast<float>(_screen.width), 0,
                    static_cast<float>(_screen.height),
+                   static_cast<float>(_screen.progress.value_or(0)),
                    parseHexColor(_screen.color),
-                   static_cast<uint32_t>(_screen.asset.value_or(0))});
+                   static_cast<int32_t>(_screen.asset.value_or(0))});
 
   for (const auto &[id, entity] : _entities) {
     if (entity.px + entity.width < 0 || entity.px > _screen.width ||
@@ -70,8 +79,9 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
                      static_cast<float>(entity.px + entity.width),
                      static_cast<float>(entity.py),
                      static_cast<float>(entity.py + entity.height),
+                     static_cast<float>(entity.progress.value_or(0)),
                      parseHexColor(entity.color),
-                     static_cast<uint32_t>(entity.asset.value_or(0))});
+                     static_cast<int32_t>(entity.asset.value_or(0))});
   }
   return rects;
 }
@@ -159,8 +169,17 @@ void GameLoop::updateEntities(double deltaTime) {
     if (entity.vx) {
       entity.px += *entity.vx * deltaTime;
     }
+
     if (entity.vy) {
       entity.py += *entity.vy * deltaTime;
+    }
+
+    if (entity.asset && entity.asset < 0) {
+      auto it = _lottieDurations.find(*entity.asset);
+      if (it != _lottieDurations.end() && it->second > 0.0) {
+        entity.progress =
+            fmod(entity.progress.value_or(0.0) + deltaTime / it->second, 1.0);
+      }
     }
   }
 }

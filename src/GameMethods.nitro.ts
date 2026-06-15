@@ -1,5 +1,5 @@
 import type { HybridObject } from 'react-native-nitro-modules';
-import type { Entity, EntityUpdate, System, Screen } from './types';
+import type { Entity, EntityUpdate, System, Screen } from './nativeTypes';
 import { NitroModules } from 'react-native-nitro-modules';
 
 interface GameMethods extends HybridObject<{

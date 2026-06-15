@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.SurfaceView
 import android.view.View
 import java.nio.ByteBuffer
@@ -69,18 +70,30 @@ class GameView(
         clampedBottom,
         paint
       )
-
-      val picture = GameAssets.getPicture(rect.asset)
-      if (picture != null) {
-        canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
-          withTranslation(left, top) {
-            scale(
-              (right - left) / picture.width,
-              (bottom - top) / picture.height
-            )
-            drawPicture(picture)
+      when(val asset = GameAssets.getAsset(rect.asset)){
+        is Asset.Svg -> {
+          canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
+            withTranslation(left, top) {
+              scale(
+                (right - left) / asset.picture.width,
+                (bottom - top) / asset.picture.height
+              )
+              drawPicture(asset.picture)
+            }
           }
         }
+
+        is Asset.Lottie -> {
+          canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
+            withTranslation(left, top) {
+              asset.drawable.progress = rect.progress
+              asset.drawable.setBounds(0, 0, (right - left).toInt(), (bottom - top).toInt())
+              asset.drawable.draw(canvas)
+            }
+          }
+        }
+
+        null -> {}
       }
     }
     holder.unlockCanvasAndPost(canvas)

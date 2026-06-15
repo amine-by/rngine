@@ -114,22 +114,33 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
     }
 
     for (auto *entity : resolvedEntitiesInternals) {
-      if (update.px.has_value())
+      if (update.px.has_value()) {
         entity->px = update.px.value();
-      if (update.py.has_value())
+      }
+      if (update.py.has_value()) {
         entity->py = update.py.value();
-      if (update.width.has_value())
+      }
+      if (update.width.has_value()) {
         entity->width = update.width.value();
-      if (update.height.has_value())
+      }
+      if (update.height.has_value()) {
         entity->height = update.height.value();
-      if (update.asset.has_value())
+      }
+      if (update.asset.has_value()) {
         entity->asset = update.asset.value();
-      if (update.color.has_value())
+      }
+      if (update.progress.has_value()) {
+        entity->progress = update.progress.value();
+      }
+      if (update.color.has_value()) {
         entity->color = update.color.value();
-      if (update.vx.has_value())
+      }
+      if (update.vx.has_value()) {
         entity->vx = update.vx.value();
-      if (update.vy.has_value())
+      }
+      if (update.vy.has_value()) {
         entity->vy = update.vy.value();
+      }
     }
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",

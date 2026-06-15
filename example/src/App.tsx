@@ -12,7 +12,8 @@ import {
 import { ControlButton } from './components/ControlButton';
 
 const backgroundAsset = require('../assets/background-test.svg');
-const asset = require('../assets/test.svg');
+const lottieAsset = require('../assets/test.json');
+const svgAsset = require('../assets/test.svg');
 
 configure({
   tickRate: 60,
@@ -26,9 +27,9 @@ configure({
       id: 'entity_1',
       px: 300,
       py: 300,
-      width: 52,
-      height: 84,
-      asset,
+      width: 75,
+      height: 105,
+      asset: lottieAsset,
     },
   ],
   paused: false,
@@ -57,7 +58,7 @@ export default function App() {
         py: 300,
         width: 52,
         height: 84,
-        asset,
+        asset: svgAsset,
       },
       {
         id: 'entity_3',
@@ -65,7 +66,7 @@ export default function App() {
         py: 500,
         width: 52,
         height: 84,
-        asset,
+        asset: svgAsset,
       },
     ]);
   };
