@@ -32,6 +32,16 @@ configure({
       asset: lottieAsset,
     },
   ],
+  systems: [
+    {
+      collisions: [{ a: 'entity', b: 'entity' }],
+      onTick: (_, collisions) => {
+        collisions.forEach(({ a, b, depth }) => {
+          console.log(`a=${a} b=${b} depth=${depth}`);
+        });
+      },
+    },
+  ],
   paused: false,
 });
 
@@ -54,7 +64,7 @@ export default function App() {
     spawn([
       {
         id: 'entity_2',
-        px: 500,
+        px: 374,
         py: 300,
         width: 52,
         height: 84,
@@ -62,8 +72,8 @@ export default function App() {
       },
       {
         id: 'entity_3',
-        px: 300,
-        py: 500,
+        px: 320,
+        py: 320,
         width: 52,
         height: 84,
         asset: svgAsset,
