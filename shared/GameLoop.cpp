@@ -1,9 +1,11 @@
 #include "GameLoop.hpp"
+#include "Collision.hpp"
 #include "ColorUtils.hpp"
 #include "Entity.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
+#include <set>
 
 namespace margelo::nitro::rngine {
 
@@ -122,14 +124,53 @@ void GameLoop::runGameLoop() {
 void GameLoop::runSystems() {
   for (auto &system : _systems) {
     std::vector<Entity> entities;
+    std::vector<Collision> collisions;
 
-    for (const auto &id : system.ids) {
-      auto resolvedEntitiesInternal = resolveEntitiesInternal(id);
-      for (auto *entity : resolvedEntitiesInternal)
-        entities.push_back(*entity);
+    if (system.entities.has_value()) {
+      for (const auto &id : system.entities.value()) {
+        auto resolvedEntitiesInternal = resolveEntitiesInternal(id);
+        for (auto *entity : resolvedEntitiesInternal)
+          entities.push_back(*entity);
+      }
     }
 
-    system.onTick(entities);
+    if (system.collisions.has_value()) {
+      std::set<std::pair<std::string, std::string>> uniqueEntityIdPairs;
+
+      for (const auto &[a, b] : system.collisions.value()) {
+        auto resolvedEntitiesInternalA = resolveEntitiesInternal(a);
+        auto resolvedEntitiesInternalB = resolveEntitiesInternal(b);
+
+        for (auto *entityA : resolvedEntitiesInternalA) {
+          for (auto *entityB : resolvedEntitiesInternalB) {
+            if (entityA == entityB)
+              continue;
+
+            auto uniqueEntityIdPairKey = std::minmax(entityA->id, entityB->id);
+
+            if (uniqueEntityIdPairs.count(uniqueEntityIdPairKey))
+              continue;
+
+            uniqueEntityIdPairs.insert(uniqueEntityIdPairKey);
+
+            float aLeft = entityA->px, aRight = entityA->px + entityA->width;
+            float aTop = entityA->py, aBottom = entityA->py + entityA->height;
+            float bLeft = entityB->px, bRight = entityB->px + entityB->width;
+            float bTop = entityB->py, bBottom = entityB->py + entityB->height;
+
+            float overlapX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
+            float overlapY = std::min(aBottom, bBottom) - std::max(aTop, bTop);
+
+            if (overlapX > 0 && overlapY > 0) {
+              collisions.push_back(Collision(entityA->id, entityB->id,
+                                             std::min(overlapX, overlapY)));
+            }
+          }
+        }
+      }
+    }
+
+    system.onTick(entities, collisions);
   }
 }
 

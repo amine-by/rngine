@@ -34,11 +34,29 @@ export type Entity = {
   vy?: number;
 };
 
+export type CollisionPair = {
+  /** Entity id or prefix of the first entity to watch. */
+  a: string;
+  /** Entity id or prefix of the second entity to watch. */
+  b: string;
+};
+
+export type Collision = {
+  /** Id of the first entity involved in the collision. */
+  a: string;
+  /** Id of the second entity involved in the collision. */
+  b: string;
+  /** Penetration depth of the collision. */
+  depth: number;
+};
+
 export type System = {
   /** Entity ids or prefixes this system subscribes to. */
-  ids: string[];
-  /** Called every tick with the resolved entities. */
-  onTick: (entities: Entity[]) => void;
+  entities?: string[];
+  /** Collision pairs to watch for every tick. */
+  collisions?: CollisionPair[];
+  /** Called every tick with the resolved entities and collisions. */
+  onTick: (entities: Entity[], collisions: Collision[]) => void;
 };
 
 export type EntityUpdate = {
@@ -62,20 +80,4 @@ export type EntityUpdate = {
   vx?: number;
   /** Velocity on the Y axis in game units per second. */
   vy?: number;
-};
-
-export type Config = {
-  /** Number of game logic updates per second. */
-  tickRate: number;
-  /** Screen dimensions and background color. */
-  screen: Screen;
-  /** Initial entities to spawn. */
-  entities?: Entity[];
-  /**
-   * Systems that define the game logic. Each system runs every tick
-   * and receives the entities matching its ids.
-   */
-  systems?: System[];
-  /** Whether to start paused. Defaults to true. */
-  paused?: boolean;
 };
