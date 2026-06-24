@@ -49,7 +49,7 @@ configure({
   systems: [
     {
       // runs every tick for all enemies
-      ids: ['enemy'],
+      entities: ['enemy'],
       onTick: (enemies) => {
         enemies.forEach((enemy) => {
           // reverse direction when reaching screen edges
@@ -70,11 +70,11 @@ export default function App() {
 
 ## Concepts
 
-**Entities** are the objects in your game world. Each entity has a position, size, color, and velocity. See [`Entity`](./src/types.ts).
+**Entities** are the objects in your game world. Each entity has a position, size, color, and velocity. See [`Entity`](./src/nativeTypes.ts).
 
-**Systems** define your game logic. Each system declares which entities it cares about via `ids` and runs every tick receiving those entities. See [`System`](./src/types.ts).
+**Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/nativeTypes.ts).
 
-**Screen** defines the viewport dimensions and background color. Entities outside the screen bounds are automatically clipped. See [`Screen`](./src/types.ts).
+**Screen** defines the viewport dimensions and background color. Entities outside the screen bounds are automatically clipped. See [`Screen`](./src/nativeTypes.ts).
 
 ## Entity Querying
 
@@ -84,13 +84,16 @@ This makes it easy to build entity groups naturally through naming. No extra con
 
 ```ts
 // matches enemy_1, enemy_magician_1, enemy_warrior_2
-{ ids: ['enemy'], onTick: (entities) => {} }
+{ entities: ['enemy'], onTick: (entities) => {} }
 
 // matches only enemy_magician_1, enemy_magician_2
-{ ids: ['enemy_magician'], onTick: (entities) => {} }
+{ entities: ['enemy_magician'], onTick: (entities) => {} }
 
 // exact match
-{ ids: ['enemy_magician_1'], onTick: (entities) => {} }
+{ entities: ['enemy_magician_1'], onTick: (entities) => {} }
+
+// collision detection between the player and all enemies
+{ collisions: [{ a: 'player', b: 'enemy' }], onTick: (_, collisions) => {} }
 ```
 
 ## API
