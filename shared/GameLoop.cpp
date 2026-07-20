@@ -90,7 +90,6 @@ std::vector<Rect> GameLoop::getRectsSnapshot() {
 
 void GameLoop::runGameLoop() {
   using namespace std::chrono;
-  double targetDeltaTime = 1.0 / _tickRate;
 
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Game loop thread started");
 
@@ -98,6 +97,7 @@ void GameLoop::runGameLoop() {
   double accumulator = 0.0;
 
   while (_isRunning) {
+    double targetDeltaTime = 1.0 / _tickRate.load();
     auto currentTime = steady_clock::now();
     double frameTime = duration<double>(currentTime - previousTime).count();
     previousTime = currentTime;
