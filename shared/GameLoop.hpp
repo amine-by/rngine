@@ -31,7 +31,7 @@ public:
   void registerLottieDuration(double, double);
   std::vector<Rect> getRectsSnapshot();
 
-  void setTickRate(double tickRate) { _tickRate = tickRate; };
+  void setTickRate(double tickRate) { _tickRate.store(tickRate); };
 
 private:
   explicit GameLoop();
@@ -41,7 +41,7 @@ private:
   std::vector<System> _systems{};
   std::atomic<bool> _isRunning{true};
   std::atomic<bool> _isPaused{true};
-  double _tickRate{60.0};
+  std::atomic<double> _tickRate{60.0};
   Screen _screen;
   GameStats _gameStats;
   std::unique_ptr<std::thread> _gameThread;

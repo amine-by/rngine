@@ -16,7 +16,7 @@ const lottieAsset = require('../assets/test.json');
 const svgAsset = require('../assets/test.svg');
 
 configure({
-  tickRate: 60,
+  tickRate: 20,
   screen: {
     width: 800,
     height: 800,
