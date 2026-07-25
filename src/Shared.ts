@@ -60,7 +60,7 @@ export const configure = ({
         const start = Date.now();
         system.onTick(e, c);
         const finish = Date.now();
-        return start - finish;
+        return finish - start;
       },
     });
   }
