@@ -1,0 +1,19 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Turn segment: connects BOTTOM edge to RIGHT edge, curving around the
+       bottom-right corner. Both flush seams (bottom: y=100, x=18 to 82 /
+       right: x=100, y=18 to 82) match the same 64px band used by
+       body_straight, head, and tail, so the outer/inner arcs (radius 82
+       and 18, both centered on the tile corner at 100,100) meet them
+       exactly with no gap. Rotate 90deg increments for the other 3
+       corner orientations. -->
+  <path d="M 18 100
+           A 82 82 0 0 1 100 18
+           L 100 82
+           A 18 18 0 0 0 82 100
+           Z"
+        fill="#4ADE80" stroke="#16A34A" stroke-width="4" stroke-linejoin="round"/>
+
+  <circle cx="38" cy="90" r="3.2" fill="#22C55E" opacity="0.55"/>
+  <circle cx="90" cy="38" r="3.2" fill="#22C55E" opacity="0.55"/>
+  <circle cx="60" cy="68" r="3" fill="#22C55E" opacity="0.45"/>
+</svg>

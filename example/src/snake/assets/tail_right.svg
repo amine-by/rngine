@@ -1,0 +1,16 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tail. Connects to the body on the LEFT edge with the exact same
+       flush band (x=0, y=18 to y=82) as body_straight/head, then tapers
+       to a point on the right. Rotate 90/180/270deg for other directions. -->
+  <path d="M 0 18
+           L 42 18
+           Q 100 24 100 50
+           Q 100 76 42 82
+           L 0 82
+           Z"
+        fill="#4ADE80" stroke="#16A34A" stroke-width="4" stroke-linejoin="round"/>
+
+  <circle cx="18" cy="34" r="3.2" fill="#22C55E" opacity="0.55"/>
+  <circle cx="18" cy="66" r="3.2" fill="#22C55E" opacity="0.55"/>
+  <circle cx="40" cy="50" r="3" fill="#22C55E" opacity="0.5"/>
+</svg>

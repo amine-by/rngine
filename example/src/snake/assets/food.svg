@@ -1,0 +1,20 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Apple, centered, square canvas -->
+  <path d="M 50 40
+           C 30 40 18 55 18 72
+           C 18 88 32 96 46 96
+           C 50 96 50 93 50 93
+           C 50 93 50 96 54 96
+           C 68 96 82 88 82 72
+           C 82 55 70 40 50 40 Z"
+        fill="#EF4444" stroke="#B91C1C" stroke-width="3.5" stroke-linejoin="round"/>
+
+  <!-- shine -->
+  <ellipse cx="35" cy="60" rx="7" ry="11" fill="#FCA5A5" opacity="0.7" transform="rotate(-20 35 60)"/>
+
+  <!-- stem -->
+  <path d="M 50 40 Q 48 26 58 16" stroke="#78350F" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- leaf -->
+  <path d="M 58 22 Q 74 14 82 26 Q 68 34 58 22 Z" fill="#4ADE80" stroke="#16A34A" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>
