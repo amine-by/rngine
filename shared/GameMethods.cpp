@@ -6,7 +6,6 @@
 namespace margelo::nitro::rngine {
 void GameMethods::setTickRate(double tickRate) {
   auto &instance = GameLoop::getInstance();
-  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   instance.setTickRate(tickRate);
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setTickRate: tickRate=%.1f", tickRate);
@@ -15,7 +14,10 @@ void GameMethods::setTickRate(double tickRate) {
 void GameMethods::setScreen(const Screen &screen) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  std::lock_guard<std::mutex> snapshotLock(instance.getSnapshotMutexInternal());
   instance.getScreenInternal() = screen;
+  instance.getScreenSnapshotInternal() = screen;
+
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setWorld: width=%.0f height=%.0f", screen.width,
                       screen.height);
@@ -24,9 +26,12 @@ void GameMethods::setScreen(const Screen &screen) {
 void GameMethods::setEntities(const std::vector<Entity> &entities) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  std::lock_guard<std::mutex> snapshotLock(instance.getSnapshotMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
+  auto &entitiesSnapshotInternal = instance.getEntitiesSnapshotInternal();
   for (auto &entity : entities) {
     entitiesInternal[entity.id] = entity;
+    entitiesSnapshotInternal[entity.id] = entity;
   }
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setEntities: loaded %zu entities", entities.size());

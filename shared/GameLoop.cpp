@@ -61,29 +61,32 @@ void GameLoop::registerLottieDuration(double id, double duration) {
 }
 
 std::vector<Rect> GameLoop::getRectsSnapshot() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::lock_guard<std::mutex> snapshotLock(_snapshotMutex);
   std::vector<Rect> rects;
-  rects.reserve(_entities.size() + 1);
+  rects.reserve(_entitiesSnapshot.size() + 1);
 
-  rects.push_back({0, static_cast<float>(_screen.width), 0,
-                   static_cast<float>(_screen.height),
-                   static_cast<float>(_screen.progress.value_or(0)),
-                   parseHexColor(_screen.color),
-                   static_cast<int32_t>(_screen.asset.value_or(0))});
+  rects.push_back({0, static_cast<float>(_screenSnapshot.width), 0,
+                   static_cast<float>(_screenSnapshot.height),
+                   static_cast<float>(_screenSnapshot.progress.value_or(0)),
+                   parseHexColor(_screenSnapshot.color),
+                   static_cast<int32_t>(_screenSnapshot.asset.value_or(0))});
 
-  for (const auto &[id, entity] : _entities) {
-    if (entity.px + entity.width < 0 || entity.px > _screen.width ||
-        entity.py + entity.height < 0 || entity.py > _screen.height) {
+  for (const auto &[id, entitySnapshot] : _entitiesSnapshot) {
+    if (entitySnapshot.px + entitySnapshot.width < 0 ||
+        entitySnapshot.px > _screenSnapshot.width ||
+        entitySnapshot.py + entitySnapshot.height < 0 ||
+        entitySnapshot.py > _screenSnapshot.height) {
       continue;
     }
 
-    rects.push_back({static_cast<float>(entity.px),
-                     static_cast<float>(entity.px + entity.width),
-                     static_cast<float>(entity.py),
-                     static_cast<float>(entity.py + entity.height),
-                     static_cast<float>(entity.progress.value_or(0)),
-                     parseHexColor(entity.color),
-                     static_cast<int32_t>(entity.asset.value_or(0))});
+    rects.push_back(
+        {static_cast<float>(entitySnapshot.px),
+         static_cast<float>(entitySnapshot.px + entitySnapshot.width),
+         static_cast<float>(entitySnapshot.py),
+         static_cast<float>(entitySnapshot.py + entitySnapshot.height),
+         static_cast<float>(entitySnapshot.progress.value_or(0)),
+         parseHexColor(entitySnapshot.color),
+         static_cast<int32_t>(entitySnapshot.asset.value_or(0))});
   }
   return rects;
 }
@@ -122,7 +125,8 @@ void GameLoop::runGameLoop() {
 }
 
 void GameLoop::runSystems() {
-  for (auto &system : _systems) {
+  for (size_t systemIndex = 0; systemIndex < _systems.size(); ++systemIndex) {
+    auto &system = _systems[systemIndex];
     std::vector<Entity> entities;
     std::vector<Collision> collisions;
 
@@ -170,14 +174,34 @@ void GameLoop::runSystems() {
       }
     }
 
-    system.onTick(entities, collisions);
+    __android_log_print(
+        ANDROID_LOG_DEBUG, "GameLoop",
+        "System Index: %zu, Entities: %zu, Collisions: %zu, Calling onTick",
+        systemIndex, entities.size(), collisions.size());
+
+    std::shared_ptr<Promise<double>> promise =
+        system.onTick(entities, collisions);
+    std::future<double> future = promise->await();
+    double duration = future.get();
+
+    __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
+                        "System Index: %zu, onTick Complete, Duration: %.2fms",
+                        systemIndex, duration);
   }
+}
+
+void GameLoop::captureSnapshot() {
+  std::lock_guard<std::mutex> snapshotLock(_snapshotMutex);
+  std::lock_guard<std::mutex> lock(_mutex);
+  _entitiesSnapshot = _entities;
+  _screenSnapshot = _screen;
 }
 
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
   runSystems();
+  captureSnapshot();
 }
 
 void GameLoop::updateStats(double deltaTime) {
