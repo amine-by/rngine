@@ -1,0 +1,16 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tail pointing LEFT (rotated 180deg from base RIGHT-facing art) -->
+  <g transform="rotate(180 50 50)">
+    <path d="M 0 18
+             L 42 18
+             Q 100 24 100 50
+             Q 100 76 42 82
+             L 0 82
+             Z"
+          fill="#4ADE80" stroke="#16A34A" stroke-width="4" stroke-linejoin="round"/>
+
+    <circle cx="18" cy="34" r="3.2" fill="#22C55E" opacity="0.55"/>
+    <circle cx="18" cy="66" r="3.2" fill="#22C55E" opacity="0.55"/>
+    <circle cx="40" cy="50" r="3" fill="#22C55E" opacity="0.5"/>
+  </g>
+</svg>

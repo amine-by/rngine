@@ -35,7 +35,11 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply from: '../nitrogen/generated/android/rngine+autolinking.gradle'
 
-apply plugin: "com.facebook.react"
+if (rootProject.name != "rngine.example") {
+  apply plugin: "com.facebook.react"
+} else {
+  println("\u001B[33m⚠️  Skipping React Native Gradle plugin in library (example build detected)\u001B[0m")
+}
 
 android {
   namespace "com.margelo.nitro.rngine"
