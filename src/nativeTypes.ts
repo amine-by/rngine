@@ -56,7 +56,7 @@ export type System = {
   /** Collision pairs to watch for every tick. */
   collisions?: CollisionPair[];
   /** Called every tick with the resolved entities and collisions. */
-  onTick: (entities: Entity[], collisions: Collision[]) => void;
+  onTick: (entities: Entity[], collisions: Collision[]) => number;
 };
 
 export type EntityUpdate = {

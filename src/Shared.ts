@@ -5,6 +5,7 @@ import type {
   Screen as NativeScreen,
   Entity as NativeEntity,
   EntityUpdate as NativeEntityUpdate,
+  System as NativeSystem,
 } from './nativeTypes';
 import type { Asset, Config, Entity, EntityUpdate } from './types';
 
@@ -49,10 +50,25 @@ export const configure = ({
     entity.asset = registerAssetIfNotExist(entity.asset);
   }
 
+  let nativeSystems: NativeSystem[] = [];
+
+  for (const system of systems) {
+    nativeSystems.push({
+      entities: system.entities,
+      collisions: system.collisions,
+      onTick: (e, c) => {
+        const start = Date.now();
+        system.onTick(e, c);
+        const finish = Date.now();
+        return finish - start;
+      },
+    });
+  }
+
   gameMethods.setTickRate(tickRate);
   gameMethods.setScreen(screen as NativeScreen);
   gameMethods.setEntities(entities as NativeEntity[]);
-  gameMethods.setSystems(systems);
+  gameMethods.setSystems(nativeSystems);
   if (paused) {
     gameMethods.pause();
   } else {
