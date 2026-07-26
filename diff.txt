@@ -1,0 +1,961 @@
+diff --git a/README.md b/README.md
+index 884dea7..c92603f 100644
+--- a/README.md
++++ b/README.md
+@@ -72,7 +72,7 @@ export default function App() {
+ 
+ **Entities** are the objects in your game world. Each entity has a position, size, color, and velocity. See [`Entity`](./src/nativeTypes.ts).
+ 
+-**Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/nativeTypes.ts).
++**Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/types.ts).
+ 
+ **Screen** defines the viewport dimensions and background color. Entities outside the screen bounds are automatically clipped. See [`Screen`](./src/nativeTypes.ts).
+ 
+diff --git a/android/src/main/java/com/margelo/nitro/rngine/GameAssets.kt b/android/src/main/java/com/margelo/nitro/rngine/GameAssets.kt
+index 3ce597a..5d8372d 100644
+--- a/android/src/main/java/com/margelo/nitro/rngine/GameAssets.kt
++++ b/android/src/main/java/com/margelo/nitro/rngine/GameAssets.kt
+@@ -4,6 +4,7 @@ import android.util.Log
+ import com.airbnb.lottie.LottieCompositionFactory
+ import com.airbnb.lottie.LottieDrawable
+ import com.caverock.androidsvg.SVG
++import com.margelo.nitro.core.Promise
+ import java.net.URL
+ 
+ class GameAssets : HybridGameAssetsSpec() {
+@@ -18,30 +19,33 @@ class GameAssets : HybridGameAssetsSpec() {
+     return id.toInt() in assetCache
+   }
+ 
+-  override fun registerSvg(id: Double, uri: String) {
+-    try {
+-      val stream = URL(uri).openStream()
+-      assetCache[id.toInt()] = Asset.Svg(SVG.getFromInputStream(stream).renderToPicture())
+-      Log.d("GameAssets", "assetCache: $assetCache")
+-    } catch (e: Exception) {
+-      Log.e("GameAssets", "Failed to parse SVG: $uri", e)
++  override fun registerSvg(id: Double, uri: String): Promise<Unit> {
++    return Promise.async {
++      try {
++        val stream = URL(uri).openStream()
++        assetCache[id.toInt()] = Asset.Svg(SVG.getFromInputStream(stream).renderToPicture())
++        Log.d("GameAssets", "assetCache: $assetCache")
++      } catch (e: Exception) {
++        Log.e("GameAssets", "Failed to parse SVG: $uri", e)
++        throw e
++      }
+     }
+   }
+ 
+-  override fun registerLottie(id: Double, json: String) {
+-    try {
+-      val composition = LottieCompositionFactory.fromJsonStringSync(json, null).value
+-      if (composition == null) {
+-        Log.e("GameAssets", "Failed to parse Lottie JSON for id: $id")
+-        return
++  override fun registerLottie(id: Double, json: String): Promise<Unit> {
++    return Promise.async {
++      try {
++        val composition = LottieCompositionFactory.fromJsonStringSync(json, null).value
++          ?: throw IllegalStateException("Failed to parse Lottie JSON for id: $id")
++        val drawable = LottieDrawable()
++        drawable.composition = composition
++        assetCache[id.toInt()] = Asset.Lottie(drawable)
++        registerLottieDuration(id, composition.duration.toDouble() / 1000)
++        Log.d("GameAssets", "assetCache: $assetCache")
++      } catch (e: Exception) {
++        Log.e("GameAssets", "Failed to register Lottie: $id", e)
++        throw e
+       }
+-      val drawable = LottieDrawable()
+-      drawable.composition = composition
+-      assetCache[id.toInt()] = Asset.Lottie(drawable)
+-      registerLottieDuration(id, composition.duration.toDouble() / 1000)
+-      Log.d("GameAssets", "assetCache: $assetCache")
+-    } catch (e: Exception) {
+-      Log.e("GameAssets", "Failed to register Lottie: $id", e)
+     }
+   }
+ }
+diff --git a/example/src/playground/index.tsx b/example/src/playground/index.tsx
+index 8a92aea..fc84129 100644
+--- a/example/src/playground/index.tsx
++++ b/example/src/playground/index.tsx
+@@ -1,4 +1,4 @@
+-import { useState } from 'react';
++import { useEffect, useState } from 'react';
+ import { StyleSheet, View } from 'react-native';
+ import {
+   GameEngine,
+@@ -8,45 +8,52 @@ import {
+   update,
+   spawn,
+   despawn,
++  loadAssets,
+ } from 'rngine';
+ import { ControlButton } from './components/ControlButton';
+ 
+-const backgroundAsset = require('./assets/background-test.svg');
+-const lottieAsset = require('./assets/test.json');
+-const svgAsset = require('./assets/test.svg');
+-
+-configure({
+-  tickRate: 60,
+-  screen: {
+-    width: 800,
+-    height: 800,
+-    asset: backgroundAsset,
+-  },
+-  entities: [
+-    {
+-      id: 'entity_1',
+-      px: 300,
+-      py: 300,
+-      width: 75,
+-      height: 105,
+-      asset: lottieAsset,
+-    },
+-  ],
+-  systems: [
+-    {
+-      collisions: [{ a: 'entity', b: 'entity' }],
+-      onTick: (_, collisions) => {
+-        collisions.forEach(({ a, b, depth }) => {
+-          console.log(`a=${a} b=${b} depth=${depth}`);
+-        });
+-      },
+-    },
+-  ],
+-  paused: false,
+-});
+-
+ export default function Playground() {
+   const [isPaused, setIsPaused] = useState(false);
++  const [assets, setAssets] = useState<Record<'svgAsset', number>>();
++
++  useEffect(() => {
++    loadAssets({
++      backgroundAsset: require('./assets/background-test.svg'),
++      lottieAsset: require('./assets/test.json'),
++      svgAsset: require('./assets/test.svg'),
++    }).then(({ backgroundAsset, lottieAsset, svgAsset }) => {
++      configure({
++        tickRate: 60,
++        screen: {
++          width: 800,
++          height: 800,
++          asset: backgroundAsset,
++        },
++        entities: [
++          {
++            id: 'entity_1',
++            px: 300,
++            py: 300,
++            width: 75,
++            height: 105,
++            asset: lottieAsset,
++          },
++        ],
++        systems: [
++          {
++            collisions: [{ a: 'entity', b: 'entity' }],
++            onTick: (_, collisions) => {
++              collisions.forEach(({ a, b, depth }) => {
++                console.log(`a=${a} b=${b} depth=${depth}`);
++              });
++            },
++          },
++        ],
++        paused: false,
++      });
++      setAssets({ svgAsset });
++    });
++  }, []);
+ 
+   const onTogglePause = () => {
+     setIsPaused((prev) => {
+@@ -68,7 +75,7 @@ export default function Playground() {
+         py: 300,
+         width: 52,
+         height: 84,
+-        asset: svgAsset,
++        asset: assets?.svgAsset,
+       },
+       {
+         id: 'entity_3',
+@@ -76,7 +83,7 @@ export default function Playground() {
+         py: 320,
+         width: 52,
+         height: 84,
+-        asset: svgAsset,
++        asset: assets?.svgAsset,
+       },
+     ]);
+   };
+diff --git a/example/src/snake/index.tsx b/example/src/snake/index.tsx
+index 8fcb835..f451044 100644
+--- a/example/src/snake/index.tsx
++++ b/example/src/snake/index.tsx
+@@ -19,28 +19,9 @@ import {
+   resume,
+   spawn,
+   type EntityUpdate,
++  loadAssets,
+ } from 'rngine';
+ 
+-const food = require('./assets/food.svg');
+-
+-const head_up = require('./assets/head_up.svg');
+-const head_down = require('./assets/head_down.svg');
+-const head_left = require('./assets/head_left.svg');
+-const head_right = require('./assets/head_right.svg');
+-
+-const body_up_left = require('./assets/body_up_left.svg');
+-const body_down_right = require('./assets/body_down_right.svg');
+-const body_left_down = require('./assets/body_left_down.svg');
+-const body_right_up = require('./assets/body_right_up.svg');
+-
+-const body_horizontal = require('./assets/body_horizontal.svg');
+-const body_vertical = require('./assets/body_vertical.svg');
+-
+-const tail_up = require('./assets/tail_up.svg');
+-const tail_down = require('./assets/tail_down.svg');
+-const tail_left = require('./assets/tail_left.svg');
+-const tail_right = require('./assets/tail_right.svg');
+-
+ function Snake() {
+   return (
+     <SafeAreaProvider>
+@@ -66,227 +47,265 @@ function SnakeContent() {
+   const [gameState, setGameState] = useState<GameState>('IDLE');
+ 
+   useEffect(() => {
+-    configure({
+-      tickRate: 8,
+-      screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
+-      entities: [
+-        {
+-          id: 'food',
+-          px: Math.floor(Math.random() * COLS) * CELL,
+-          py: Math.floor(Math.random() * ROWS) * CELL,
+-          width: CELL,
+-          height: CELL,
+-          asset: food,
+-        },
+-        {
+-          id: 'snake_head',
+-          px: 10 * CELL,
+-          py: 10 * CELL,
+-          width: CELL,
+-          height: CELL,
+-          asset: head_left,
+-        },
+-        {
+-          id: 'snake_body_001',
+-          px: 11 * CELL,
+-          py: 10 * CELL,
+-          width: CELL,
+-          height: CELL,
+-          asset: body_horizontal,
+-        },
+-        {
+-          id: 'snake_body_002',
+-          px: 12 * CELL,
+-          py: 10 * CELL,
+-          width: CELL,
+-          height: CELL,
+-          asset: tail_right,
+-        },
+-      ],
+-      systems: [
+-        {
+-          entities: ['food', 'snake_head', 'snake_body'],
+-          onTick: (entities) => {
+-            const updates: (Omit<EntityUpdate, 'px' | 'py'> & {
+-              px: number;
+-              py: number;
+-            })[] = [
+-              {
+-                id: entities[1]!.id,
+-                px: entities[1]!.px,
+-                py: entities[1]!.py,
++    loadAssets({
++      food: require('./assets/food.svg'),
++      head_up: require('./assets/head_up.svg'),
++      head_down: require('./assets/head_down.svg'),
++      head_left: require('./assets/head_left.svg'),
++      head_right: require('./assets/head_right.svg'),
++      body_up_left: require('./assets/body_up_left.svg'),
++      body_down_right: require('./assets/body_down_right.svg'),
++      body_left_down: require('./assets/body_left_down.svg'),
++      body_right_up: require('./assets/body_right_up.svg'),
++      body_horizontal: require('./assets/body_horizontal.svg'),
++      body_vertical: require('./assets/body_vertical.svg'),
++      tail_up: require('./assets/tail_up.svg'),
++      tail_down: require('./assets/tail_down.svg'),
++      tail_left: require('./assets/tail_left.svg'),
++      tail_right: require('./assets/tail_right.svg'),
++    }).then(
++      ({
++        food,
++        head_up,
++        head_down,
++        head_left,
++        head_right,
++        body_up_left,
++        body_down_right,
++        body_left_down,
++        body_right_up,
++        body_horizontal,
++        body_vertical,
++        tail_up,
++        tail_down,
++        tail_left,
++        tail_right,
++      }) => {
++        configure({
++          tickRate: 8,
++          screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
++          entities: [
++            {
++              id: 'food',
++              px: Math.floor(Math.random() * COLS) * CELL,
++              py: Math.floor(Math.random() * ROWS) * CELL,
++              width: CELL,
++              height: CELL,
++              asset: food,
++            },
++            {
++              id: 'snake_head',
++              px: 10 * CELL,
++              py: 10 * CELL,
++              width: CELL,
++              height: CELL,
++              asset: head_left,
++            },
++            {
++              id: 'snake_body_001',
++              px: 11 * CELL,
++              py: 10 * CELL,
++              width: CELL,
++              height: CELL,
++              asset: body_horizontal,
++            },
++            {
++              id: 'snake_body_002',
++              px: 12 * CELL,
++              py: 10 * CELL,
++              width: CELL,
++              height: CELL,
++              asset: tail_right,
++            },
++          ],
++          systems: [
++            {
++              entities: ['food', 'snake_head', 'snake_body'],
++              onTick: (entities) => {
++                const updates: (Omit<EntityUpdate, 'px' | 'py'> & {
++                  px: number;
++                  py: number;
++                })[] = [
++                  {
++                    id: entities[1]!.id,
++                    px: entities[1]!.px,
++                    py: entities[1]!.py,
++                  },
++                ];
++
++                switch (directionRef.current) {
++                  case 'UP':
++                    updates[0]!.py -= CELL;
++                    break;
++                  case 'DOWN':
++                    updates[0]!.py += CELL;
++                    break;
++                  case 'LEFT':
++                    updates[0]!.px -= CELL;
++                    break;
++                  case 'RIGHT':
++                    updates[0]!.px += CELL;
++                    break;
++                }
++
++                if (
++                  updates[0]!.px < 0 ||
++                  updates[0]!.py < 0 ||
++                  updates[0]!.px + CELL > CELL * COLS ||
++                  updates[0]!.py + CELL > CELL * ROWS
++                ) {
++                  pause();
++                  setGameState('OVER');
++                  return;
++                }
++
++                for (let i = 2; i < entities.length; i++) {
++                  if (
++                    updates[0]!.px === entities[i - 1]!.px &&
++                    updates[0]!.py === entities[i - 1]!.py
++                  ) {
++                    pause();
++                    setGameState('OVER');
++                    return;
++                  }
++
++                  updates.push({
++                    id: entities[i]!.id,
++                    px: entities[i - 1]!.px,
++                    py: entities[i - 1]!.py,
++                  });
++                }
++
++                if (
++                  entities[1]!.px === entities[0]!.px &&
++                  entities[1]!.py === entities[0]!.py
++                ) {
++                  updates.push({
++                    id: 'food',
++                    px: Math.floor(Math.random() * COLS) * CELL,
++                    py: Math.floor(Math.random() * ROWS) * CELL,
++                  });
++
++                  spawn({
++                    id: `snake_body_${
++                      entities.length - 1 < 10
++                        ? '00'
++                        : entities.length - 1 < 100
++                          ? '0'
++                          : ''
++                    }${entities.length - 1}`,
++                    px: entities[entities.length - 1]!.px,
++                    py: entities[entities.length - 1]!.py,
++                    width: CELL,
++                    height: CELL,
++                  });
++                }
++                update(updates);
+               },
+-            ];
+-
+-            switch (directionRef.current) {
+-              case 'UP':
+-                updates[0]!.py -= CELL;
+-                break;
+-              case 'DOWN':
+-                updates[0]!.py += CELL;
+-                break;
+-              case 'LEFT':
+-                updates[0]!.px -= CELL;
+-                break;
+-              case 'RIGHT':
+-                updates[0]!.px += CELL;
+-                break;
+-            }
+-
+-            if (
+-              updates[0]!.px < 0 ||
+-              updates[0]!.py < 0 ||
+-              updates[0]!.px + CELL > CELL * COLS ||
+-              updates[0]!.py + CELL > CELL * ROWS
+-            ) {
+-              pause();
+-              setGameState('OVER');
+-              return;
+-            }
+-
+-            for (let i = 2; i < entities.length; i++) {
+-              if (
+-                updates[0]!.px === entities[i - 1]!.px &&
+-                updates[0]!.py === entities[i - 1]!.py
+-              ) {
+-                pause();
+-                setGameState('OVER');
+-                return;
+-              }
+-
+-              updates.push({
+-                id: entities[i]!.id,
+-                px: entities[i - 1]!.px,
+-                py: entities[i - 1]!.py,
+-              });
+-            }
+-
+-            if (
+-              entities[1]!.px === entities[0]!.px &&
+-              entities[1]!.py === entities[0]!.py
+-            ) {
+-              updates.push({
+-                id: 'food',
+-                px: Math.floor(Math.random() * COLS) * CELL,
+-                py: Math.floor(Math.random() * ROWS) * CELL,
+-              });
+-
+-              spawn({
+-                id: `snake_body_${
+-                  entities.length - 1 < 10
+-                    ? '00'
+-                    : entities.length - 1 < 100
+-                      ? '0'
+-                      : ''
+-                }${entities.length - 1}`,
+-                px: entities[entities.length - 1]!.px,
+-                py: entities[entities.length - 1]!.py,
+-                width: CELL,
+-                height: CELL,
+-              });
+-            }
+-            update(updates);
+-          },
+-        },
+-        {
+-          entities: ['snake_head', 'snake_body'],
+-          onTick: (entities) => {
+-            const updates: EntityUpdate[] = [];
+-            const HEAD_ASSET_MAP = {
+-              UP: head_up,
+-              DOWN: head_down,
+-              LEFT: head_left,
+-              RIGHT: head_right,
+-            };
+-
+-            updates.push({
+-              id: entities[0]!.id,
+-              asset: HEAD_ASSET_MAP[directionRef.current],
+-            });
+-
+-            let asset;
+-
+-            for (let i = 1; i < entities.length - 1; i++) {
+-              const previousPx = entities[i - 1]!.px;
+-              const previousPy = entities[i - 1]!.py;
+-              const currentPx = entities[i]!.px;
+-              const currentPy = entities[i]!.py;
+-              const nextPx = entities[i + 1]!.px;
+-              const nextPy = entities[i + 1]!.py;
+-
+-              if (previousPx === currentPx && currentPx === nextPx) {
+-                asset = body_vertical;
+-              } else if (previousPy === currentPy && currentPy === nextPy) {
+-                asset = body_horizontal;
+-              } else {
+-                const dirTowardHead =
+-                  previousPx > currentPx
+-                    ? 'right'
+-                    : previousPx < currentPx
+-                      ? 'left'
+-                      : previousPy > currentPy
+-                        ? 'down'
+-                        : 'up';
+-
+-                const dirTowardTail =
+-                  nextPx > currentPx
+-                    ? 'right'
+-                    : nextPx < currentPx
+-                      ? 'left'
+-                      : nextPy > currentPy
+-                        ? 'down'
+-                        : 'up';
+-
+-                const pair = [dirTowardHead, dirTowardTail].sort().join('_') as
+-                  | 'left_up'
+-                  | 'down_right'
+-                  | 'down_left'
+-                  | 'right_up';
+-
+-                const CORNER_ASSET_MAP = {
+-                  left_up: body_up_left,
+-                  down_right: body_down_right,
+-                  down_left: body_left_down,
+-                  right_up: body_right_up,
++            },
++            {
++              entities: ['snake_head', 'snake_body'],
++              onTick: (entities) => {
++                const updates: EntityUpdate[] = [];
++                const HEAD_ASSET_MAP = {
++                  UP: head_up,
++                  DOWN: head_down,
++                  LEFT: head_left,
++                  RIGHT: head_right,
+                 };
+ 
+-                asset = CORNER_ASSET_MAP[pair];
+-              }
+-
+-              updates.push({ id: entities[i]!.id, asset });
+-            }
+-
+-            if (
+-              entities[entities.length - 1]!.px ===
+-              entities[entities.length - 2]!.px
+-            ) {
+-              if (
+-                entities[entities.length - 1]!.py >
+-                entities[entities.length - 2]!.py
+-              ) {
+-                asset = tail_down;
+-              } else {
+-                asset = tail_up;
+-              }
+-            } else {
+-              if (
+-                entities[entities.length - 1]!.px >
+-                entities[entities.length - 2]!.px
+-              ) {
+-                asset = tail_right;
+-              } else {
+-                asset = tail_left;
+-              }
+-            }
+-            updates.push({ id: entities[entities.length - 1]!.id, asset });
++                updates.push({
++                  id: entities[0]!.id,
++                  asset: HEAD_ASSET_MAP[directionRef.current],
++                });
++
++                let asset;
++
++                for (let i = 1; i < entities.length - 1; i++) {
++                  const previousPx = entities[i - 1]!.px;
++                  const previousPy = entities[i - 1]!.py;
++                  const currentPx = entities[i]!.px;
++                  const currentPy = entities[i]!.py;
++                  const nextPx = entities[i + 1]!.px;
++                  const nextPy = entities[i + 1]!.py;
++
++                  if (previousPx === currentPx && currentPx === nextPx) {
++                    asset = body_vertical;
++                  } else if (previousPy === currentPy && currentPy === nextPy) {
++                    asset = body_horizontal;
++                  } else {
++                    const dirTowardHead =
++                      previousPx > currentPx
++                        ? 'right'
++                        : previousPx < currentPx
++                          ? 'left'
++                          : previousPy > currentPy
++                            ? 'down'
++                            : 'up';
++
++                    const dirTowardTail =
++                      nextPx > currentPx
++                        ? 'right'
++                        : nextPx < currentPx
++                          ? 'left'
++                          : nextPy > currentPy
++                            ? 'down'
++                            : 'up';
++
++                    const pair = [dirTowardHead, dirTowardTail]
++                      .sort()
++                      .join('_') as
++                      | 'left_up'
++                      | 'down_right'
++                      | 'down_left'
++                      | 'right_up';
++
++                    const CORNER_ASSET_MAP = {
++                      left_up: body_up_left,
++                      down_right: body_down_right,
++                      down_left: body_left_down,
++                      right_up: body_right_up,
++                    };
++
++                    asset = CORNER_ASSET_MAP[pair];
++                  }
++
++                  updates.push({ id: entities[i]!.id, asset });
++                }
++
++                if (
++                  entities[entities.length - 1]!.px ===
++                  entities[entities.length - 2]!.px
++                ) {
++                  if (
++                    entities[entities.length - 1]!.py >
++                    entities[entities.length - 2]!.py
++                  ) {
++                    asset = tail_down;
++                  } else {
++                    asset = tail_up;
++                  }
++                } else {
++                  if (
++                    entities[entities.length - 1]!.px >
++                    entities[entities.length - 2]!.px
++                  ) {
++                    asset = tail_right;
++                  } else {
++                    asset = tail_left;
++                  }
++                }
++                updates.push({ id: entities[entities.length - 1]!.id, asset });
++
++                update(updates);
+ 
+-            update(updates);
+-
+-            return;
+-          },
+-        },
+-      ],
+-    });
++                return;
++              },
++            },
++          ],
++        });
++      }
++    );
+   }, [setGameState]);
+ 
+   const togglePause = () => {
+diff --git a/src/GameAssets.nitro.ts b/src/GameAssets.nitro.ts
+index dd833e6..b4c376d 100644
+--- a/src/GameAssets.nitro.ts
++++ b/src/GameAssets.nitro.ts
+@@ -6,8 +6,8 @@ interface GameAssets extends HybridObject<{
+   android: 'kotlin';
+ }> {
+   isAssetRegistered(id: number): boolean;
+-  registerSvg(id: number, uri: string): void;
+-  registerLottie(id: number, json: string): void;
++  registerSvg(id: number, uri: string): Promise<void>;
++  registerLottie(id: number, json: string): Promise<void>;
+ }
+ 
+ export const gameAssets =
+diff --git a/src/GameEngine.tsx b/src/GameEngine.tsx
+index a2fdf6a..f3fdc14 100644
+--- a/src/GameEngine.tsx
++++ b/src/GameEngine.tsx
+@@ -1,5 +1,5 @@
+ import { getHostComponent } from 'react-native-nitro-modules';
+-const GameEngineConfig = require('../nitrogen/generated/shared/json/GameEngineConfig.json');
++import GameEngineConfig from '../nitrogen/generated/shared/json/GameEngineConfig.json';
+ import type { GameEngineMethods, GameEngineProps } from './GameEngine.nitro';
+ 
+ /**
+diff --git a/src/GameMethods.ts b/src/GameMethods.ts
+index db003b3..5e15b2f 100644
+--- a/src/GameMethods.ts
++++ b/src/GameMethods.ts
+@@ -1,4 +1,40 @@
+ import { gameMethods } from './GameMethods.nitro';
++import type { Entity, EntityUpdate, System } from './nativeTypes';
++import type { Config } from './types';
++
++/** Sets up the game engine with the given configuration. Call this before anything else. */
++export const configure = ({
++  tickRate,
++  screen,
++  entities = [],
++  systems = [],
++  paused = true,
++}: Config) => {
++  let nativeSystems: System[] = [];
++
++  for (const system of systems) {
++    nativeSystems.push({
++      entities: system.entities,
++      collisions: system.collisions,
++      onTick: (e, c) => {
++        const start = Date.now();
++        system.onTick(e, c);
++        const finish = Date.now();
++        return finish - start;
++      },
++    });
++  }
++
++  gameMethods.setTickRate(tickRate);
++  gameMethods.setScreen(screen);
++  gameMethods.setEntities(entities);
++  gameMethods.setSystems(nativeSystems);
++  if (paused) {
++    gameMethods.pause();
++  } else {
++    gameMethods.resume();
++  }
++};
+ 
+ /** Pauses the game loop. Systems will stop running. */
+ export const pause = () => gameMethods.pause();
+@@ -6,5 +42,17 @@ export const pause = () => gameMethods.pause();
+ /** Resumes the game loop. */
+ export const resume = () => gameMethods.resume();
+ 
++/** Spawns one or more entities into the world. Skips duplicates by id. */
++export const spawn = (entities: Entity | Entity[]) => {
++  const entityArray = Array.isArray(entities) ? entities : [entities];
++  gameMethods.spawn(entityArray);
++};
++
+ /** Removes an entity or all entities matching the given id prefix from the world. */
+ export const despawn = (id: string) => gameMethods.despawn(id);
++
++/** Updates one or more entities. Only the provided fields are changed. */
++export const update = (updates: EntityUpdate | EntityUpdate[]) => {
++  const entityUpdateArray = Array.isArray(updates) ? updates : [updates];
++  gameMethods.update(entityUpdateArray);
++};
+diff --git a/src/Shared.ts b/src/Shared.ts
+deleted file mode 100644
+index 3f38dba..0000000
+--- a/src/Shared.ts
++++ /dev/null
+@@ -1,99 +0,0 @@
+-import { Image } from 'react-native';
+-import { gameAssets } from './GameAssets.nitro';
+-import { gameMethods } from './GameMethods.nitro';
+-import type {
+-  Screen as NativeScreen,
+-  Entity as NativeEntity,
+-  EntityUpdate as NativeEntityUpdate,
+-  System as NativeSystem,
+-} from './nativeTypes';
+-import type { Asset, Config, Entity, EntityUpdate } from './types';
+-
+-const assetCache = new WeakMap<object, number>();
+-let nextId = -1;
+-
+-const registerAssetIfNotExist = (asset?: Asset) => {
+-  switch (typeof asset) {
+-    case 'object':
+-      if (assetCache.has(asset)) {
+-        return assetCache.get(asset);
+-      }
+-      const assetId = nextId--;
+-      assetCache.set(asset, assetId);
+-      gameAssets.registerLottie(assetId, JSON.stringify(asset));
+-      return assetId;
+-
+-    case 'number':
+-      if (gameAssets.isAssetRegistered(asset)) {
+-        return asset;
+-      }
+-      const assetUri = Image.resolveAssetSource(asset)?.uri;
+-      if (!assetUri) {
+-        break;
+-      }
+-      gameAssets.registerSvg(asset, assetUri);
+-      return asset;
+-  }
+-  return;
+-};
+-
+-/** Sets up the game engine with the given configuration. Call this before anything else. */
+-export const configure = ({
+-  tickRate,
+-  screen,
+-  entities = [],
+-  systems = [],
+-  paused = true,
+-}: Config) => {
+-  screen.asset = registerAssetIfNotExist(screen.asset);
+-  for (const entity of entities) {
+-    entity.asset = registerAssetIfNotExist(entity.asset);
+-  }
+-
+-  let nativeSystems: NativeSystem[] = [];
+-
+-  for (const system of systems) {
+-    nativeSystems.push({
+-      entities: system.entities,
+-      collisions: system.collisions,
+-      onTick: (e, c) => {
+-        const start = Date.now();
+-        system.onTick(e, c);
+-        const finish = Date.now();
+-        return finish - start;
+-      },
+-    });
+-  }
+-
+-  gameMethods.setTickRate(tickRate);
+-  gameMethods.setScreen(screen as NativeScreen);
+-  gameMethods.setEntities(entities as NativeEntity[]);
+-  gameMethods.setSystems(nativeSystems);
+-  if (paused) {
+-    gameMethods.pause();
+-  } else {
+-    gameMethods.resume();
+-  }
+-};
+-
+-/** Spawns one or more entities into the world. Skips duplicates by id. */
+-export const spawn = (entities: Entity | Entity[]) => {
+-  const entityArray = Array.isArray(entities) ? entities : [entities];
+-
+-  for (const entity of entityArray) {
+-    entity.asset = registerAssetIfNotExist(entity.asset);
+-  }
+-
+-  gameMethods.spawn(entityArray as NativeEntity[]);
+-};
+-
+-/** Updates one or more entities. Only the provided fields are changed. */
+-export const update = (updates: EntityUpdate | EntityUpdate[]) => {
+-  const entityUpdateArray = Array.isArray(updates) ? updates : [updates];
+-
+-  for (const entityUpdate of entityUpdateArray) {
+-    entityUpdate.asset = registerAssetIfNotExist(entityUpdate.asset);
+-  }
+-
+-  gameMethods.update(entityUpdateArray as NativeEntityUpdate[]);
+-};
+diff --git a/src/index.tsx b/src/index.tsx
+index caad8e6..6454c31 100644
+--- a/src/index.tsx
++++ b/src/index.tsx
+@@ -1,6 +1,13 @@
+ import GameEngine from './GameEngine';
+ 
+ export * from './GameMethods';
+-export * from './Shared';
++export * from './GameAssets';
+ export * from './types';
++export type {
++  Screen,
++  Entity,
++  CollisionPair,
++  Collision,
++  EntityUpdate,
++} from './nativeTypes';
+ export { GameEngine };
+diff --git a/src/types.ts b/src/types.ts
+index b2f2117..095f0ad 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -1,29 +1,13 @@
+ import type {
+-  Screen as NativeScreen,
+-  Entity as NativeEntity,
+-  EntityUpdate as NativeEntityUpdate,
+   System as NativeSystem,
+   Collision,
++  Screen,
++  Entity,
+ } from './nativeTypes';
+ 
+-export type Asset = number | object;
+-
+-export type Screen = Omit<NativeScreen, 'asset'> & {
+-  /** Asset to render, use `require` with the file path to get the id. */
+-  asset?: Asset;
+-};
+-export type Entity = Omit<NativeEntity, 'asset'> & {
+-  /** Asset to render, use `require` with the file path to get the id. */
+-  asset?: Asset;
+-};
+-export type EntityUpdate = Omit<NativeEntityUpdate, 'asset'> & {
+-  /** Asset to render, use `require` with the file path to get the id. */
+-  asset?: Asset;
+-};
+-
+ export type System = Omit<NativeSystem, 'onTick'> & {
+   /** Called every tick with the resolved entities and collisions. */
+-  onTick: (entities: NativeEntity[], collisions: Collision[]) => void;
++  onTick: (entities: Entity[], collisions: Collision[]) => void;
+ };
+ 
+ export type Config = {

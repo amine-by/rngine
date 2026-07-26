@@ -1,29 +1,13 @@
 import type {
-  Screen as NativeScreen,
-  Entity as NativeEntity,
-  EntityUpdate as NativeEntityUpdate,
   System as NativeSystem,
   Collision,
+  Screen,
+  Entity,
 } from './nativeTypes';
-
-export type Asset = number | object;
-
-export type Screen = Omit<NativeScreen, 'asset'> & {
-  /** Asset to render, use `require` with the file path to get the id. */
-  asset?: Asset;
-};
-export type Entity = Omit<NativeEntity, 'asset'> & {
-  /** Asset to render, use `require` with the file path to get the id. */
-  asset?: Asset;
-};
-export type EntityUpdate = Omit<NativeEntityUpdate, 'asset'> & {
-  /** Asset to render, use `require` with the file path to get the id. */
-  asset?: Asset;
-};
 
 export type System = Omit<NativeSystem, 'onTick'> & {
   /** Called every tick with the resolved entities and collisions. */
-  onTick: (entities: NativeEntity[], collisions: Collision[]) => void;
+  onTick: (entities: Entity[], collisions: Collision[]) => void;
 };
 
 export type Config = {
