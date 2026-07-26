@@ -1,5 +1,5 @@
 import { getHostComponent } from 'react-native-nitro-modules';
-const GameEngineConfig = require('../nitrogen/generated/shared/json/GameEngineConfig.json');
+import GameEngineConfig from '../nitrogen/generated/shared/json/GameEngineConfig.json';
 import type { GameEngineMethods, GameEngineProps } from './GameEngine.nitro';
 
 /**

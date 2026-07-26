@@ -72,7 +72,7 @@ export default function App() {
 
 **Entities** are the objects in your game world. Each entity has a position, size, color, and velocity. See [`Entity`](./src/nativeTypes.ts).
 
-**Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/nativeTypes.ts).
+**Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/types.ts).
 
 **Screen** defines the viewport dimensions and background color. Entities outside the screen bounds are automatically clipped. See [`Screen`](./src/nativeTypes.ts).
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   GameEngine,
@@ -8,45 +8,52 @@ import {
   update,
   spawn,
   despawn,
+  loadAssets,
 } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 
-const backgroundAsset = require('./assets/background-test.svg');
-const lottieAsset = require('./assets/test.json');
-const svgAsset = require('./assets/test.svg');
-
-configure({
-  tickRate: 60,
-  screen: {
-    width: 800,
-    height: 800,
-    asset: backgroundAsset,
-  },
-  entities: [
-    {
-      id: 'entity_1',
-      px: 300,
-      py: 300,
-      width: 75,
-      height: 105,
-      asset: lottieAsset,
-    },
-  ],
-  systems: [
-    {
-      collisions: [{ a: 'entity', b: 'entity' }],
-      onTick: (_, collisions) => {
-        collisions.forEach(({ a, b, depth }) => {
-          console.log(`a=${a} b=${b} depth=${depth}`);
-        });
-      },
-    },
-  ],
-  paused: false,
-});
-
 export default function Playground() {
   const [isPaused, setIsPaused] = useState(false);
+  const [assets, setAssets] = useState<Record<'svgAsset', number>>();
+
+  useEffect(() => {
+    loadAssets({
+      backgroundAsset: require('./assets/background-test.svg'),
+      lottieAsset: require('./assets/test.json'),
+      svgAsset: require('./assets/test.svg'),
+    }).then(({ backgroundAsset, lottieAsset, svgAsset }) => {
+      configure({
+        tickRate: 60,
+        screen: {
+          width: 800,
+          height: 800,
+          asset: backgroundAsset,
+        },
+        entities: [
+          {
+            id: 'entity_1',
+            px: 300,
+            py: 300,
+            width: 75,
+            height: 105,
+            asset: lottieAsset,
+          },
+        ],
+        systems: [
+          {
+            collisions: [{ a: 'entity', b: 'entity' }],
+            onTick: (_, collisions) => {
+              collisions.forEach(({ a, b, depth }) => {
+                console.log(`a=${a} b=${b} depth=${depth}`);
+              });
+            },
+          },
+        ],
+        paused: false,
+      });
+      setAssets({ svgAsset });
+    });
+  }, []);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -68,7 +75,7 @@ export default function Playground() {
         py: 300,
         width: 52,
         height: 84,
-        asset: svgAsset,
+        asset: assets?.svgAsset,
       },
       {
         id: 'entity_3',
@@ -76,7 +83,7 @@ export default function Playground() {
         py: 320,
         width: 52,
         height: 84,
-        asset: svgAsset,
+        asset: assets?.svgAsset,
       },
     ]);
   };

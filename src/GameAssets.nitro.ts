@@ -6,8 +6,8 @@ interface GameAssets extends HybridObject<{
   android: 'kotlin';
 }> {
   isAssetRegistered(id: number): boolean;
-  registerSvg(id: number, uri: string): void;
-  registerLottie(id: number, json: string): void;
+  registerSvg(id: number, uri: string): Promise<void>;
+  registerLottie(id: number, json: string): Promise<void>;
 }
 
 export const gameAssets =
