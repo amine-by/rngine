@@ -29,6 +29,8 @@ void GameMethods::setEntities(const std::vector<Entity> &entities) {
   std::lock_guard<std::mutex> snapshotLock(instance.getSnapshotMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
   auto &entitiesSnapshotInternal = instance.getEntitiesSnapshotInternal();
+  entitiesInternal.clear();
+  entitiesSnapshotInternal.clear();
   for (auto &entity : entities) {
     entitiesInternal[entity.id] = entity;
     entitiesSnapshotInternal[entity.id] = entity;
