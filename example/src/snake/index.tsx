@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,8 +19,8 @@ import {
   resume,
   spawn,
   type EntityUpdate,
-  loadAssets,
 } from 'rngine';
+import { useAssets } from '../AssetsContext';
 
 function Snake() {
   return (
@@ -43,273 +43,273 @@ function SnakeContent() {
   const safeAreaInsets = useSafeAreaInsets();
   const styles = getStyles({ ...safeAreaInsets, isLandscape });
   const directionRef = useRef<Direction>('LEFT');
+  const { getAssets } = useAssets();
+
+  const {
+    food,
+    head_up,
+    head_down,
+    head_left,
+    head_right,
+    body_up_left,
+    body_down_right,
+    body_left_down,
+    body_right_up,
+    body_horizontal,
+    body_vertical,
+    tail_up,
+    tail_down,
+    tail_left,
+    tail_right,
+  } = getAssets('Snake') ?? {};
 
   const [gameState, setGameState] = useState<GameState>('IDLE');
 
-  useEffect(() => {
-    loadAssets({
-      food: require('./assets/food.svg'),
-      head_up: require('./assets/head_up.svg'),
-      head_down: require('./assets/head_down.svg'),
-      head_left: require('./assets/head_left.svg'),
-      head_right: require('./assets/head_right.svg'),
-      body_up_left: require('./assets/body_up_left.svg'),
-      body_down_right: require('./assets/body_down_right.svg'),
-      body_left_down: require('./assets/body_left_down.svg'),
-      body_right_up: require('./assets/body_right_up.svg'),
-      body_horizontal: require('./assets/body_horizontal.svg'),
-      body_vertical: require('./assets/body_vertical.svg'),
-      tail_up: require('./assets/tail_up.svg'),
-      tail_down: require('./assets/tail_down.svg'),
-      tail_left: require('./assets/tail_left.svg'),
-      tail_right: require('./assets/tail_right.svg'),
-    }).then(
-      ({
-        food,
-        head_up,
-        head_down,
-        head_left,
-        head_right,
-        body_up_left,
-        body_down_right,
-        body_left_down,
-        body_right_up,
-        body_horizontal,
-        body_vertical,
-        tail_up,
-        tail_down,
-        tail_left,
-        tail_right,
-      }) => {
-        configure({
-          tickRate: 8,
-          screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
-          entities: [
-            {
-              id: 'food',
-              px: Math.floor(Math.random() * COLS) * CELL,
-              py: Math.floor(Math.random() * ROWS) * CELL,
-              width: CELL,
-              height: CELL,
-              asset: food,
-            },
-            {
-              id: 'snake_head',
-              px: 10 * CELL,
-              py: 10 * CELL,
-              width: CELL,
-              height: CELL,
-              asset: head_left,
-            },
-            {
-              id: 'snake_body_001',
-              px: 11 * CELL,
-              py: 10 * CELL,
-              width: CELL,
-              height: CELL,
-              asset: body_horizontal,
-            },
-            {
-              id: 'snake_body_002',
-              px: 12 * CELL,
-              py: 10 * CELL,
-              width: CELL,
-              height: CELL,
-              asset: tail_right,
-            },
-          ],
-          systems: [
-            {
-              entities: ['food', 'snake_head', 'snake_body'],
-              onTick: (entities) => {
-                const updates: (Omit<EntityUpdate, 'px' | 'py'> & {
-                  px: number;
-                  py: number;
-                })[] = [
-                  {
-                    id: entities[1]!.id,
-                    px: entities[1]!.px,
-                    py: entities[1]!.py,
-                  },
-                ];
-
-                switch (directionRef.current) {
-                  case 'UP':
-                    updates[0]!.py -= CELL;
-                    break;
-                  case 'DOWN':
-                    updates[0]!.py += CELL;
-                    break;
-                  case 'LEFT':
-                    updates[0]!.px -= CELL;
-                    break;
-                  case 'RIGHT':
-                    updates[0]!.px += CELL;
-                    break;
-                }
-
-                if (
-                  updates[0]!.px < 0 ||
-                  updates[0]!.py < 0 ||
-                  updates[0]!.px + CELL > CELL * COLS ||
-                  updates[0]!.py + CELL > CELL * ROWS
-                ) {
-                  pause();
-                  setGameState('OVER');
-                  return;
-                }
-
-                for (let i = 2; i < entities.length; i++) {
-                  if (
-                    updates[0]!.px === entities[i - 1]!.px &&
-                    updates[0]!.py === entities[i - 1]!.py
-                  ) {
-                    pause();
-                    setGameState('OVER');
-                    return;
-                  }
-
-                  updates.push({
-                    id: entities[i]!.id,
-                    px: entities[i - 1]!.px,
-                    py: entities[i - 1]!.py,
-                  });
-                }
-
-                if (
-                  entities[1]!.px === entities[0]!.px &&
-                  entities[1]!.py === entities[0]!.py
-                ) {
-                  updates.push({
-                    id: 'food',
-                    px: Math.floor(Math.random() * COLS) * CELL,
-                    py: Math.floor(Math.random() * ROWS) * CELL,
-                  });
-
-                  spawn({
-                    id: `snake_body_${
-                      entities.length - 1 < 10
-                        ? '00'
-                        : entities.length - 1 < 100
-                          ? '0'
-                          : ''
-                    }${entities.length - 1}`,
-                    px: entities[entities.length - 1]!.px,
-                    py: entities[entities.length - 1]!.py,
-                    width: CELL,
-                    height: CELL,
-                  });
-                }
-                update(updates);
+  const start = useCallback(() => {
+    configure({
+      tickRate: 8,
+      screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
+      entities: [
+        {
+          id: 'food',
+          px: Math.floor(Math.random() * COLS) * CELL,
+          py: Math.floor(Math.random() * ROWS) * CELL,
+          width: CELL,
+          height: CELL,
+          asset: food,
+        },
+        {
+          id: 'snake_head',
+          px: 10 * CELL,
+          py: 10 * CELL,
+          width: CELL,
+          height: CELL,
+          asset: head_left,
+        },
+        {
+          id: 'snake_body_001',
+          px: 11 * CELL,
+          py: 10 * CELL,
+          width: CELL,
+          height: CELL,
+          asset: body_horizontal,
+        },
+        {
+          id: 'snake_body_002',
+          px: 12 * CELL,
+          py: 10 * CELL,
+          width: CELL,
+          height: CELL,
+          asset: tail_right,
+        },
+      ],
+      systems: [
+        {
+          entities: ['food', 'snake_head', 'snake_body'],
+          onTick: (entities) => {
+            const updates: (Omit<EntityUpdate, 'px' | 'py'> & {
+              px: number;
+              py: number;
+            })[] = [
+              {
+                id: entities[1]!.id,
+                px: entities[1]!.px,
+                py: entities[1]!.py,
               },
-            },
-            {
-              entities: ['snake_head', 'snake_body'],
-              onTick: (entities) => {
-                const updates: EntityUpdate[] = [];
-                const HEAD_ASSET_MAP = {
-                  UP: head_up,
-                  DOWN: head_down,
-                  LEFT: head_left,
-                  RIGHT: head_right,
+            ];
+
+            switch (directionRef.current) {
+              case 'UP':
+                updates[0]!.py -= CELL;
+                break;
+              case 'DOWN':
+                updates[0]!.py += CELL;
+                break;
+              case 'LEFT':
+                updates[0]!.px -= CELL;
+                break;
+              case 'RIGHT':
+                updates[0]!.px += CELL;
+                break;
+            }
+
+            if (
+              updates[0]!.px < 0 ||
+              updates[0]!.py < 0 ||
+              updates[0]!.px + CELL > CELL * COLS ||
+              updates[0]!.py + CELL > CELL * ROWS
+            ) {
+              pause();
+              setGameState('OVER');
+              return;
+            }
+
+            for (let i = 2; i < entities.length; i++) {
+              if (
+                updates[0]!.px === entities[i - 1]!.px &&
+                updates[0]!.py === entities[i - 1]!.py
+              ) {
+                pause();
+                setGameState('OVER');
+                return;
+              }
+
+              updates.push({
+                id: entities[i]!.id,
+                px: entities[i - 1]!.px,
+                py: entities[i - 1]!.py,
+              });
+            }
+
+            if (
+              entities[1]!.px === entities[0]!.px &&
+              entities[1]!.py === entities[0]!.py
+            ) {
+              updates.push({
+                id: 'food',
+                px: Math.floor(Math.random() * COLS) * CELL,
+                py: Math.floor(Math.random() * ROWS) * CELL,
+              });
+
+              spawn({
+                id: `snake_body_${
+                  entities.length - 1 < 10
+                    ? '00'
+                    : entities.length - 1 < 100
+                      ? '0'
+                      : ''
+                }${entities.length - 1}`,
+                px: entities[entities.length - 1]!.px,
+                py: entities[entities.length - 1]!.py,
+                width: CELL,
+                height: CELL,
+              });
+            }
+            update(updates);
+          },
+        },
+        {
+          entities: ['snake_head', 'snake_body'],
+          onTick: (entities) => {
+            const updates: EntityUpdate[] = [];
+            const HEAD_ASSET_MAP = {
+              UP: head_up,
+              DOWN: head_down,
+              LEFT: head_left,
+              RIGHT: head_right,
+            };
+
+            updates.push({
+              id: entities[0]!.id,
+              asset: HEAD_ASSET_MAP[directionRef.current],
+            });
+
+            let asset;
+
+            for (let i = 1; i < entities.length - 1; i++) {
+              const previousPx = entities[i - 1]!.px;
+              const previousPy = entities[i - 1]!.py;
+              const currentPx = entities[i]!.px;
+              const currentPy = entities[i]!.py;
+              const nextPx = entities[i + 1]!.px;
+              const nextPy = entities[i + 1]!.py;
+
+              if (previousPx === currentPx && currentPx === nextPx) {
+                asset = body_vertical;
+              } else if (previousPy === currentPy && currentPy === nextPy) {
+                asset = body_horizontal;
+              } else {
+                const dirTowardHead =
+                  previousPx > currentPx
+                    ? 'right'
+                    : previousPx < currentPx
+                      ? 'left'
+                      : previousPy > currentPy
+                        ? 'down'
+                        : 'up';
+
+                const dirTowardTail =
+                  nextPx > currentPx
+                    ? 'right'
+                    : nextPx < currentPx
+                      ? 'left'
+                      : nextPy > currentPy
+                        ? 'down'
+                        : 'up';
+
+                const pair = [dirTowardHead, dirTowardTail].sort().join('_') as
+                  | 'left_up'
+                  | 'down_right'
+                  | 'down_left'
+                  | 'right_up';
+
+                const CORNER_ASSET_MAP = {
+                  left_up: body_up_left,
+                  down_right: body_down_right,
+                  down_left: body_left_down,
+                  right_up: body_right_up,
                 };
 
-                updates.push({
-                  id: entities[0]!.id,
-                  asset: HEAD_ASSET_MAP[directionRef.current],
-                });
+                asset = CORNER_ASSET_MAP[pair];
+              }
 
-                let asset;
+              updates.push({ id: entities[i]!.id, asset });
+            }
 
-                for (let i = 1; i < entities.length - 1; i++) {
-                  const previousPx = entities[i - 1]!.px;
-                  const previousPy = entities[i - 1]!.py;
-                  const currentPx = entities[i]!.px;
-                  const currentPy = entities[i]!.py;
-                  const nextPx = entities[i + 1]!.px;
-                  const nextPy = entities[i + 1]!.py;
+            if (
+              entities[entities.length - 1]!.px ===
+              entities[entities.length - 2]!.px
+            ) {
+              if (
+                entities[entities.length - 1]!.py >
+                entities[entities.length - 2]!.py
+              ) {
+                asset = tail_down;
+              } else {
+                asset = tail_up;
+              }
+            } else {
+              if (
+                entities[entities.length - 1]!.px >
+                entities[entities.length - 2]!.px
+              ) {
+                asset = tail_right;
+              } else {
+                asset = tail_left;
+              }
+            }
+            updates.push({ id: entities[entities.length - 1]!.id, asset });
 
-                  if (previousPx === currentPx && currentPx === nextPx) {
-                    asset = body_vertical;
-                  } else if (previousPy === currentPy && currentPy === nextPy) {
-                    asset = body_horizontal;
-                  } else {
-                    const dirTowardHead =
-                      previousPx > currentPx
-                        ? 'right'
-                        : previousPx < currentPx
-                          ? 'left'
-                          : previousPy > currentPy
-                            ? 'down'
-                            : 'up';
+            update(updates);
 
-                    const dirTowardTail =
-                      nextPx > currentPx
-                        ? 'right'
-                        : nextPx < currentPx
-                          ? 'left'
-                          : nextPy > currentPy
-                            ? 'down'
-                            : 'up';
-
-                    const pair = [dirTowardHead, dirTowardTail]
-                      .sort()
-                      .join('_') as
-                      | 'left_up'
-                      | 'down_right'
-                      | 'down_left'
-                      | 'right_up';
-
-                    const CORNER_ASSET_MAP = {
-                      left_up: body_up_left,
-                      down_right: body_down_right,
-                      down_left: body_left_down,
-                      right_up: body_right_up,
-                    };
-
-                    asset = CORNER_ASSET_MAP[pair];
-                  }
-
-                  updates.push({ id: entities[i]!.id, asset });
-                }
-
-                if (
-                  entities[entities.length - 1]!.px ===
-                  entities[entities.length - 2]!.px
-                ) {
-                  if (
-                    entities[entities.length - 1]!.py >
-                    entities[entities.length - 2]!.py
-                  ) {
-                    asset = tail_down;
-                  } else {
-                    asset = tail_up;
-                  }
-                } else {
-                  if (
-                    entities[entities.length - 1]!.px >
-                    entities[entities.length - 2]!.px
-                  ) {
-                    asset = tail_right;
-                  } else {
-                    asset = tail_left;
-                  }
-                }
-                updates.push({ id: entities[entities.length - 1]!.id, asset });
-
-                update(updates);
-
-                return;
-              },
-            },
-          ],
-        });
-      }
-    );
-  }, [setGameState]);
+            return;
+          },
+        },
+      ],
+    });
+  }, [
+    food,
+    head_up,
+    head_down,
+    head_left,
+    head_right,
+    body_up_left,
+    body_down_right,
+    body_left_down,
+    body_right_up,
+    body_horizontal,
+    body_vertical,
+    tail_up,
+    tail_down,
+    tail_left,
+    tail_right,
+  ]);
 
   const togglePause = () => {
-    if (gameState === 'PLAYING') {
+    if (gameState === 'OVER') {
+      start();
+      setGameState('IDLE');
+    } else if (gameState === 'PLAYING') {
       pause();
       setGameState('PAUSED');
     } else {
@@ -339,6 +339,10 @@ function SnakeContent() {
     directionRef.current = newDirection;
   };
 
+  useEffect(() => {
+    start();
+  }, [start]);
+
   return (
     <View style={styles.screen}>
       <View style={styles.container}>
@@ -346,7 +350,11 @@ function SnakeContent() {
         <View style={styles.controls}>
           <TouchableOpacity style={styles.pauseBtn} onPress={togglePause}>
             <Text style={styles.btnText}>
-              {gameState === 'PLAYING' ? '❚❚' : '▶'}
+              {gameState === 'OVER'
+                ? '⟳'
+                : gameState === 'PLAYING'
+                  ? '❚❚'
+                  : '▶'}
             </Text>
           </TouchableOpacity>
           <View style={styles.dpad}>

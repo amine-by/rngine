@@ -1,16 +1,27 @@
 import { Button, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '../App';
+import { useAssets } from '../AssetsContext';
 export default function Menu() {
+  const { loadAssetsFor } = useAssets();
   const navigation = useNavigation<NavigationProp>();
 
   return (
     <View style={styles.container}>
       <Button
         title="Playground"
-        onPress={() => navigation.navigate('Playground')}
+        onPress={async () => {
+          await loadAssetsFor('Playground');
+          navigation.navigate('Playground');
+        }}
       />
-      <Button title="Snake" onPress={() => navigation.navigate('Snake')} />
+      <Button
+        title="Snake"
+        onPress={async () => {
+          await loadAssetsFor('Snake');
+          navigation.navigate('Snake');
+        }}
+      />
     </View>
   );
 }
