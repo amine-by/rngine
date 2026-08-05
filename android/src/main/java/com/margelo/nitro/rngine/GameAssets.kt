@@ -6,6 +6,7 @@ import com.airbnb.lottie.LottieDrawable
 import com.caverock.androidsvg.SVG
 import com.margelo.nitro.core.Promise
 import java.net.URL
+import com.margelo.nitro.NitroModules
 
 class GameAssets : HybridGameAssetsSpec() {
   private external fun registerLottieDuration(id: Double, duration: Double)
@@ -22,7 +23,16 @@ class GameAssets : HybridGameAssetsSpec() {
   override fun registerSvg(id: Double, uri: String): Promise<Unit> {
     return Promise.async {
       try {
-        val stream = URL(uri).openStream()
+        val stream = if (uri.startsWith("http://") || uri.startsWith("https://")) {
+          URL(uri).openStream()
+        } else {
+          val context = NitroModules.applicationContext ?: throw Error("No Context available!")
+          val resId = context.resources.getIdentifier(uri, "raw", context.packageName)
+          if (resId == 0) {
+            throw IllegalStateException("Could not resolve drawable resource for asset: $uri")
+          }
+          context.resources.openRawResource(resId)
+        }
         assetCache[id.toInt()] = Asset.Svg(SVG.getFromInputStream(stream).renderToPicture())
         Log.d("GameAssets", "assetCache: $assetCache")
       } catch (e: Exception) {
