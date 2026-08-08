@@ -4,10 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceView
 import android.view.View
-import java.nio.ByteBuffer
 import androidx.core.graphics.withTranslation
 import androidx.core.graphics.withClip
 
@@ -20,13 +18,55 @@ class GameView(
   attrs,
   defStyleAttr,
 ) {
-  private external fun getRectsSnapshot(): ByteBuffer
+  private external fun getSnapshot(): ByteArray
   var onAttached: () -> Unit = {}
   var onDetached: () -> Unit = {}
 
   private val paint = Paint().apply {
     color = Color.TRANSPARENT
     style = Paint.Style.FILL
+  }
+
+  private fun drawRenderable(
+    canvas: android.graphics.Canvas,
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+    color: Int,
+    asset: Int,
+    progress: Float?,
+    clampedLeft: Float = left,
+    clampedTop: Float = top,
+    clampedRight: Float = right,
+    clampedBottom: Float = bottom,
+  ) {
+    paint.color = color
+    canvas.drawRect(clampedLeft, clampedTop, clampedRight, clampedBottom, paint)
+
+    canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
+      withTranslation(left, top) {
+        when (val resolvedAsset = GameAssets.getAsset(asset)) {
+          is Asset.Svg -> {
+            scale(
+              (right - left) / resolvedAsset.picture.width,
+              (bottom - top) / resolvedAsset.picture.height
+            )
+            drawPicture(resolvedAsset.picture)
+          }
+
+          is Asset.Lottie -> {
+            progress?.let {
+              resolvedAsset.drawable.progress = it
+            }
+            resolvedAsset.drawable.setBounds(0, 0, (right - left).toInt(), (bottom - top).toInt())
+            resolvedAsset.drawable.draw(canvas)
+          }
+
+          null -> {}
+        }
+      }
+    }
   }
 
   init {
@@ -40,61 +80,53 @@ class GameView(
   fun drawFrame() {
     if (!holder.surface.isValid) return
     val canvas = holder.lockCanvas() ?: return
+    val snapshot = SnapshotSerializer.decode(getSnapshot())
 
-    val rects = RectSerializer.decode(getRectsSnapshot())
-
-    val worldRect = rects.first()
-    val scaleX = canvas.width / worldRect.right
-    val scaleY = canvas.height / worldRect.bottom
+    val scaleX = canvas.width / snapshot.screen.width
+    val scaleY = canvas.height / snapshot.screen.height
     val scale = minOf(scaleX, scaleY)
 
-    val offsetX = (canvas.width - worldRect.right * scale) / 2f
-    val offsetY = (canvas.height - worldRect.bottom * scale) / 2f
+    val screenLeft = (canvas.width - snapshot.screen.width * scale) / 2f
+    val screenTop = (canvas.height - snapshot.screen.height * scale) / 2f
+    val screenRight = screenLeft + snapshot.screen.width * scale
+    val screenBottom = screenTop + snapshot.screen.height * scale
 
-    rects.forEach { rect ->
-      val left = rect.left * scale + offsetX
-      val top = rect.top * scale + offsetY
-      val right = rect.right * scale + offsetX
-      val bottom = rect.bottom * scale + offsetY
+    drawRenderable(
+      canvas,
+      screenLeft,
+      screenTop,
+      screenRight,
+      screenBottom,
+      snapshot.screen.color,
+      snapshot.screen.asset,
+      snapshot.screen.progress,
+    )
 
-      val clampedLeft = left.coerceAtLeast(offsetX)
-      val clampedTop = top.coerceAtLeast(offsetY)
-      val clampedRight = right.coerceAtMost(offsetX + worldRect.right * scale)
-      val clampedBottom = bottom.coerceAtMost(offsetY + worldRect.bottom * scale)
+    snapshot.rects.forEach { rect ->
+      val left = rect.left * scale + screenLeft
+      val top = rect.top * scale + screenTop
+      val right = rect.right * scale + screenLeft
+      val bottom = rect.bottom * scale + screenTop
 
-      paint.color = rect.color
-      canvas.drawRect(
+      val clampedLeft = left.coerceAtLeast(screenLeft)
+      val clampedTop = top.coerceAtLeast(screenTop)
+      val clampedRight = right.coerceAtMost(screenLeft + snapshot.screen.width * scale)
+      val clampedBottom = bottom.coerceAtMost(screenTop + snapshot.screen.height * scale)
+
+      drawRenderable(
+        canvas,
+        left,
+        top,
+        right,
+        bottom,
+        rect.color,
+        rect.asset,
+        rect.progress,
         clampedLeft,
         clampedTop,
         clampedRight,
-        clampedBottom,
-        paint
+        clampedBottom
       )
-      when(val asset = GameAssets.getAsset(rect.asset)){
-        is Asset.Svg -> {
-          canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
-            withTranslation(left, top) {
-              scale(
-                (right - left) / asset.picture.width,
-                (bottom - top) / asset.picture.height
-              )
-              drawPicture(asset.picture)
-            }
-          }
-        }
-
-        is Asset.Lottie -> {
-          canvas.withClip(clampedLeft, clampedTop, clampedRight, clampedBottom) {
-            withTranslation(left, top) {
-              asset.drawable.progress = rect.progress
-              asset.drawable.setBounds(0, 0, (right - left).toInt(), (bottom - top).toInt())
-              asset.drawable.draw(canvas)
-            }
-          }
-        }
-
-        null -> {}
-      }
     }
     holder.unlockCanvasAndPost(canvas)
   }
