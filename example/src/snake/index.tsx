@@ -34,6 +34,7 @@ type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'OVER';
 
 const CELL = 40;
+const HALF_CELL = 20;
 const COLS = 20;
 const ROWS = 20;
 
@@ -72,32 +73,32 @@ function SnakeContent() {
       entities: [
         {
           id: 'food',
-          px: Math.floor(Math.random() * COLS) * CELL,
-          py: Math.floor(Math.random() * ROWS) * CELL,
+          px: Math.floor(Math.random() * COLS) * CELL + HALF_CELL,
+          py: Math.floor(Math.random() * ROWS) * CELL + HALF_CELL,
           width: CELL,
           height: CELL,
           asset: food,
         },
         {
           id: 'snake_head',
-          px: 10 * CELL,
-          py: 10 * CELL,
+          px: 10 * CELL + HALF_CELL,
+          py: 10 * CELL + HALF_CELL,
           width: CELL,
           height: CELL,
           asset: head_left,
         },
         {
           id: 'snake_body_001',
-          px: 11 * CELL,
-          py: 10 * CELL,
+          px: 11 * CELL + HALF_CELL,
+          py: 10 * CELL + HALF_CELL,
           width: CELL,
           height: CELL,
           asset: body_horizontal,
         },
         {
           id: 'snake_body_002',
-          px: 12 * CELL,
-          py: 10 * CELL,
+          px: 12 * CELL + HALF_CELL,
+          py: 10 * CELL + HALF_CELL,
           width: CELL,
           height: CELL,
           asset: tail_right,
@@ -136,8 +137,8 @@ function SnakeContent() {
             if (
               updates[0]!.px < 0 ||
               updates[0]!.py < 0 ||
-              updates[0]!.px + CELL > CELL * COLS ||
-              updates[0]!.py + CELL > CELL * ROWS
+              updates[0]!.px + CELL > CELL * COLS + HALF_CELL ||
+              updates[0]!.py + CELL > CELL * ROWS + HALF_CELL
             ) {
               pause();
               setGameState('OVER');
@@ -167,8 +168,8 @@ function SnakeContent() {
             ) {
               updates.push({
                 id: 'food',
-                px: Math.floor(Math.random() * COLS) * CELL,
-                py: Math.floor(Math.random() * ROWS) * CELL,
+                px: Math.floor(Math.random() * COLS) * CELL + HALF_CELL,
+                py: Math.floor(Math.random() * ROWS) * CELL + HALF_CELL,
               });
 
               spawn({
@@ -309,6 +310,7 @@ function SnakeContent() {
     if (gameState === 'OVER') {
       start();
       setGameState('IDLE');
+      directionRef.current = 'LEFT';
     } else if (gameState === 'PLAYING') {
       pause();
       setGameState('PAUSED');

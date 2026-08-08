@@ -1,6 +1,5 @@
 #include "GameLoop.hpp"
 #include "Collision.hpp"
-#include "ColorUtils.hpp"
 #include "Entity.hpp"
 #include <android/log.h>
 #include <chrono>
@@ -58,37 +57,6 @@ void GameLoop::registerLottieDuration(double id, double duration) {
   __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
                       "Registered lottie duration: id: %.0f, duration: %.4f",
                       id, duration);
-}
-
-std::vector<Rect> GameLoop::getRectsSnapshot() {
-  std::lock_guard<std::mutex> snapshotLock(_snapshotMutex);
-  std::vector<Rect> rects;
-  rects.reserve(_entitiesSnapshot.size() + 1);
-
-  rects.push_back({0, static_cast<float>(_screenSnapshot.width), 0,
-                   static_cast<float>(_screenSnapshot.height),
-                   static_cast<float>(_screenSnapshot.progress.value_or(0)),
-                   parseHexColor(_screenSnapshot.color),
-                   static_cast<int32_t>(_screenSnapshot.asset.value_or(0))});
-
-  for (const auto &[id, entitySnapshot] : _entitiesSnapshot) {
-    if (entitySnapshot.px + entitySnapshot.width < 0 ||
-        entitySnapshot.px > _screenSnapshot.width ||
-        entitySnapshot.py + entitySnapshot.height < 0 ||
-        entitySnapshot.py > _screenSnapshot.height) {
-      continue;
-    }
-
-    rects.push_back(
-        {static_cast<float>(entitySnapshot.px),
-         static_cast<float>(entitySnapshot.px + entitySnapshot.width),
-         static_cast<float>(entitySnapshot.py),
-         static_cast<float>(entitySnapshot.py + entitySnapshot.height),
-         static_cast<float>(entitySnapshot.progress.value_or(0)),
-         parseHexColor(entitySnapshot.color),
-         static_cast<int32_t>(entitySnapshot.asset.value_or(0))});
-  }
-  return rects;
 }
 
 void GameLoop::runGameLoop() {
@@ -157,13 +125,18 @@ void GameLoop::runSystems() {
 
             uniqueEntityIdPairs.insert(uniqueEntityIdPairKey);
 
-            float aLeft = entityA->px, aRight = entityA->px + entityA->width;
-            float aTop = entityA->py, aBottom = entityA->py + entityA->height;
-            float bLeft = entityB->px, bRight = entityB->px + entityB->width;
-            float bTop = entityB->py, bBottom = entityB->py + entityB->height;
+            double aLeft = entityA->px - entityA->width / 2.0;
+            double aRight = entityA->px + entityA->width / 2.0;
+            double aTop = entityA->py - entityA->height / 2.0;
+            double aBottom = entityA->py + entityA->height / 2.0;
 
-            float overlapX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
-            float overlapY = std::min(aBottom, bBottom) - std::max(aTop, bTop);
+            double bLeft = entityB->px - entityB->width / 2.0;
+            double bRight = entityB->px + entityB->width / 2.0;
+            double bTop = entityB->py - entityB->height / 2.0;
+            double bBottom = entityB->py + entityB->height / 2.0;
+
+            double overlapX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
+            double overlapY = std::min(aBottom, bBottom) - std::max(aTop, bTop);
 
             if (overlapX > 0 && overlapY > 0) {
               collisions.push_back(Collision(entityA->id, entityB->id,

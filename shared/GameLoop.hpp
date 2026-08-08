@@ -2,7 +2,6 @@
 
 #include "Entity.hpp"
 #include "GameStats.hpp"
-#include "Rect.hpp"
 #include "Screen.hpp"
 #include "System.hpp"
 #include <atomic>
@@ -34,7 +33,6 @@ public:
 
   std::vector<Entity *> resolveEntitiesInternal(const std::string &prefix);
   void registerLottieDuration(double, double);
-  std::vector<Rect> getRectsSnapshot();
 
   void setTickRate(double tickRate) { _tickRate.store(tickRate); };
 

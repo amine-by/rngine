@@ -30,8 +30,8 @@ export default function Playground() {
       entities: [
         {
           id: 'entity_1',
-          px: 300,
-          py: 300,
+          px: 337.5,
+          py: 350.25,
           width: 75,
           height: 105,
           asset: lottieAsset,
@@ -67,16 +67,16 @@ export default function Playground() {
     spawn([
       {
         id: 'entity_2',
-        px: 374,
-        py: 300,
+        px: 376,
+        py: 342,
         width: 52,
         height: 84,
         asset: svgAsset,
       },
       {
         id: 'entity_3',
-        px: 320,
-        py: 320,
+        px: 376,
+        py: 392,
         width: 52,
         height: 84,
         asset: svgAsset,

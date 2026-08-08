@@ -1,10 +1,8 @@
 package com.margelo.nitro.rngine
 
-data class Rect(
-  val left: Float,
-  val right: Float,
-  val top: Float,
-  val bottom: Float,
+data class Screen(
+  val width: Float,
+  val height: Float,
   val color: Int,
   val asset: Int,
   val progress: Float?,
