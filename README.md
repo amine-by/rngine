@@ -21,28 +21,33 @@ configure({
   entities: [
     {
       id: 'player',
-      px: 400,
-      py: 400,
-      width: 40,
-      height: 40,
-      color: '#00ff00',
+      px: 420,
+      py: 420,
+      color: '#0f0',
+      shape: {
+        radius: 20,
+      },
     },
     {
       id: 'enemy_1',
-      px: 100,
-      py: 100,
-      width: 40,
-      height: 40,
-      color: '#ff0000',
+      px: 120,
+      py: 120,
+      color: '#f00',
+      shape: {
+        width: 40,
+        height: 40,
+      },
       vx: 1000,
     },
     {
       id: 'enemy_2',
-      px: 200,
-      py: 200,
-      width: 40,
-      height: 40,
-      color: '#ff0000',
+      px: 220,
+      py: 220,
+      color: '#f00',
+      shape: {
+        width: 40,
+        height: 40,
+      },
       vx: -1000,
     },
   ],
@@ -53,7 +58,10 @@ configure({
       onTick: (enemies) => {
         enemies.forEach((enemy) => {
           // reverse direction when reaching screen edges
-          if (enemy.px <= 0 || enemy.px + enemy.width >= 800) {
+          if (
+            enemy.px - enemy.width / 2 <= 0 ||
+            enemy.px + enemy.width / 2 >= 800
+          ) {
             update({ id: enemy.id, vx: -enemy.vx });
           }
         });
@@ -70,7 +78,7 @@ export default function App() {
 
 ## Concepts
 
-**Entities** are the objects in your game world. Each entity has a position, size, color, and velocity. See [`Entity`](./src/nativeTypes.ts).
+**Entities** are the objects in your game world. Each entity has a position, shape, color, and velocity. See [`Entity`](./src/nativeTypes.ts).
 
 **Systems** define your game logic. Each system optionally declares which entities it cares about via `entities`, which collision pairs to watch via `collisions`, or both. Systems run every tick receiving the resolved entities and any active collisions. See [`System`](./src/types.ts).
 

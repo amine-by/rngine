@@ -1,5 +1,6 @@
 #include "GameLoop.hpp"
 #include "Collision.hpp"
+#include "CollisionUtils.hpp"
 #include "Entity.hpp"
 #include <android/log.h>
 #include <chrono>
@@ -113,8 +114,8 @@ void GameLoop::runSystems() {
         auto resolvedEntitiesInternalA = resolveEntitiesInternal(a);
         auto resolvedEntitiesInternalB = resolveEntitiesInternal(b);
 
-        for (auto *entityA : resolvedEntitiesInternalA) {
-          for (auto *entityB : resolvedEntitiesInternalB) {
+        for (const auto &entityA : resolvedEntitiesInternalA) {
+          for (const auto &entityB : resolvedEntitiesInternalB) {
             if (entityA == entityB)
               continue;
 
@@ -125,22 +126,9 @@ void GameLoop::runSystems() {
 
             uniqueEntityIdPairs.insert(uniqueEntityIdPairKey);
 
-            double aLeft = entityA->px - entityA->width / 2.0;
-            double aRight = entityA->px + entityA->width / 2.0;
-            double aTop = entityA->py - entityA->height / 2.0;
-            double aBottom = entityA->py + entityA->height / 2.0;
-
-            double bLeft = entityB->px - entityB->width / 2.0;
-            double bRight = entityB->px + entityB->width / 2.0;
-            double bTop = entityB->py - entityB->height / 2.0;
-            double bBottom = entityB->py + entityB->height / 2.0;
-
-            double overlapX = std::min(aRight, bRight) - std::max(aLeft, bLeft);
-            double overlapY = std::min(aBottom, bBottom) - std::max(aTop, bTop);
-
-            if (overlapX > 0 && overlapY > 0) {
-              collisions.push_back(Collision(entityA->id, entityB->id,
-                                             std::min(overlapX, overlapY)));
+            if (auto ov = CollisionUtils::shapeOverlap(*entityA, *entityB)) {
+              collisions.push_back(
+                  Collision(entityA->id, entityB->id, ov.value()));
             }
           }
         }

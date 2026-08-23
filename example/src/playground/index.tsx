@@ -16,7 +16,7 @@ export default function Playground() {
   const [isPaused, setIsPaused] = useState(false);
   const { getAssets } = useAssets();
 
-  const { backgroundAsset, lottieAsset, svgAsset } =
+  const { background_test_svg, test_lottie, test_svg_rect, test_svg_circle } =
     getAssets('Playground') ?? {};
 
   useEffect(() => {
@@ -25,16 +25,15 @@ export default function Playground() {
       screen: {
         width: 800,
         height: 800,
-        asset: backgroundAsset,
+        asset: background_test_svg,
       },
       entities: [
         {
           id: 'entity_1',
-          px: 337.5,
-          py: 350.25,
-          width: 75,
-          height: 105,
-          asset: lottieAsset,
+          px: 300,
+          py: 300,
+          shape: { width: 75, height: 105 },
+          asset: test_lottie,
         },
       ],
       systems: [
@@ -49,7 +48,7 @@ export default function Playground() {
       ],
       paused: false,
     });
-  }, [backgroundAsset, lottieAsset]);
+  }, [background_test_svg, test_lottie]);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -67,19 +66,19 @@ export default function Playground() {
     spawn([
       {
         id: 'entity_2',
-        px: 376,
-        py: 342,
-        width: 52,
-        height: 84,
-        asset: svgAsset,
+        px: 300,
+        py: 400,
+        color: '#f00',
+        shape: { width: 52, height: 84 },
+        asset: test_svg_rect,
       },
       {
         id: 'entity_3',
-        px: 376,
-        py: 392,
-        width: 52,
-        height: 84,
-        asset: svgAsset,
+        px: 400,
+        py: 400,
+        color: '#00f',
+        shape: { radius: 30 },
+        asset: test_svg_circle,
       },
     ]);
   };
