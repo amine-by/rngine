@@ -5,11 +5,21 @@ interface Positioned {
   py: number;
 }
 
-interface Shaped {
+interface Rect {
   /** Width in game units. */
   width: number;
   /** Height in game units. */
   height: number;
+}
+
+interface Circle {
+  /** Radius in game units. */
+  radius: number;
+}
+
+interface Shaped {
+  /** Shape of the entity. */
+  shape: Rect | Circle;
 }
 
 interface Renderable {
@@ -28,7 +38,7 @@ interface Kinematic {
   vy?: number;
 }
 
-export interface Screen extends Shaped, Renderable {}
+export interface Screen extends Rect, Renderable {}
 
 export interface Entity extends Positioned, Shaped, Renderable, Kinematic {
   /** Unique identifier. Use `_` as a separator for group queries e.g. `'enemy_1'`. */

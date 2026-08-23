@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <jni.h>
 #include <mutex>
+#include <variant>
 
 extern "C" {
 JNIEXPORT jbyteArray JNICALL
@@ -46,14 +47,37 @@ Java_com_margelo_nitro_rngine_GameView_getSnapshot(JNIEnv *env, jobject) {
   }
 
   for (const auto &[_, entitySnapshot] : entitiesSnapshot) {
-    const auto entitySnapshotLeft =
-        static_cast<float>(entitySnapshot.px - (entitySnapshot.width / 2));
-    const auto entitySnapshotRight =
-        static_cast<float>(entitySnapshot.px + (entitySnapshot.width / 2));
-    const auto entitySnapshotTop =
-        static_cast<float>(entitySnapshot.py - (entitySnapshot.height / 2));
-    const auto entitySnapshotBottom =
-        static_cast<float>(entitySnapshot.py + (entitySnapshot.height / 2));
+    uint8_t shapeType{0};
+    float entitySnapshotLeft{0}, entitySnapshotRight{0}, entitySnapshotTop{0},
+        entitySnapshotBottom{0}, circleRadius{0};
+
+    std::visit(
+        [&](const auto &shape) {
+          using T = std::decay_t<decltype(shape)>;
+          if constexpr (std::is_same_v<T, margelo::nitro::rngine::Rect>) {
+            shapeType = 0;
+            entitySnapshotLeft =
+                static_cast<float>(entitySnapshot.px - shape.width / 2.0);
+            entitySnapshotRight =
+                static_cast<float>(entitySnapshot.px + shape.width / 2.0);
+            entitySnapshotTop =
+                static_cast<float>(entitySnapshot.py - shape.height / 2.0);
+            entitySnapshotBottom =
+                static_cast<float>(entitySnapshot.py + shape.height / 2.0);
+          } else {
+            shapeType = 1;
+            circleRadius = static_cast<float>(shape.radius);
+            entitySnapshotLeft =
+                static_cast<float>(entitySnapshot.px - shape.radius);
+            entitySnapshotRight =
+                static_cast<float>(entitySnapshot.px + shape.radius);
+            entitySnapshotTop =
+                static_cast<float>(entitySnapshot.py - shape.radius);
+            entitySnapshotBottom =
+                static_cast<float>(entitySnapshot.py + shape.radius);
+          }
+        },
+        entitySnapshot.shape);
 
     if (entitySnapshotRight < 0 || entitySnapshotLeft > screenSnapshot.width ||
         entitySnapshotBottom < 0 || entitySnapshotTop > screenSnapshot.height) {
@@ -65,10 +89,19 @@ Java_com_margelo_nitro_rngine_GameView_getSnapshot(JNIEnv *env, jobject) {
     const auto entitySnapshotAsset =
         static_cast<int32_t>(entitySnapshot.asset.value_or(0));
 
-    writeFloat(entitySnapshotLeft);
-    writeFloat(entitySnapshotRight);
-    writeFloat(entitySnapshotTop);
-    writeFloat(entitySnapshotBottom);
+    buffer.push_back(shapeType);
+
+    if (shapeType == 0) {
+      writeFloat(entitySnapshotLeft);
+      writeFloat(entitySnapshotRight);
+      writeFloat(entitySnapshotTop);
+      writeFloat(entitySnapshotBottom);
+    } else {
+      writeFloat(static_cast<float>(entitySnapshot.px));
+      writeFloat(static_cast<float>(entitySnapshot.py));
+      writeFloat(circleRadius);
+    }
+
     writeU32(entitySnapshotColor);
     writeI32(entitySnapshotAsset);
 

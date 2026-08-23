@@ -127,11 +127,8 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       if (update.py.has_value()) {
         entity->py = update.py.value();
       }
-      if (update.width.has_value()) {
-        entity->width = update.width.value();
-      }
-      if (update.height.has_value()) {
-        entity->height = update.height.value();
+      if (update.shape.has_value()) {
+        entity->shape = update.shape.value();
       }
       if (update.asset.has_value()) {
         entity->asset = update.asset.value();

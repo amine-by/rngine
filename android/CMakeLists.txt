@@ -13,6 +13,7 @@ add_library(
         src/main/cpp/GameLoopJNI.cpp
         ../shared/GameLoop.cpp
         ../shared/GameMethods.cpp
+        ../shared/CollisionUtils.cpp
 )
 
 # Add Nitrogen specs :)

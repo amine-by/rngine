@@ -13,9 +13,10 @@ import tail_up from './tail_up.svg';
 import tail_down from './tail_down.svg';
 import tail_left from './tail_left.svg';
 import tail_right from './tail_right.svg';
-import backgroundAsset from './background-test.svg';
-import lottieAsset from './test.json';
-import svgAsset from './test.svg';
+import background_test_svg from './background_test_svg.svg';
+import test_lottie from './test_lottie.json';
+import test_svg_rect from './test_svg_rect.svg';
+import test_svg_circle from './test_svg_circle.svg';
 
 const ASSETS = {
   Snake: {
@@ -36,9 +37,10 @@ const ASSETS = {
     tail_right,
   },
   Playground: {
-    backgroundAsset,
-    lottieAsset,
-    svgAsset,
+    background_test_svg,
+    test_lottie,
+    test_svg_rect,
+    test_svg_circle,
   },
 };
 
