@@ -32,10 +32,14 @@ interface Renderable {
 }
 
 interface Kinematic {
-  /** Velocity on the X axis in game units per second. */
+  /** Horizontal velocity in game units per second. */
   vx?: number;
-  /** Velocity on the Y axis in game units per second. */
+  /** Vertical velocity in game units per second. */
   vy?: number;
+  /** Horizontal acceleration in game units per second squared. */
+  ax?: number;
+  /** Vertical acceleration in game units per second squared. */
+  ay?: number;
 }
 
 export interface Screen extends Rect, Renderable {}

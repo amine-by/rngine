@@ -192,16 +192,23 @@ void GameLoop::updateEntities(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
 
   for (auto &[id, entity] : _entities) {
-    if (entity.vx) {
-      entity.px += *entity.vx * deltaTime;
+
+    if (entity.ax.has_value()) {
+      entity.vx = entity.vx.value_or(0.0) + entity.ax.value() * deltaTime;
+    }
+    if (entity.ay.has_value()) {
+      entity.vy = entity.vy.value_or(0.0) + entity.ay.value() * deltaTime;
     }
 
-    if (entity.vy) {
-      entity.py += *entity.vy * deltaTime;
+    if (entity.vx.has_value()) {
+      entity.px += entity.vx.value() * deltaTime;
+    }
+    if (entity.vy.has_value()) {
+      entity.py += entity.vy.value() * deltaTime;
     }
 
-    if (entity.asset && entity.asset < 0) {
-      auto it = _lottieDurations.find(*entity.asset);
+    if (entity.asset.has_value() && entity.asset.value() < 0) {
+      auto it = _lottieDurations.find(entity.asset.value());
       if (it != _lottieDurations.end() && it->second > 0.0) {
         entity.progress =
             fmod(entity.progress.value_or(0.0) + deltaTime / it->second, 1.0);
