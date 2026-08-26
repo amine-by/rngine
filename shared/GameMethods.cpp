@@ -145,6 +145,12 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       if (update.vy.has_value()) {
         entity->vy = update.vy.value();
       }
+      if (update.ax.has_value()) {
+        entity->ax = update.ax.value();
+      }
+      if (update.ay.has_value()) {
+        entity->ay = update.ay.value();
+      }
     }
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",

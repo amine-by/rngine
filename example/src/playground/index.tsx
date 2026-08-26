@@ -88,9 +88,9 @@ export default function Playground() {
     despawn('entity');
   };
 
-  const move = (vx: number, vy: number) => {
+  const move = (ax: number, ay: number) => {
     if (isPaused) return;
-    update({ id: 'entity', vx, vy });
+    update({ id: 'entity', ax, ay, vx: 0, vy: 0 });
   };
 
   const reposition = () => {
@@ -112,7 +112,7 @@ export default function Playground() {
       <View style={styles.dPadContainer}>
         <ControlButton
           onPress={() => {
-            move(-500, 0);
+            move(-10, 0);
           }}
         >
           Left
@@ -120,14 +120,14 @@ export default function Playground() {
         <View style={styles.verticalControlsContainer}>
           <ControlButton
             onPress={() => {
-              move(0, -500);
+              move(0, -10);
             }}
           >
             Up
           </ControlButton>
           <ControlButton
             onPress={() => {
-              move(0, 500);
+              move(0, 10);
             }}
           >
             Down
@@ -135,7 +135,7 @@ export default function Playground() {
         </View>
         <ControlButton
           onPress={() => {
-            move(500, 0);
+            move(10, 0);
           }}
         >
           Right
