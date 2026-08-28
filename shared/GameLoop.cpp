@@ -126,9 +126,9 @@ void GameLoop::runSystems() {
 
             uniqueEntityIdPairs.insert(uniqueEntityIdPairKey);
 
-            if (auto ov = CollisionUtils::shapeOverlap(*entityA, *entityB)) {
-              collisions.push_back(
-                  Collision(entityA->id, entityB->id, ov.value()));
+            if (auto collision =
+                    CollisionUtils::shapeOverlap(*entityA, *entityB)) {
+              collisions.push_back(collision.value());
             }
           }
         }

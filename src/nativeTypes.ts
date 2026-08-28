@@ -70,6 +70,10 @@ export interface Collision {
   b: string;
   /** Penetration depth of the collision. */
   depth: number;
+  /** X component of a normalised vector that represents the direction between the bodies providing the minimum separating distance. */
+  nx: number;
+  /** Y component of a normalised vector that represents the direction between the bodies providing the minimum separating distance. */
+  ny: number;
 }
 
 export interface System {
