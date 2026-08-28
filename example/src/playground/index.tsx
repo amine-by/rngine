@@ -40,8 +40,8 @@ export default function Playground() {
         {
           collisions: [{ a: 'entity', b: 'entity' }],
           onTick: (_, collisions) => {
-            collisions.forEach(({ a, b, depth }) => {
-              console.log(`a=${a} b=${b} depth=${depth}`);
+            collisions.forEach(({ a, b, depth, nx, ny }) => {
+              console.log(`a=${a} b=${b} depth=${depth} nx=${nx} ny=${ny}`);
             });
           },
         },
