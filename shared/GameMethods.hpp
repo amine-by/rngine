@@ -1,12 +1,13 @@
 #pragma once
 
 #include "HybridGameMethodsSpec.hpp"
+#include "World.hpp"
 
 namespace margelo::nitro::rngine {
 class GameMethods : public HybridGameMethodsSpec {
 public:
   GameMethods() : HybridObject(TAG) {}
-  void setTickRate(double tickRate) override;
+  void setWorld(const World &world) override;
   void setScreen(const Screen &screen) override;
   void setEntities(const std::vector<Entity> &entities) override;
   void setSystems(const std::vector<System> &systems) override;

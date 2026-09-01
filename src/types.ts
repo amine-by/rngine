@@ -3,6 +3,7 @@ import type {
   Collision,
   Screen,
   Entity,
+  World,
 } from './nativeTypes';
 
 export type System = Omit<NativeSystem, 'onTick'> & {
@@ -11,17 +12,14 @@ export type System = Omit<NativeSystem, 'onTick'> & {
 };
 
 export type Config = {
-  /** Number of game logic updates per second. */
-  tickRate: number;
-  /** Screen dimensions and background color. */
+  /** World settings: tick rate and gravity. */
+  world: World;
+  /** Screen dimensions and background. */
   screen: Screen;
-  /** Initial entities to spawn. */
+  /** Entities to spawn when the game starts. */
   entities?: Entity[];
-  /**
-   * Systems that define the game logic. Each system runs every tick
-   * and receives the entities matching its ids.
-   */
+  /** Systems that define game logic, each running every tick against its subscribed entities and collisions. */
   systems?: System[];
-  /** Whether to start paused. Defaults to true. */
+  /** Whether the game starts paused. Defaults to true. */
   paused?: boolean;
 };

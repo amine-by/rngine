@@ -4,11 +4,12 @@
 #include <android/log.h>
 
 namespace margelo::nitro::rngine {
-void GameMethods::setTickRate(double tickRate) {
+void GameMethods::setWorld(const World &world) {
   auto &instance = GameLoop::getInstance();
-  instance.setTickRate(tickRate);
+  std::lock_guard<std::mutex> lock(instance.getWorldMutexInternal());
+  instance.getWorldInternal() = world;
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setTickRate: tickRate=%.1f", tickRate);
+                      "setWorld: tickRate=%.1f", world.tickRate);
 }
 
 void GameMethods::setScreen(const Screen &screen) {
@@ -19,7 +20,7 @@ void GameMethods::setScreen(const Screen &screen) {
   instance.getScreenSnapshotInternal() = screen;
 
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setWorld: width=%.0f height=%.0f", screen.width,
+                      "setScreen: width=%.0f height=%.0f", screen.width,
                       screen.height);
 }
 
@@ -130,6 +131,9 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       if (update.shape.has_value()) {
         entity->shape = update.shape.value();
       }
+      if (update.isSensor.has_value()) {
+        entity->isSensor = update.isSensor.value();
+      }
       if (update.asset.has_value()) {
         entity->asset = update.asset.value();
       }
@@ -150,6 +154,9 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       }
       if (update.ay.has_value()) {
         entity->ay = update.ay.value();
+      }
+      if (update.mass.has_value()) {
+        entity->mass = update.mass.value();
       }
     }
 
