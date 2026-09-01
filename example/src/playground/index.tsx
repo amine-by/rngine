@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import {
-  GameEngine,
-  configure,
-  pause,
-  resume,
-  update,
-  spawn,
-  despawn,
-} from 'rngine';
+import { GameEngine, configure, pause, resume, update, despawn } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 import { useAssets } from '../AssetsContext';
 
 export default function Playground() {
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
   const { getAssets } = useAssets();
 
   const { background_test_svg, test_lottie, test_svg_rect, test_svg_circle } =
@@ -21,7 +13,7 @@ export default function Playground() {
 
   useEffect(() => {
     configure({
-      tickRate: 60,
+      world: { tickRate: 60, gy: 1000 },
       screen: {
         width: 800,
         height: 800,
@@ -31,14 +23,45 @@ export default function Playground() {
         {
           id: 'entity_1',
           px: 300,
-          py: 300,
+          py: 100,
+          color: '#ff0',
           shape: { width: 75, height: 105 },
           asset: test_lottie,
+          mass: 5,
+        },
+        {
+          id: 'entity_2',
+          px: 400,
+          py: 100,
+          color: '#f00',
+          shape: { width: 52, height: 84 },
+          asset: test_svg_rect,
+          mass: 5,
+          vx: 10,
+          ay: -1000,
+        },
+        {
+          id: 'entity_3',
+          px: 500,
+          py: 100,
+          color: '#00f',
+          shape: { radius: 30 },
+          asset: test_svg_circle,
+          mass: 5,
+          vx: -10,
+          ay: -1000,
+        },
+        {
+          id: 'ground',
+          px: 400,
+          py: 780,
+          shape: { width: 800, height: 40 },
+          color: '#654321',
         },
       ],
       systems: [
         {
-          collisions: [{ a: 'entity', b: 'entity' }],
+          collisions: [{ a: 'entity', b: 'ground' }],
           onTick: (_, collisions) => {
             collisions.forEach(({ a, b, depth, nx, ny }) => {
               console.log(`a=${a} b=${b} depth=${depth} nx=${nx} ny=${ny}`);
@@ -46,9 +69,8 @@ export default function Playground() {
           },
         },
       ],
-      paused: false,
     });
-  }, [background_test_svg, test_lottie]);
+  }, [background_test_svg, test_svg_rect, test_svg_circle, test_lottie]);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -61,42 +83,28 @@ export default function Playground() {
     });
   };
 
-  const spawn2 = () => {
-    if (isPaused) return;
-    spawn([
-      {
-        id: 'entity_2',
-        px: 300,
-        py: 400,
-        color: '#f00',
-        shape: { width: 52, height: 84 },
-        asset: test_svg_rect,
-      },
-      {
-        id: 'entity_3',
-        px: 400,
-        py: 400,
-        color: '#00f',
-        shape: { radius: 30 },
-        asset: test_svg_circle,
-      },
-    ]);
-  };
-
   const despawnAll = () => {
     if (isPaused) return;
     despawn('entity');
   };
 
-  const move = (ax: number, ay: number) => {
+  const jump = () => {
+    update({ id: 'entity_1', vy: -600 });
+  };
+
+  const move = (ax: number) => {
     if (isPaused) return;
-    update({ id: 'entity', ax, ay, vx: 0, vy: 0 });
+    update({ id: 'entity_1', ax, vx: 0 });
   };
 
   const reposition = () => {
     if (isPaused) return;
 
-    update({ id: 'entity_1', px: 300, py: 300 });
+    update([
+      { id: 'entity_1', px: 300, py: 100, vx: 0, vy: 0, ax: 0 },
+      { id: 'entity_2', px: 400, py: 100, vy: 0 },
+      { id: 'entity_3', px: 500, py: 100, vy: 0 },
+    ]);
   };
   return (
     <View style={styles.container}>
@@ -106,36 +114,26 @@ export default function Playground() {
           {isPaused ? 'Resume' : 'Pause'}
         </ControlButton>
         <ControlButton onPress={reposition}>Repo</ControlButton>
-        <ControlButton onPress={spawn2}>Spawn</ControlButton>
         <ControlButton onPress={despawnAll}>Despawn</ControlButton>
       </View>
       <View style={styles.dPadContainer}>
         <ControlButton
           onPress={() => {
-            move(-10, 0);
+            move(-100);
           }}
         >
           Left
         </ControlButton>
-        <View style={styles.verticalControlsContainer}>
-          <ControlButton
-            onPress={() => {
-              move(0, -10);
-            }}
-          >
-            Up
-          </ControlButton>
-          <ControlButton
-            onPress={() => {
-              move(0, 10);
-            }}
-          >
-            Down
-          </ControlButton>
-        </View>
         <ControlButton
           onPress={() => {
-            move(10, 0);
+            jump();
+          }}
+        >
+          Jump
+        </ControlButton>
+        <ControlButton
+          onPress={() => {
+            move(100);
           }}
         >
           Right

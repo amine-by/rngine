@@ -68,7 +68,7 @@ function SnakeContent() {
 
   const start = useCallback(() => {
     configure({
-      tickRate: 8,
+      world: { tickRate: 8 },
       screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
       entities: [
         {
@@ -77,6 +77,7 @@ function SnakeContent() {
           py: Math.floor(Math.random() * ROWS) * CELL + HALF_CELL,
           shape: { width: CELL, height: CELL },
           asset: food,
+          isSensor: true,
         },
         {
           id: 'snake_head',
@@ -84,6 +85,7 @@ function SnakeContent() {
           py: 10 * CELL + HALF_CELL,
           shape: { width: CELL, height: CELL },
           asset: head_left,
+          isSensor: true,
         },
         {
           id: 'snake_body_001',
@@ -91,6 +93,7 @@ function SnakeContent() {
           py: 10 * CELL + HALF_CELL,
           shape: { width: CELL, height: CELL },
           asset: body_horizontal,
+          isSensor: true,
         },
         {
           id: 'snake_body_002',
@@ -98,6 +101,7 @@ function SnakeContent() {
           py: 10 * CELL + HALF_CELL,
           shape: { width: CELL, height: CELL },
           asset: tail_right,
+          isSensor: true,
         },
       ],
       systems: [
@@ -179,6 +183,7 @@ function SnakeContent() {
                 px: entities[entities.length - 1]!.px,
                 py: entities[entities.length - 1]!.py,
                 shape: { width: CELL, height: CELL },
+                isSensor: true,
               });
             }
             update(updates);

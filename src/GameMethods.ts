@@ -4,7 +4,7 @@ import type { Config } from './types';
 
 /** Sets up the game engine with the given configuration. Call this before anything else. */
 export const configure = ({
-  tickRate,
+  world,
   screen,
   entities = [],
   systems = [],
@@ -25,7 +25,7 @@ export const configure = ({
     });
   }
 
-  gameMethods.setTickRate(tickRate);
+  gameMethods.setWorld(world);
   gameMethods.setScreen(screen);
   gameMethods.setEntities(entities);
   gameMethods.setSystems(nativeSystems);

@@ -20,6 +20,8 @@ interface Circle {
 interface Shaped {
   /** Shape of the entity. */
   shape: Rect | Circle;
+  /** Indicates whether the entity is a sensor. Sensors trigger collision events but don't react physically. */
+  isSensor?: boolean;
 }
 
 interface Renderable {
@@ -40,6 +42,17 @@ interface Kinematic {
   ax?: number;
   /** Vertical acceleration in game units per second squared. */
   ay?: number;
+  /** Mass in arbitrary units. */
+  mass?: number;
+}
+
+export interface World {
+  /** Number of game logic updates per second. */
+  tickRate: number;
+  /** Horizontal gravitational acceleration in game units per second squared. */
+  gx?: number;
+  /** Vertical gravitational acceleration in game units per second squared. */
+  gy?: number;
 }
 
 export interface Screen extends Rect, Renderable {}

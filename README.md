@@ -16,7 +16,7 @@ npm install rngine react-native-nitro-modules
 import { GameEngine, configure, update } from 'rngine';
 
 configure({
-  tickRate: 60,
+  world: { tickRate: 60 },
   screen: { width: 800, height: 800, color: '#1a1a1a' },
   entities: [
     {

@@ -4,6 +4,7 @@ export * from './GameMethods';
 export * from './GameAssets';
 export * from './types';
 export type {
+  World,
   Screen,
   Entity,
   CollisionPair,

@@ -5,7 +5,6 @@
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
-#include <set>
 
 namespace margelo::nitro::rngine {
 
@@ -30,6 +29,11 @@ GameLoop::~GameLoop() {
     _gameThread->join();
   }
   __android_log_print(ANDROID_LOG_INFO, "GameLoop", "Destructor - Complete");
+}
+
+bool GameLoop::entityIdMatches(const std::string &entityId,
+                               const std::string &prefix) {
+  return entityId == prefix || entityId.starts_with(prefix + "_");
 }
 
 std::vector<Entity *>
@@ -69,7 +73,11 @@ void GameLoop::runGameLoop() {
   double accumulator = 0.0;
 
   while (_isRunning) {
-    double targetDeltaTime = 1.0 / _tickRate.load();
+    double targetDeltaTime;
+    {
+      std::lock_guard<std::mutex> lock(_worldMutex);
+      targetDeltaTime = 1.0 / _world.tickRate;
+    }
     auto currentTime = steady_clock::now();
     double frameTime = duration<double>(currentTime - previousTime).count();
     previousTime = currentTime;
@@ -108,28 +116,14 @@ void GameLoop::runSystems() {
     }
 
     if (system.collisions.has_value()) {
-      std::set<std::pair<std::string, std::string>> uniqueEntityIdPairs;
-
-      for (const auto &[a, b] : system.collisions.value()) {
-        auto resolvedEntitiesInternalA = resolveEntitiesInternal(a);
-        auto resolvedEntitiesInternalB = resolveEntitiesInternal(b);
-
-        for (const auto &entityA : resolvedEntitiesInternalA) {
-          for (const auto &entityB : resolvedEntitiesInternalB) {
-            if (entityA == entityB)
-              continue;
-
-            auto uniqueEntityIdPairKey = std::minmax(entityA->id, entityB->id);
-
-            if (uniqueEntityIdPairs.count(uniqueEntityIdPairKey))
-              continue;
-
-            uniqueEntityIdPairs.insert(uniqueEntityIdPairKey);
-
-            if (auto collision =
-                    CollisionUtils::shapeOverlap(*entityA, *entityB)) {
-              collisions.push_back(collision.value());
-            }
+      for (const auto &pair : system.collisions.value()) {
+        for (const auto &c : _collisions) {
+          bool matchesForward =
+              entityIdMatches(c.a, pair.a) && entityIdMatches(c.b, pair.b);
+          bool matchesReverse =
+              entityIdMatches(c.a, pair.b) && entityIdMatches(c.b, pair.a);
+          if (matchesForward || matchesReverse) {
+            collisions.push_back(c);
           }
         }
       }
@@ -161,6 +155,8 @@ void GameLoop::captureSnapshot() {
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
+  computeCollisions();
+  resolveCollisions();
   runSystems();
   captureSnapshot();
 }
@@ -189,9 +185,19 @@ void GameLoop::updateStats(double deltaTime) {
 }
 
 void GameLoop::updateEntities(double deltaTime) {
+  std::lock_guard<std::mutex> worldLock(_worldMutex);
   std::lock_guard<std::mutex> lock(_mutex);
 
   for (auto &[id, entity] : _entities) {
+
+    if (entity.mass.has_value() && entity.mass.value() > 0.0) {
+      if (_world.gx.has_value()) {
+        entity.vx = entity.vx.value_or(0.0) + _world.gx.value() * deltaTime;
+      }
+      if (_world.gy.has_value()) {
+        entity.vy = entity.vy.value_or(0.0) + _world.gy.value() * deltaTime;
+      }
+    }
 
     if (entity.ax.has_value()) {
       entity.vx = entity.vx.value_or(0.0) + entity.ax.value() * deltaTime;
@@ -214,6 +220,79 @@ void GameLoop::updateEntities(double deltaTime) {
             fmod(entity.progress.value_or(0.0) + deltaTime / it->second, 1.0);
       }
     }
+  }
+}
+
+void GameLoop::computeCollisions() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  _collisions.clear();
+
+  std::vector<Entity *> entities;
+  entities.reserve(_entities.size());
+  for (auto &[id, entity] : _entities) {
+    entities.push_back(&entity);
+  }
+
+  for (size_t i = 0; i < entities.size(); ++i) {
+    for (size_t j = i + 1; j < entities.size(); ++j) {
+      auto result = CollisionUtils::shapeOverlap(*entities[i], *entities[j]);
+      if (result.has_value()) {
+        _collisions.push_back(result.value());
+      }
+    }
+  }
+}
+
+void GameLoop::resolveCollisions() {
+  std::lock_guard<std::mutex> lock(_mutex);
+
+  const double percent = 0.8;
+  const double slop = 0.01;
+
+  for (const auto &c : _collisions) {
+    auto itA = _entities.find(c.a);
+    auto itB = _entities.find(c.b);
+    if (itA == _entities.end() || itB == _entities.end())
+      continue;
+
+    Entity &a = itA->second;
+    Entity &b = itB->second;
+
+    if (a.isSensor.value_or(false) || b.isSensor.value_or(false))
+      continue;
+
+    double inverseMassA = (a.mass.has_value() && a.mass.value() > 0.0)
+                              ? 1.0 / a.mass.value()
+                              : 0.0;
+    double inverseMassB = (b.mass.has_value() && b.mass.value() > 0.0)
+                              ? 1.0 / b.mass.value()
+                              : 0.0;
+    double totalInverseMass = inverseMassA + inverseMassB;
+    if (totalInverseMass == 0.0)
+      continue;
+
+    double correctionDepth = std::max(c.depth - slop, 0.0);
+    double correction = (correctionDepth / totalInverseMass) * percent;
+    a.px -= c.nx * correction * inverseMassA;
+    a.py -= c.ny * correction * inverseMassA;
+    b.px += c.nx * correction * inverseMassB;
+    b.py += c.ny * correction * inverseMassB;
+
+    double avx = a.vx.value_or(0.0), avy = a.vy.value_or(0.0);
+    double bvx = b.vx.value_or(0.0), bvy = b.vy.value_or(0.0);
+    double relativeVx = bvx - avx, relativeVy = bvy - avy;
+    double velocityAlongNormal = relativeVx * c.nx + relativeVy * c.ny;
+    if (velocityAlongNormal > 0)
+      continue;
+
+    double restitution = 0.0;
+    double impulse =
+        -(1 + restitution) * velocityAlongNormal / totalInverseMass;
+
+    a.vx = avx - impulse * c.nx * inverseMassA;
+    a.vy = avy - impulse * c.ny * inverseMassA;
+    b.vx = bvx + impulse * c.nx * inverseMassB;
+    b.vy = bvy + impulse * c.ny * inverseMassB;
   }
 }
 } // namespace margelo::nitro::rngine
