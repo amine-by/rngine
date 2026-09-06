@@ -21,6 +21,10 @@ interface GameMethods extends HybridObject<{
   spawn(entities: Entity[]): void;
   despawn(id: string): void;
   update(updates: EntityUpdate[]): void;
+
+  isAssetLoaded(id: number): boolean;
+  loadLottie(id: number, jsonStr: string): Promise<boolean>;
+  loadSvg(id: number, svgUri: string): Promise<boolean>;
 }
 
 export const gameMethods =
