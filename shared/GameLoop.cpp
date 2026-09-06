@@ -2,9 +2,11 @@
 #include "Collision.hpp"
 #include "CollisionUtils.hpp"
 #include "Entity.hpp"
+#include "GameRenderer.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
+#include <mutex>
 
 namespace margelo::nitro::rngine {
 
@@ -56,14 +58,6 @@ GameLoop::resolveEntitiesInternal(const std::string &prefix) {
   return results;
 }
 
-void GameLoop::registerLottieDuration(double id, double duration) {
-  std::lock_guard<std::mutex> lock(_mutex);
-  _lottieDurations[id] = duration;
-  __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
-                      "Registered lottie duration: id: %.0f, duration: %.4f",
-                      id, duration);
-}
-
 void GameLoop::runGameLoop() {
   using namespace std::chrono;
 
@@ -71,6 +65,8 @@ void GameLoop::runGameLoop() {
 
   auto previousTime = steady_clock::now();
   double accumulator = 0.0;
+
+  auto &gameRenderer = GameRenderer::getInstance();
 
   while (_isRunning) {
     double targetDeltaTime;
@@ -93,6 +89,11 @@ void GameLoop::runGameLoop() {
         update(targetDeltaTime);
         accumulator -= targetDeltaTime;
       }
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(_mutex);
+      gameRenderer.render(_screen, _entities);
     }
 
     std::this_thread::sleep_for(milliseconds(1));
@@ -145,20 +146,12 @@ void GameLoop::runSystems() {
   }
 }
 
-void GameLoop::captureSnapshot() {
-  std::lock_guard<std::mutex> snapshotLock(_snapshotMutex);
-  std::lock_guard<std::mutex> lock(_mutex);
-  _entitiesSnapshot = _entities;
-  _screenSnapshot = _screen;
-}
-
 void GameLoop::update(double deltaTime) {
   updateStats(deltaTime);
   updateEntities(deltaTime);
   computeCollisions();
   resolveCollisions();
   runSystems();
-  captureSnapshot();
 }
 
 void GameLoop::updateStats(double deltaTime) {
@@ -169,19 +162,34 @@ void GameLoop::updateStats(double deltaTime) {
   frameCount++;
 
   if (timeAccumulator >= 1.0) {
-    _gameStats.tickRate = static_cast<double>(frameCount);
-    _gameStats.deltaTime = deltaTime;
+    _gameStats.tickRate = static_cast<double>(frameCount) / timeAccumulator;
+    _gameStats.deltaTime = timeAccumulator / static_cast<double>(frameCount);
 
-    __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
-                        "TickRate: %.2f, Delta: %.4f, Total Ticks: %" PRIu64,
-                        _gameStats.tickRate, _gameStats.deltaTime,
-                        _gameStats.totalTicks);
+    __android_log_print(
+        ANDROID_LOG_DEBUG, "GameLoop",
+        "updateStats: TickRate: %.2f, Delta: %.4f, Total Ticks: %" PRIu64,
+        _gameStats.tickRate, _gameStats.deltaTime, _gameStats.totalTicks);
 
-    timeAccumulator = 0.0;
+    timeAccumulator -= 1.0;
     frameCount = 0;
   }
 
   _gameStats.totalTicks++;
+}
+
+void GameLoop::updateScreen(double deltaTime) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  if (_screen.asset.has_value() && _screen.asset.value() < 0) {
+    auto &lottieCache = GameRenderer::getInstance().getLottieCacheInternal();
+    auto it = lottieCache.find(_screen.asset.value());
+    if (it != lottieCache.end() && it->second) {
+      _screen.progress = fmod(_screen.progress.value_or(0.0) +
+                                  deltaTime / it->second->duration(),
+                              1.0);
+    }
+  } else if (_screen.progress.has_value()) {
+    _screen.progress.reset();
+  }
 }
 
 void GameLoop::updateEntities(double deltaTime) {
@@ -214,11 +222,15 @@ void GameLoop::updateEntities(double deltaTime) {
     }
 
     if (entity.asset.has_value() && entity.asset.value() < 0) {
-      auto it = _lottieDurations.find(entity.asset.value());
-      if (it != _lottieDurations.end() && it->second > 0.0) {
-        entity.progress =
-            fmod(entity.progress.value_or(0.0) + deltaTime / it->second, 1.0);
+      auto &lottieCache = GameRenderer::getInstance().getLottieCacheInternal();
+      auto it = lottieCache.find(entity.asset.value());
+      if (it != lottieCache.end() && it->second) {
+        entity.progress = fmod(entity.progress.value_or(0.0) +
+                                   deltaTime / it->second->duration(),
+                               1.0);
       }
+    } else if (entity.progress.has_value()) {
+      entity.progress.reset();
     }
   }
 }

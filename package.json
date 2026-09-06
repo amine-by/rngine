@@ -176,5 +176,8 @@
       "vite"
     ],
     "version": "0.61.0"
+  },
+  "dependencies": {
+    "react-native-skia-android": "^152.0.0"
   }
 }

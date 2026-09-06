@@ -11245,6 +11245,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-skia-android@npm:^152.0.0":
+  version: 152.0.0
+  resolution: "react-native-skia-android@npm:152.0.0"
+  checksum: 10c0/f623d41a83e7876b00b97c049aaa54b656de06f0c3732b89b40032fa983832e7e28aff345ad0f00529977648377145cd99b2cd7fbc4319e3c10cee9204b12062
+  languageName: node
+  linkType: hard
+
 "react-native-web@npm:~0.21.1":
   version: 0.21.2
   resolution: "react-native-web@npm:0.21.2"
@@ -11670,6 +11677,7 @@ __metadata:
     react-native: "npm:0.85.0"
     react-native-builder-bob: "npm:^0.41.0"
     react-native-nitro-modules: "npm:^0.35.3"
+    react-native-skia-android: "npm:^152.0.0"
     react-native-web: "npm:~0.21.1"
     release-it: "npm:^19.2.4"
     turbo: "npm:^2.8.21"

@@ -1,7 +1,10 @@
 #include "GameMethods.hpp"
 #include "EntityUpdate.hpp"
 #include "GameLoop.hpp"
+#include "GameRenderer.hpp"
+#include "include/core/SkStream.h"
 #include <android/log.h>
+#include <fbjni/fbjni.h>
 
 namespace margelo::nitro::rngine {
 void GameMethods::setWorld(const World &world) {
@@ -15,9 +18,7 @@ void GameMethods::setWorld(const World &world) {
 void GameMethods::setScreen(const Screen &screen) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  std::lock_guard<std::mutex> snapshotLock(instance.getSnapshotMutexInternal());
   instance.getScreenInternal() = screen;
-  instance.getScreenSnapshotInternal() = screen;
 
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setScreen: width=%.0f height=%.0f", screen.width,
@@ -27,14 +28,10 @@ void GameMethods::setScreen(const Screen &screen) {
 void GameMethods::setEntities(const std::vector<Entity> &entities) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  std::lock_guard<std::mutex> snapshotLock(instance.getSnapshotMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
-  auto &entitiesSnapshotInternal = instance.getEntitiesSnapshotInternal();
   entitiesInternal.clear();
-  entitiesSnapshotInternal.clear();
   for (auto &entity : entities) {
     entitiesInternal[entity.id] = entity;
-    entitiesSnapshotInternal[entity.id] = entity;
   }
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "setEntities: loaded %zu entities", entities.size());
@@ -165,4 +162,91 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
                         resolvedEntitiesInternals.size(), update.id.c_str());
   }
 }
+
+bool GameMethods::isAssetLoaded(double id) {
+  auto &gameRenderer = GameRenderer::getInstance();
+
+  if (id > 0) {
+    auto &svgCache = gameRenderer.getSvgCacheInternal();
+    auto it = svgCache.find(id);
+    return it != svgCache.end();
+  }
+
+  if (id < 0) {
+    auto &lottieCache = gameRenderer.getLottieCacheInternal();
+    auto it = lottieCache.find(id);
+    return it != lottieCache.end();
+  }
+
+  return false;
+};
+
+std::shared_ptr<Promise<bool>>
+GameMethods::loadLottie(double id, const std::string &jsonStr) {
+  return Promise<bool>::async([=]() -> bool {
+    auto stream = SkMemoryStream::MakeDirect(jsonStr.data(), jsonStr.size());
+    auto animation = skottie::Animation::Make(stream.get());
+
+    if (!animation) {
+      return false;
+    }
+
+    auto &gameRenderer = GameRenderer::getInstance();
+    auto &lottieCache = gameRenderer.getLottieCacheInternal();
+
+    lottieCache[id] = std::move(animation);
+
+    return true;
+  });
+};
+
+std::shared_ptr<Promise<bool>> GameMethods::loadSvg(double id,
+                                                    const std::string &svgUri) {
+  return Promise<bool>::async([=]() -> bool {
+    std::string svgStr;
+
+    using namespace facebook::jni;
+
+    ThreadScope::WithClassLoader([&] {
+      static const auto helperClass =
+          findClassStatic("com/margelo/nitro/rngine/SvgLoaderHelper");
+
+      local_ref<JArrayByte> byteArray;
+
+      if (svgUri.rfind("http://", 0) == 0 || svgUri.rfind("https://", 0) == 0) {
+        static const auto method =
+            helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
+                "loadFromUrl");
+        byteArray = method(helperClass, make_jstring(svgUri));
+      } else {
+        static const auto method =
+            helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
+                "loadFromResource");
+        byteArray = method(helperClass, make_jstring(svgUri));
+      }
+
+      if (!byteArray) {
+        throw std::runtime_error("Failed to load SVG bytes for: " + svgUri);
+      }
+
+      size_t len = byteArray->size();
+      svgStr.resize(len);
+      byteArray->getRegion(0, len, reinterpret_cast<int8_t *>(svgStr.data()));
+    });
+
+    auto stream = SkMemoryStream::MakeDirect(svgStr.data(), svgStr.size());
+    auto svgDom = SkSVGDOM::MakeFromStream(*stream);
+
+    if (!svgDom) {
+      return false;
+    }
+
+    auto &gameRenderer = GameRenderer::getInstance();
+    auto &svgCache = gameRenderer.getSvgCacheInternal();
+
+    svgCache[id] = std::move(svgDom);
+
+    return true;
+  });
+};
 } // namespace margelo::nitro::rngine
