@@ -1,17 +1,22 @@
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  type TouchableOpacityProps,
-} from 'react-native';
+import { StyleSheet, Text, View, type ViewProps } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
 
-type ControlButtonProps = TouchableOpacityProps;
+type ControlButtonProps = ViewProps & {
+  gesture: any;
+};
 
-function ControlButton({ style, children, ...props }: ControlButtonProps) {
+function ControlButton({
+  style,
+  children,
+  gesture,
+  ...props
+}: ControlButtonProps) {
   return (
-    <TouchableOpacity style={[styles.controlButton, style]} {...props}>
-      <Text style={styles.buttonText} children={children} />
-    </TouchableOpacity>
+    <GestureDetector gesture={gesture}>
+      <View style={[styles.controlButton, style]} {...props}>
+        <Text style={styles.buttonText} children={children} />
+      </View>
+    </GestureDetector>
   );
 }
 

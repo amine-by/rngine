@@ -165,6 +165,12 @@ void GameRenderer::render(const Screen &screen,
       float scaleY = virtualHeight / intrinsicSize.height();
 
       canvas->save();
+      if (screen.flipH.has_value() || screen.flipV.has_value()) {
+        canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
+        canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
+                      screen.flipV.value_or(false) ? -1.f : 1.f);
+        canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
+      }
       canvas->scale(scaleX, scaleY);
       svgDom->render(canvas);
       canvas->restore();
@@ -172,8 +178,7 @@ void GameRenderer::render(const Screen &screen,
       auto lottieIt = _lottieCache.find(assetId);
       if (lottieIt != _lottieCache.end() && lottieIt->second) {
         auto &lottie = lottieIt->second;
-        lottie->seekFrameTime(screen.progress.value_or(0.0) *
-                              lottie->duration());
+        lottie->seek(screen.progress.value_or(0.0));
         SkRect dstBounds = SkRect::MakeWH(virtualWidth, virtualHeight);
         lottie->render(canvas, &dstBounds);
       }
@@ -234,6 +239,13 @@ void GameRenderer::render(const Screen &screen,
         SkAutoCanvasRestore autoRestore(canvas, true);
         canvas->translate(px - width / 2, py - height / 2);
 
+        if (entity.flipH.has_value() || entity.flipV.has_value()) {
+          canvas->translate(width / 2.f, height / 2.f);
+          canvas->scale(entity.flipH.value_or(false) ? -1.f : 1.f,
+                        entity.flipV.value_or(false) ? -1.f : 1.f);
+          canvas->translate(-width / 2.f, -height / 2.f);
+        }
+
         auto svgIt = _svgCache.find(assetId);
         if (svgIt != _svgCache.end() && svgIt->second) {
           auto &svgDom = svgIt->second;
@@ -255,8 +267,7 @@ void GameRenderer::render(const Screen &screen,
           auto lottieIt = _lottieCache.find(assetId);
           if (lottieIt != _lottieCache.end() && lottieIt->second) {
             auto &lottie = lottieIt->second;
-            lottie->seekFrameTime(entity.progress.value_or(0.0) *
-                                  lottie->duration());
+            lottie->seek(entity.progress.value_or(0.0));
             SkRect dstBounds = SkRect::MakeWH(width, height);
             lottie->render(canvas, &dstBounds);
           }

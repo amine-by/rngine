@@ -183,9 +183,12 @@ void GameLoop::updateScreen(double deltaTime) {
     auto &lottieCache = GameRenderer::getInstance().getLottieCacheInternal();
     auto it = lottieCache.find(_screen.asset.value());
     if (it != lottieCache.end() && it->second) {
-      _screen.progress = fmod(_screen.progress.value_or(0.0) +
-                                  deltaTime / it->second->duration(),
-                              1.0);
+      if (_screen.speed.has_value() && _screen.speed.value() > 0) {
+        _screen.progress = fmod(_screen.progress.value_or(0.0) +
+                                    (deltaTime * _screen.speed.value()) /
+                                        it->second->duration(),
+                                1.0);
+      }
     }
   } else if (_screen.progress.has_value()) {
     _screen.progress.reset();
@@ -225,9 +228,12 @@ void GameLoop::updateEntities(double deltaTime) {
       auto &lottieCache = GameRenderer::getInstance().getLottieCacheInternal();
       auto it = lottieCache.find(entity.asset.value());
       if (it != lottieCache.end() && it->second) {
-        entity.progress = fmod(entity.progress.value_or(0.0) +
-                                   deltaTime / it->second->duration(),
-                               1.0);
+        if (entity.speed.has_value() && entity.speed.value() > 0) {
+          entity.progress = fmod(entity.progress.value_or(0.0) +
+                                     (deltaTime * entity.speed.value()) /
+                                         it->second->duration(),
+                                 1.0);
+        }
       }
     } else if (entity.progress.has_value()) {
       entity.progress.reset();

@@ -137,8 +137,17 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       if (update.progress.has_value()) {
         entity->progress = update.progress.value();
       }
+      if (update.speed.has_value()) {
+        entity->speed = update.speed.value();
+      }
       if (update.color.has_value()) {
         entity->color = update.color.value();
+      }
+      if (update.flipH.has_value()) {
+        entity->flipH = update.flipH.value();
+      }
+      if (update.flipV.has_value()) {
+        entity->flipV = update.flipV.value();
       }
       if (update.vx.has_value()) {
         entity->vx = update.vx.value();
@@ -184,8 +193,12 @@ bool GameMethods::isAssetLoaded(double id) {
 std::shared_ptr<Promise<bool>>
 GameMethods::loadLottie(double id, const std::string &jsonStr) {
   return Promise<bool>::async([=]() -> bool {
-    auto stream = SkMemoryStream::MakeDirect(jsonStr.data(), jsonStr.size());
-    auto animation = skottie::Animation::Make(stream.get());
+    auto resourceProvider = skresources::DataURIResourceProviderProxy::Make(
+        nullptr, skresources::ImageDecodeStrategy::kLazyDecode);
+
+    auto animation = skottie::Animation::Builder()
+                         .setResourceProvider(resourceProvider)
+                         .make(jsonStr.data(), jsonStr.size());
 
     if (!animation) {
       return false;

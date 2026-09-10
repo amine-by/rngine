@@ -29,8 +29,14 @@ interface Renderable {
   color?: string;
   /** Asset to render, use `require` with the file path to get the id. */
   asset?: number;
+  /** Whether to flip the rendered asset horizontally. */
+  flipH?: boolean;
+  /** Whether to flip the rendered asset vertically. */
+  flipV?: boolean;
   /** Animation progress between 0 and 1, automatically advanced each tick for Lottie assets. */
   progress?: number;
+  /** Playback speed multiplier for animated assets (1 = normal speed). */
+  speed?: number;
 }
 
 interface Kinematic {
