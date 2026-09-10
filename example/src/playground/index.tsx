@@ -1,18 +1,41 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { GameEngine, configure, pause, resume, update, despawn } from 'rngine';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { GameEngine, configure, pause, resume, update } from 'rngine';
 import { ControlButton } from './components/ControlButton';
 import { useAssets } from '../AssetsContext';
+import {
+  GestureHandlerRootView,
+  useLongPressGesture,
+  useTapGesture,
+} from 'react-native-gesture-handler';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+  type EdgeInsets,
+} from 'react-native-safe-area-context';
 
-export default function Playground() {
-  const [isPaused, setIsPaused] = useState(true);
+function Playground() {
+  return (
+    <SafeAreaProvider>
+      <PlaygroundContent />
+    </SafeAreaProvider>
+  );
+}
+
+function PlaygroundContent() {
+  const [isPaused, setIsPaused] = useState(false);
   const { getAssets } = useAssets();
 
-  const { background_test_svg, test_lottie, test_svg_rect, test_svg_circle } =
-    getAssets('Playground') ?? {};
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+  const safeAreaInsets = useSafeAreaInsets();
+  const styles = getStyles({ ...safeAreaInsets, isLandscape });
+
+  const { background_test_svg, idle, run } = getAssets('Playground') ?? {};
 
   useEffect(() => {
     configure({
+      paused: false,
       world: { tickRate: 60, gy: 1000 },
       screen: {
         width: 800,
@@ -21,56 +44,24 @@ export default function Playground() {
       },
       entities: [
         {
-          id: 'entity_1',
+          id: 'player',
           px: 300,
           py: 100,
-          color: '#ff0',
-          shape: { width: 75, height: 105 },
-          asset: test_lottie,
+          shape: { width: 84, height: 116 },
+          asset: idle,
+          speed: 1,
           mass: 5,
-        },
-        {
-          id: 'entity_2',
-          px: 400,
-          py: 100,
-          color: '#f00',
-          shape: { width: 52, height: 84 },
-          asset: test_svg_rect,
-          mass: 5,
-          vx: 10,
-          ay: -1000,
-        },
-        {
-          id: 'entity_3',
-          px: 500,
-          py: 100,
-          color: '#00f',
-          shape: { radius: 30 },
-          asset: test_svg_circle,
-          mass: 5,
-          vx: -10,
-          ay: -1000,
         },
         {
           id: 'ground',
           px: 400,
-          py: 780,
-          shape: { width: 800, height: 40 },
+          py: 760,
+          shape: { width: 800, height: 80 },
           color: '#654321',
         },
       ],
-      systems: [
-        {
-          collisions: [{ a: 'entity', b: 'ground' }],
-          onTick: (_, collisions) => {
-            collisions.forEach(({ a, b, depth, nx, ny }) => {
-              console.log(`a=${a} b=${b} depth=${depth} nx=${nx} ny=${ny}`);
-            });
-          },
-        },
-      ],
     });
-  }, [background_test_svg, test_svg_rect, test_svg_circle, test_lottie]);
+  }, [background_test_svg, idle]);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -83,84 +74,123 @@ export default function Playground() {
     });
   };
 
-  const despawnAll = () => {
-    if (isPaused) return;
-    despawn('entity');
-  };
-
   const jump = () => {
-    update({ id: 'entity_1', vy: -600 });
-  };
-
-  const move = (ax: number) => {
     if (isPaused) return;
-    update({ id: 'entity_1', ax, vx: 0 });
+    update({ id: 'player', vy: -600 });
   };
 
-  const reposition = () => {
+  const moveLeft = () => {
     if (isPaused) return;
-
-    update([
-      { id: 'entity_1', px: 300, py: 100, vx: 0, vy: 0, ax: 0 },
-      { id: 'entity_2', px: 400, py: 100, vy: 0 },
-      { id: 'entity_3', px: 500, py: 100, vy: 0 },
-    ]);
+    update({
+      id: 'player',
+      asset: run,
+      progress: 0,
+      shape: { width: 92, height: 120 },
+      vx: -500,
+      flipH: true,
+    });
   };
+
+  const moveRight = () => {
+    if (isPaused) return;
+    update({
+      id: 'player',
+      asset: run,
+      progress: 0,
+      shape: { width: 92, height: 120 },
+      vx: 500,
+      flipH: false,
+    });
+  };
+
+  const stop = () => {
+    update({
+      id: 'player',
+      asset: idle,
+      progress: 0,
+      shape: { width: 84, height: 116 },
+      vx: 0,
+    });
+  };
+
+  const moveLeftGesture = useLongPressGesture({
+    onBegin: moveLeft,
+    onFinalize: stop,
+  });
+
+  const moveRightGesture = useLongPressGesture({
+    onBegin: moveRight,
+    onFinalize: stop,
+  });
+
+  const onTogglePauseGesture = useTapGesture({
+    onActivate: onTogglePause,
+  });
+
+  const jumpGesture = useTapGesture({
+    onActivate: jump,
+  });
+
   return (
-    <View style={styles.container}>
-      <GameEngine style={styles.gameEngine} />
-      <View style={styles.systemButtonsContainer}>
-        <ControlButton onPress={onTogglePause}>
+    <GestureHandlerRootView style={styles.screen}>
+      <View style={styles.container}>
+        <GameEngine style={styles.gameEngine} />
+        <ControlButton
+          style={styles.togglePauseButtonContainer}
+          gesture={onTogglePauseGesture}
+        >
           {isPaused ? 'Resume' : 'Pause'}
         </ControlButton>
-        <ControlButton onPress={reposition}>Repo</ControlButton>
-        <ControlButton onPress={despawnAll}>Despawn</ControlButton>
-      </View>
-      <View style={styles.dPadContainer}>
-        <ControlButton
-          onPress={() => {
-            move(-100);
-          }}
-        >
-          Left
-        </ControlButton>
-        <ControlButton
-          onPress={() => {
-            jump();
-          }}
-        >
+        <ControlButton style={styles.jumpContainer} gesture={jumpGesture}>
           Jump
         </ControlButton>
-        <ControlButton
-          onPress={() => {
-            move(100);
-          }}
-        >
-          Right
-        </ControlButton>
+        <View style={styles.moveButtonsContainer}>
+          <ControlButton gesture={moveLeftGesture}>Left</ControlButton>
+          <ControlButton gesture={moveRightGesture}>Right</ControlButton>
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  systemButtonsContainer: {
-    position: 'absolute',
-    bottom: 100,
-    left: 25,
-    gap: 10,
-  },
-  dPadContainer: {
-    position: 'absolute',
-    flexDirection: 'row',
-    bottom: 100,
-    right: 25,
-    gap: 10,
-    alignItems: 'flex-end',
-  },
-  verticalControlsContainer: {
-    gap: 10,
-  },
-  gameEngine: { flex: 1 },
-});
+const getStyles = ({
+  top,
+  right,
+  bottom,
+  left,
+}: EdgeInsets & { isLandscape: boolean }) => {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: 'black',
+    },
+    container: {
+      position: 'absolute',
+      top,
+      right,
+      bottom,
+      left,
+    },
+    togglePauseButtonContainer: {
+      position: 'absolute',
+      top: 32,
+      right: 16,
+    },
+    jumpContainer: {
+      position: 'absolute',
+      bottom: 32,
+      left: 16,
+    },
+    moveButtonsContainer: {
+      position: 'absolute',
+      flexDirection: 'row',
+      bottom: 32,
+      right: 16,
+      gap: 8,
+      alignItems: 'flex-end',
+    },
+    gameEngine: { flex: 1 },
+  });
+};
+
+export default Playground;

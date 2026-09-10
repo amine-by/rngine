@@ -49,18 +49,11 @@ function SnakeContent() {
   const {
     food,
     head_up,
-    head_down,
     head_left,
-    head_right,
     body_up_left,
-    body_down_right,
-    body_left_down,
-    body_right_up,
     body_horizontal,
     body_vertical,
     tail_up,
-    tail_down,
-    tail_left,
     tail_right,
   } = getAssets('Snake') ?? {};
 
@@ -194,18 +187,43 @@ function SnakeContent() {
           onTick: (entities) => {
             const updates: EntityUpdate[] = [];
             const HEAD_ASSET_MAP = {
-              UP: head_up,
-              DOWN: head_down,
-              LEFT: head_left,
-              RIGHT: head_right,
+              UP: { asset: head_up, flipH: false, flipV: false },
+              DOWN: { asset: head_up, flipH: false, flipV: true },
+              LEFT: { asset: head_left, flipH: false, flipV: false },
+              RIGHT: { asset: head_left, flipH: true, flipV: false },
             };
 
             updates.push({
               id: entities[0]!.id,
-              asset: HEAD_ASSET_MAP[directionRef.current],
+              ...HEAD_ASSET_MAP[directionRef.current],
             });
 
-            let asset;
+            const BODY_ASSET_MAP = {
+              LEFT_UP: { asset: body_up_left, flipH: false, flipV: false },
+              DOWN_RIGHT: {
+                asset: body_up_left,
+                flipH: true,
+                flipV: true,
+              },
+              DOWN_LEFT: {
+                asset: body_up_left,
+                flipH: false,
+                flipV: true,
+              },
+              RIGHT_UP: { asset: body_up_left, flipH: true, flipV: false },
+              HORIZONTAL: {
+                asset: body_horizontal,
+                flipH: false,
+                flipV: false,
+              },
+              VERTICAL: {
+                asset: body_vertical,
+                flipH: false,
+                flipV: false,
+              },
+            };
+
+            let bodyKey: keyof typeof BODY_ASSET_MAP;
 
             for (let i = 1; i < entities.length - 1; i++) {
               const previousPx = entities[i - 1]!.px;
@@ -216,46 +234,51 @@ function SnakeContent() {
               const nextPy = entities[i + 1]!.py;
 
               if (previousPx === currentPx && currentPx === nextPx) {
-                asset = body_vertical;
+                bodyKey = 'VERTICAL';
               } else if (previousPy === currentPy && currentPy === nextPy) {
-                asset = body_horizontal;
+                bodyKey = 'HORIZONTAL';
               } else {
                 const dirTowardHead =
                   previousPx > currentPx
-                    ? 'right'
+                    ? 'RIGHT'
                     : previousPx < currentPx
-                      ? 'left'
+                      ? 'LEFT'
                       : previousPy > currentPy
-                        ? 'down'
-                        : 'up';
+                        ? 'DOWN'
+                        : 'UP';
 
                 const dirTowardTail =
                   nextPx > currentPx
-                    ? 'right'
+                    ? 'RIGHT'
                     : nextPx < currentPx
-                      ? 'left'
+                      ? 'LEFT'
                       : nextPy > currentPy
-                        ? 'down'
-                        : 'up';
+                        ? 'DOWN'
+                        : 'UP';
 
                 const pair = [dirTowardHead, dirTowardTail].sort().join('_') as
-                  | 'left_up'
-                  | 'down_right'
-                  | 'down_left'
-                  | 'right_up';
+                  | 'LEFT_UP'
+                  | 'DOWN_RIGHT'
+                  | 'DOWN_LEFT'
+                  | 'RIGHT_UP';
 
-                const CORNER_ASSET_MAP = {
-                  left_up: body_up_left,
-                  down_right: body_down_right,
-                  down_left: body_left_down,
-                  right_up: body_right_up,
-                };
-
-                asset = CORNER_ASSET_MAP[pair];
+                bodyKey = pair;
               }
 
-              updates.push({ id: entities[i]!.id, asset });
+              updates.push({
+                id: entities[i]!.id,
+                ...BODY_ASSET_MAP[bodyKey],
+              });
             }
+
+            const TAIL_ASSET_MAP = {
+              UP: { asset: tail_up, flipH: false, flipV: false },
+              DOWN: { asset: tail_up, flipH: false, flipV: true },
+              LEFT: { asset: tail_right, flipH: true, flipV: false },
+              RIGHT: { asset: tail_right, flipH: false, flipV: false },
+            };
+
+            let tailKey: keyof typeof TAIL_ASSET_MAP;
 
             if (
               entities[entities.length - 1]!.px ===
@@ -265,21 +288,24 @@ function SnakeContent() {
                 entities[entities.length - 1]!.py >
                 entities[entities.length - 2]!.py
               ) {
-                asset = tail_down;
+                tailKey = 'DOWN';
               } else {
-                asset = tail_up;
+                tailKey = 'UP';
               }
             } else {
               if (
                 entities[entities.length - 1]!.px >
                 entities[entities.length - 2]!.px
               ) {
-                asset = tail_right;
+                tailKey = 'RIGHT';
               } else {
-                asset = tail_left;
+                tailKey = 'LEFT';
               }
             }
-            updates.push({ id: entities[entities.length - 1]!.id, asset });
+            updates.push({
+              id: entities[entities.length - 1]!.id,
+              ...TAIL_ASSET_MAP[tailKey],
+            });
 
             update(updates);
 
@@ -291,18 +317,11 @@ function SnakeContent() {
   }, [
     food,
     head_up,
-    head_down,
     head_left,
-    head_right,
     body_up_left,
-    body_down_right,
-    body_left_down,
-    body_right_up,
     body_horizontal,
     body_vertical,
     tail_up,
-    tail_down,
-    tail_left,
     tail_right,
   ]);
 
