@@ -2,6 +2,7 @@
 #include "EntityUpdate.hpp"
 #include "GameLoop.hpp"
 #include "GameRenderer.hpp"
+#include "include/core/SkImage.h"
 #include "include/core/SkStream.h"
 #include <android/log.h>
 #include <fbjni/fbjni.h>
@@ -176,9 +177,9 @@ bool GameMethods::isAssetLoaded(double id) {
   auto &gameRenderer = GameRenderer::getInstance();
 
   if (id > 0) {
-    auto &svgCache = gameRenderer.getSvgCacheInternal();
-    auto it = svgCache.find(id);
-    return it != svgCache.end();
+    auto &imageCache = gameRenderer.getImageCacheInternal();
+    auto it = imageCache.find(id);
+    return it != imageCache.end();
   }
 
   if (id < 0) {
@@ -213,53 +214,86 @@ GameMethods::loadLottie(double id, const std::string &jsonStr) {
   });
 };
 
-std::shared_ptr<Promise<bool>> GameMethods::loadSvg(double id,
-                                                    const std::string &svgUri) {
+std::shared_ptr<Promise<bool>>
+GameMethods::loadImage(double id, const std::string &imageUri) {
   return Promise<bool>::async([=]() -> bool {
-    std::string svgStr;
+    __android_log_print(ANDROID_LOG_DEBUG, "GameMethods",
+                        "loadImage: start id=%.0f uri=%s", id,
+                        imageUri.c_str());
+    std::string imageStr;
 
     using namespace facebook::jni;
 
-    ThreadScope::WithClassLoader([&] {
-      static const auto helperClass =
-          findClassStatic("com/margelo/nitro/rngine/SvgLoaderHelper");
+    try {
+      ThreadScope::WithClassLoader([&] {
+        static const auto helperClass =
+            findClassStatic("com/margelo/nitro/rngine/ImageLoaderHelper");
 
-      local_ref<JArrayByte> byteArray;
+        local_ref<JArrayByte> byteArray;
 
-      if (svgUri.rfind("http://", 0) == 0 || svgUri.rfind("https://", 0) == 0) {
-        static const auto method =
-            helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
-                "loadFromUrl");
-        byteArray = method(helperClass, make_jstring(svgUri));
-      } else {
-        static const auto method =
-            helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
-                "loadFromResource");
-        byteArray = method(helperClass, make_jstring(svgUri));
-      }
+        if (imageUri.rfind("http://", 0) == 0 ||
+            imageUri.rfind("https://", 0) == 0) {
+          static const auto method =
+              helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
+                  "loadFromUrl");
+          byteArray = method(helperClass, make_jstring(imageUri));
+        } else {
+          static const auto method =
+              helperClass->getStaticMethod<JArrayByte(local_ref<JString>)>(
+                  "loadFromResource");
+          byteArray = method(helperClass, make_jstring(imageUri));
+        }
 
-      if (!byteArray) {
-        throw std::runtime_error("Failed to load SVG bytes for: " + svgUri);
-      }
+        if (!byteArray) {
+          throw std::runtime_error("Failed to load image bytes for: " +
+                                   imageUri);
+        }
 
-      size_t len = byteArray->size();
-      svgStr.resize(len);
-      byteArray->getRegion(0, len, reinterpret_cast<int8_t *>(svgStr.data()));
-    });
-
-    auto stream = SkMemoryStream::MakeDirect(svgStr.data(), svgStr.size());
-    auto svgDom = SkSVGDOM::MakeFromStream(*stream);
-
-    if (!svgDom) {
+        size_t len = byteArray->size();
+        imageStr.resize(len);
+        byteArray->getRegion(0, len,
+                             reinterpret_cast<int8_t *>(imageStr.data()));
+      });
+    } catch (const std::exception &e) {
+      __android_log_print(ANDROID_LOG_ERROR, "GameMethods",
+                          "loadImage: JNI fetch failed id=%.0f: %s", id,
+                          e.what());
       return false;
     }
 
+    __android_log_print(ANDROID_LOG_DEBUG, "GameMethods",
+                        "loadImage: fetched %zu bytes id=%.0f", imageStr.size(),
+                        id);
+
     auto &gameRenderer = GameRenderer::getInstance();
-    auto &svgCache = gameRenderer.getSvgCacheInternal();
+    auto &imageCache = gameRenderer.getImageCacheInternal();
 
-    svgCache[id] = std::move(svgDom);
+    auto stream = SkMemoryStream::MakeDirect(imageStr.data(), imageStr.size());
+    auto svgDom = SkSVGDOM::MakeFromStream(*stream);
 
-    return true;
+    if (svgDom) {
+      __android_log_print(ANDROID_LOG_DEBUG, "GameMethods",
+                          "loadImage: parsed as SVG id=%.0f", id);
+      imageCache[id] = std::move(svgDom);
+      return true;
+    }
+
+    auto data = SkData::MakeWithCopy(imageStr.data(), imageStr.size());
+    auto raster = SkImages::DeferredFromEncodedData(std::move(data));
+
+    if (raster) {
+      __android_log_print(ANDROID_LOG_DEBUG, "GameMethods",
+                          "loadImage: parsed as raster id=%.0f", id);
+      imageCache[id] = std::move(raster);
+      return true;
+    }
+
+    __android_log_print(ANDROID_LOG_ERROR, "GameMethods",
+                        "loadImage: both SVG parse and raster decode failed "
+                        "id=%.0f",
+                        id);
+
+    return false;
   });
 };
 } // namespace margelo::nitro::rngine

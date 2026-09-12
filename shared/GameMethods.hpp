@@ -31,7 +31,7 @@ public:
   std::shared_ptr<Promise<bool>>
   loadLottie(double id, const std::string &jsonStr) override;
 
-  std::shared_ptr<Promise<bool>> loadSvg(double id,
-                                         const std::string &svgUri) override;
+  std::shared_ptr<Promise<bool>> loadImage(double id,
+                                           const std::string &svgUri) override;
 };
 } // namespace margelo::nitro::rngine

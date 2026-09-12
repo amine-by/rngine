@@ -10,6 +10,7 @@
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 
 #include "include/gpu/ganesh/GrBackendSurface.h"
@@ -19,6 +20,7 @@
 
 #include "include/gpu/ganesh/gl/GrGLDirectContext.h"
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
+#include "modules/svg/include/SkSVGDOM.h"
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
@@ -151,29 +153,58 @@ void GameRenderer::render(const Screen &screen,
   if (screen.asset.has_value() && screen.asset.value() != 0) {
     double assetId = screen.asset.value();
 
-    auto svgIt = _svgCache.find(assetId);
-    if (svgIt != _svgCache.end() && svgIt->second) {
-      auto &svgDom = svgIt->second;
+    auto imageIt = _imageCache.find(assetId);
+    if (imageIt != _imageCache.end()) {
+      std::visit(
+          [&](const auto image) {
+            using T = std::decay_t<decltype(image)>;
+            if constexpr (std::is_same_v<T, sk_sp<SkSVGDOM>>) {
+              SkSize intrinsicSize = image->containerSize();
 
-      SkSize intrinsicSize = svgDom->containerSize();
-      if (intrinsicSize.isEmpty()) {
-        svgDom->setContainerSize(SkSize::Make(virtualWidth, virtualHeight));
-        intrinsicSize = SkSize::Make(virtualWidth, virtualHeight);
-      }
+              if (intrinsicSize.isEmpty()) {
+                image->setContainerSize(
+                    SkSize::Make(virtualWidth, virtualHeight));
+                intrinsicSize = SkSize::Make(virtualWidth, virtualHeight);
+              }
 
-      float scaleX = virtualWidth / intrinsicSize.width();
-      float scaleY = virtualHeight / intrinsicSize.height();
+              float scaleX = virtualWidth / intrinsicSize.width();
+              float scaleY = virtualHeight / intrinsicSize.height();
 
-      canvas->save();
-      if (screen.flipH.has_value() || screen.flipV.has_value()) {
-        canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
-        canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
-                      screen.flipV.value_or(false) ? -1.f : 1.f);
-        canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
-      }
-      canvas->scale(scaleX, scaleY);
-      svgDom->render(canvas);
-      canvas->restore();
+              canvas->save();
+              if (screen.flipH.has_value() || screen.flipV.has_value()) {
+                canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
+                canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
+                              screen.flipV.value_or(false) ? -1.f : 1.f);
+                canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
+              }
+              canvas->scale(scaleX, scaleY);
+              image->render(canvas);
+              canvas->restore();
+            } else {
+              float intrinsicW = static_cast<float>(image->width());
+              float intrinsicH = static_cast<float>(image->height());
+              if (intrinsicW <= 0.f || intrinsicH <= 0.f)
+                return;
+
+              float scaleX = virtualWidth / intrinsicW;
+              float scaleY = virtualHeight / intrinsicH;
+
+              canvas->save();
+              if (screen.flipH.has_value() || screen.flipV.has_value()) {
+                canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
+                canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
+                              screen.flipV.value_or(false) ? -1.f : 1.f);
+                canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
+              }
+              canvas->scale(scaleX, scaleY);
+
+              SkSamplingOptions sampling(SkFilterMode::kLinear,
+                                         SkMipmapMode::kLinear);
+              canvas->drawImage(image, 0.f, 0.f, sampling);
+              canvas->restore();
+            }
+          },
+          imageIt->second);
     } else {
       auto lottieIt = _lottieCache.find(assetId);
       if (lottieIt != _lottieCache.end() && lottieIt->second) {
@@ -246,23 +277,43 @@ void GameRenderer::render(const Screen &screen,
           canvas->translate(-width / 2.f, -height / 2.f);
         }
 
-        auto svgIt = _svgCache.find(assetId);
-        if (svgIt != _svgCache.end() && svgIt->second) {
-          auto &svgDom = svgIt->second;
+        auto imageIt = _imageCache.find(assetId);
+        if (imageIt != _imageCache.end()) {
+          std::visit(
+              [&](const auto image) {
+                using T = std::decay_t<decltype(image)>;
+                if constexpr (std::is_same_v<T, sk_sp<SkSVGDOM>>) {
+                  SkSize intrinsicSize = image->containerSize();
+                  if (intrinsicSize.isEmpty()) {
+                    image->setContainerSize(SkSize::Make(width, height));
+                    intrinsicSize = SkSize::Make(width, height);
+                  }
 
-          SkSize intrinsicSize = svgDom->containerSize();
-          if (intrinsicSize.isEmpty()) {
-            svgDom->setContainerSize(SkSize::Make(width, height));
-            intrinsicSize = SkSize::Make(width, height);
-          }
+                  float scaleX = width / intrinsicSize.width();
+                  float scaleY = height / intrinsicSize.height();
 
-          float scaleX = width / intrinsicSize.width();
-          float scaleY = height / intrinsicSize.height();
+                  canvas->save();
+                  canvas->scale(scaleX, scaleY);
+                  image->render(canvas);
+                  canvas->restore();
+                } else {
+                  float intrinsicW = static_cast<float>(image->width());
+                  float intrinsicH = static_cast<float>(image->height());
+                  if (intrinsicW <= 0.f || intrinsicH <= 0.f)
+                    return;
 
-          canvas->save();
-          canvas->scale(scaleX, scaleY);
-          svgDom->render(canvas);
-          canvas->restore();
+                  float scaleX = width / intrinsicW;
+                  float scaleY = height / intrinsicH;
+
+                  canvas->save();
+                  canvas->scale(scaleX, scaleY);
+                  SkSamplingOptions sampling(SkFilterMode::kLinear,
+                                             SkMipmapMode::kLinear);
+                  canvas->drawImage(image, 0.f, 0.f, sampling);
+                  canvas->restore();
+                }
+              },
+              imageIt->second);
         } else {
           auto lottieIt = _lottieCache.find(assetId);
           if (lottieIt != _lottieCache.end() && lottieIt->second) {

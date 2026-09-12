@@ -14,6 +14,8 @@ import {
   type EdgeInsets,
 } from 'react-native-safe-area-context';
 
+const EPSILON = 1e-10;
+
 function Playground() {
   return (
     <SafeAreaProvider>
@@ -31,24 +33,25 @@ function PlaygroundContent() {
   const safeAreaInsets = useSafeAreaInsets();
   const styles = getStyles({ ...safeAreaInsets, isLandscape });
 
-  const { background_test_svg, idle, run } = getAssets('Playground') ?? {};
+  const { Background_Test_Svg, Idle, Run, Jump, Fall } =
+    getAssets('Playground') ?? {};
 
   useEffect(() => {
     configure({
       paused: false,
-      world: { tickRate: 60, gy: 1000 },
+      world: { tickRate: 60, gy: 2000 },
       screen: {
         width: 800,
         height: 800,
-        asset: background_test_svg,
+        asset: Background_Test_Svg,
       },
       entities: [
         {
           id: 'player',
-          px: 300,
-          py: 100,
-          shape: { width: 84, height: 116 },
-          asset: idle,
+          px: 120,
+          py: 640,
+          shape: { width: 92, height: 116 },
+          asset: Fall,
           speed: 1,
           mass: 5,
         },
@@ -59,9 +62,73 @@ function PlaygroundContent() {
           shape: { width: 800, height: 80 },
           color: '#654321',
         },
+        {
+          id: 'platform_1',
+          px: 280,
+          py: 520,
+          shape: { width: 560, height: 80 },
+          color: '#654321',
+        },
+        {
+          id: 'platform_2',
+          px: 520,
+          py: 200,
+          shape: { width: 560, height: 80 },
+          color: '#654321',
+        },
+      ],
+      systems: [
+        {
+          entities: ['player'],
+          onTick: (entities) => {
+            if (
+              entities[0]?.vx === 0 &&
+              Math.abs(entities[0]?.vy ?? 0) < EPSILON &&
+              entities[0]?.asset !== Idle
+            ) {
+              update({
+                id: 'player',
+                asset: Idle,
+                shape: { width: 84, height: 116 },
+              });
+            } else if (
+              entities[0]?.vx !== 0 &&
+              Math.abs(entities[0]?.vy ?? 0) < EPSILON &&
+              entities[0]?.asset !== Run
+            ) {
+              update({
+                id: 'player',
+                asset: Run,
+                shape: { width: 92, height: 120 },
+              });
+            } else if (
+              typeof entities[0]?.vy !== 'undefined' &&
+              !isNaN(entities[0]?.vy) &&
+              entities[0]?.vy < -EPSILON &&
+              entities[0]?.asset !== Jump
+            ) {
+              update({
+                id: 'player',
+                asset: Jump,
+                shape: { width: 84, height: 124 },
+              });
+            } else if (
+              typeof entities[0]?.vy !== 'undefined' &&
+              !isNaN(entities[0]?.vy) &&
+              entities[0]?.vy > EPSILON &&
+              entities[0]?.asset !== Fall
+            ) {
+              update({
+                id: 'player',
+                asset: Fall,
+                shape: { width: 92, height: 116 },
+              });
+            }
+          },
+        },
       ],
     });
-  }, [background_test_svg, idle]);
+  }, [Background_Test_Svg, Fall, Idle, Run, Jump]);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -76,16 +143,13 @@ function PlaygroundContent() {
 
   const jump = () => {
     if (isPaused) return;
-    update({ id: 'player', vy: -600 });
+    update({ id: 'player', vy: -1200 });
   };
 
   const moveLeft = () => {
     if (isPaused) return;
     update({
       id: 'player',
-      asset: run,
-      progress: 0,
-      shape: { width: 92, height: 120 },
       vx: -500,
       flipH: true,
     });
@@ -95,9 +159,6 @@ function PlaygroundContent() {
     if (isPaused) return;
     update({
       id: 'player',
-      asset: run,
-      progress: 0,
-      shape: { width: 92, height: 120 },
       vx: 500,
       flipH: false,
     });
@@ -106,9 +167,6 @@ function PlaygroundContent() {
   const stop = () => {
     update({
       id: 'player',
-      asset: idle,
-      progress: 0,
-      shape: { width: 84, height: 116 },
       vx: 0,
     });
   };
