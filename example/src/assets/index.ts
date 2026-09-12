@@ -6,9 +6,11 @@ import body_horizontal from './snake/body_horizontal.svg';
 import body_vertical from './snake/body_vertical.svg';
 import tail_up from './snake/tail_up.svg';
 import tail_right from './snake/tail_right.svg';
-import background_test_svg from './playground/background_test_svg.svg';
-import idle from './playground/idle.json';
-import run from './playground/run.json';
+import Background_Test_Svg from './playground/background_test_svg.svg';
+import Idle from './playground/idle.json';
+import Run from './playground/run.json';
+import Fall from './playground/fall.png';
+import Jump from './playground/jump.png';
 
 const ASSETS = {
   Snake: {
@@ -22,9 +24,11 @@ const ASSETS = {
     tail_right,
   },
   Playground: {
-    background_test_svg,
-    idle,
-    run,
+    Background_Test_Svg,
+    Idle,
+    Run,
+    Fall,
+    Jump,
   },
 };
 

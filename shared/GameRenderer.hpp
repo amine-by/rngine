@@ -1,6 +1,7 @@
 #pragma once
 #include "Entity.hpp"
 #include "Screen.hpp"
+#include "include/core/SkImage.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/ganesh/GrDirectContext.h"
 #include "modules/skottie/include/Skottie.h"
@@ -21,9 +22,11 @@ public:
 
   ~GameRenderer();
 
-  std::map<double, sk_sp<SkSVGDOM>> &getSvgCacheInternal() {
-    return _svgCache;
+  std::map<double, std::variant<sk_sp<SkSVGDOM>, sk_sp<SkImage>>> &
+  getImageCacheInternal() {
+    return _imageCache;
   };
+
   std::map<double, sk_sp<skottie::Animation>> &getLottieCacheInternal() {
     return _lottieCache;
   };
@@ -52,8 +55,8 @@ private:
   int _height{0};
   bool _initialized{false};
 
-  std::map<double, sk_sp<SkSVGDOM>> _svgCache;
   std::map<double, sk_sp<skottie::Animation>> _lottieCache;
+  std::map<double, std::variant<sk_sp<SkSVGDOM>, sk_sp<SkImage>>> _imageCache;
 
   bool isEntityVisible(const Entity &entity, float screenWidth,
                        float screenHeight);

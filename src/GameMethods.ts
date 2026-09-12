@@ -89,9 +89,9 @@ const loadAsset = async (asset: unknown) => {
       if (!assetUri) {
         throw new Error(`loadAssets: could not resolve asset URI for ${asset}`);
       }
-      const isSvgLoaded = await gameMethods.loadSvg(asset, assetUri);
-      if (!isSvgLoaded) {
-        throw new Error('loadAssets: Failed to load svg asset');
+      const isLoaded = await gameMethods.loadImage(asset, assetUri);
+      if (!isLoaded) {
+        throw new Error('loadAssets: Failed to load image asset');
       }
       return asset;
   }

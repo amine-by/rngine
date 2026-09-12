@@ -24,7 +24,7 @@ interface GameMethods extends HybridObject<{
 
   isAssetLoaded(id: number): boolean;
   loadLottie(id: number, jsonStr: string): Promise<boolean>;
-  loadSvg(id: number, svgUri: string): Promise<boolean>;
+  loadImage(id: number, imageUri: string): Promise<boolean>;
 }
 
 export const gameMethods =
