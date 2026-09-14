@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.9.0)
 set(PACKAGE_NAME rngine)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
+set(UTILS_ROOT ${CMAKE_SOURCE_DIR}/../shared/utils)
 set(SKIA_ROOT ${CMAKE_SOURCE_DIR}/../shared/skia)
 set(SKIA_LIBS_ROOT ${CMAKE_SOURCE_DIR}/../node_modules/react-native-skia-android/libs/${ANDROID_ABI})
 
@@ -40,8 +41,9 @@ add_library(
         ../shared/GameLoop.cpp
         ../shared/GameRenderer.cpp
         ../shared/GameMethods.cpp
-        ../shared/ColorUtils.cpp
-        ../shared/CollisionUtils.cpp
+        ../shared/utils/ColorUtils.cpp
+        ../shared/utils/CollisionUtils.cpp
+        ../shared/utils/AssetUtils.cpp
 )
 
 # Add Nitrogen specs :)
@@ -51,6 +53,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/rngine+autolinking.cma
 include_directories(
         "src/main/cpp"
         "../shared"
+        "${UTILS_ROOT}"
         "${SKIA_ROOT}"
 )
 

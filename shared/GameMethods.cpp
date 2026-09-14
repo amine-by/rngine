@@ -119,52 +119,28 @@ void GameMethods::update(const std::vector<EntityUpdate> &updates) {
       continue;
     }
 
+    auto patch = [](const auto &field, auto &target) {
+      if (field.has_value()) {
+        target = field.value();
+      }
+    };
+
     for (auto *entity : resolvedEntitiesInternals) {
-      if (update.px.has_value()) {
-        entity->px = update.px.value();
-      }
-      if (update.py.has_value()) {
-        entity->py = update.py.value();
-      }
-      if (update.shape.has_value()) {
-        entity->shape = update.shape.value();
-      }
-      if (update.isSensor.has_value()) {
-        entity->isSensor = update.isSensor.value();
-      }
-      if (update.asset.has_value()) {
-        entity->asset = update.asset.value();
-      }
-      if (update.progress.has_value()) {
-        entity->progress = update.progress.value();
-      }
-      if (update.speed.has_value()) {
-        entity->speed = update.speed.value();
-      }
-      if (update.color.has_value()) {
-        entity->color = update.color.value();
-      }
-      if (update.flipH.has_value()) {
-        entity->flipH = update.flipH.value();
-      }
-      if (update.flipV.has_value()) {
-        entity->flipV = update.flipV.value();
-      }
-      if (update.vx.has_value()) {
-        entity->vx = update.vx.value();
-      }
-      if (update.vy.has_value()) {
-        entity->vy = update.vy.value();
-      }
-      if (update.ax.has_value()) {
-        entity->ax = update.ax.value();
-      }
-      if (update.ay.has_value()) {
-        entity->ay = update.ay.value();
-      }
-      if (update.mass.has_value()) {
-        entity->mass = update.mass.value();
-      }
+      patch(update.px, entity->px);
+      patch(update.py, entity->py);
+      patch(update.shape, entity->shape);
+      patch(update.isSensor, entity->isSensor);
+      patch(update.asset, entity->asset);
+      patch(update.progress, entity->progress);
+      patch(update.speed, entity->speed);
+      patch(update.color, entity->color);
+      patch(update.flipH, entity->flipH);
+      patch(update.flipV, entity->flipV);
+      patch(update.vx, entity->vx);
+      patch(update.vy, entity->vy);
+      patch(update.ax, entity->ax);
+      patch(update.ay, entity->ay);
+      patch(update.mass, entity->mass);
     }
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",

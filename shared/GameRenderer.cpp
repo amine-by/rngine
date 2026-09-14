@@ -1,6 +1,7 @@
 #include "GameRenderer.hpp"
-#include "ColorUtils.hpp"
 #include "Rect.hpp"
+#include "AssetUtils.hpp"
+#include "ColorUtils.hpp"
 
 #include <android/log.h>
 #include <android/native_window.h>
@@ -20,7 +21,6 @@
 
 #include "include/gpu/ganesh/gl/GrGLDirectContext.h"
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
-#include "modules/svg/include/SkSVGDOM.h"
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
@@ -151,69 +151,10 @@ void GameRenderer::render(const Screen &screen,
   }
 
   if (screen.asset.has_value() && screen.asset.value() != 0) {
-    double assetId = screen.asset.value();
-
-    auto imageIt = _imageCache.find(assetId);
-    if (imageIt != _imageCache.end()) {
-      std::visit(
-          [&](const auto image) {
-            using T = std::decay_t<decltype(image)>;
-            if constexpr (std::is_same_v<T, sk_sp<SkSVGDOM>>) {
-              SkSize intrinsicSize = image->containerSize();
-
-              if (intrinsicSize.isEmpty()) {
-                image->setContainerSize(
-                    SkSize::Make(virtualWidth, virtualHeight));
-                intrinsicSize = SkSize::Make(virtualWidth, virtualHeight);
-              }
-
-              float scaleX = virtualWidth / intrinsicSize.width();
-              float scaleY = virtualHeight / intrinsicSize.height();
-
-              canvas->save();
-              if (screen.flipH.has_value() || screen.flipV.has_value()) {
-                canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
-                canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
-                              screen.flipV.value_or(false) ? -1.f : 1.f);
-                canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
-              }
-              canvas->scale(scaleX, scaleY);
-              image->render(canvas);
-              canvas->restore();
-            } else {
-              float intrinsicW = static_cast<float>(image->width());
-              float intrinsicH = static_cast<float>(image->height());
-              if (intrinsicW <= 0.f || intrinsicH <= 0.f)
-                return;
-
-              float scaleX = virtualWidth / intrinsicW;
-              float scaleY = virtualHeight / intrinsicH;
-
-              canvas->save();
-              if (screen.flipH.has_value() || screen.flipV.has_value()) {
-                canvas->translate(virtualWidth / 2.f, virtualHeight / 2.f);
-                canvas->scale(screen.flipH.value_or(false) ? -1.f : 1.f,
-                              screen.flipV.value_or(false) ? -1.f : 1.f);
-                canvas->translate(-virtualWidth / 2.f, -virtualHeight / 2.f);
-              }
-              canvas->scale(scaleX, scaleY);
-
-              SkSamplingOptions sampling(SkFilterMode::kLinear,
-                                         SkMipmapMode::kLinear);
-              canvas->drawImage(image, 0.f, 0.f, sampling);
-              canvas->restore();
-            }
-          },
-          imageIt->second);
-    } else {
-      auto lottieIt = _lottieCache.find(assetId);
-      if (lottieIt != _lottieCache.end() && lottieIt->second) {
-        auto &lottie = lottieIt->second;
-        lottie->seek(screen.progress.value_or(0.0));
-        SkRect dstBounds = SkRect::MakeWH(virtualWidth, virtualHeight);
-        lottie->render(canvas, &dstBounds);
-      }
-    }
+    AssetUtils::drawAsset(canvas, screen.asset.value(), virtualWidth,
+                          virtualHeight, screen.flipH.value_or(false),
+                          screen.flipV.value_or(false),
+                          screen.progress.value_or(0.0));
   }
 
   for (const auto &[id, entity] : entities) {
@@ -250,8 +191,6 @@ void GameRenderer::render(const Screen &screen,
       }
 
       if ((entity.asset.has_value() && entity.asset.value() != 0)) {
-        double assetId = entity.asset.value();
-
         float width = 0.f, height = 0.f;
         std::visit(
             [&](const auto &shape) {
@@ -270,59 +209,10 @@ void GameRenderer::render(const Screen &screen,
         SkAutoCanvasRestore autoRestore(canvas, true);
         canvas->translate(px - width / 2, py - height / 2);
 
-        if (entity.flipH.has_value() || entity.flipV.has_value()) {
-          canvas->translate(width / 2.f, height / 2.f);
-          canvas->scale(entity.flipH.value_or(false) ? -1.f : 1.f,
-                        entity.flipV.value_or(false) ? -1.f : 1.f);
-          canvas->translate(-width / 2.f, -height / 2.f);
-        }
-
-        auto imageIt = _imageCache.find(assetId);
-        if (imageIt != _imageCache.end()) {
-          std::visit(
-              [&](const auto image) {
-                using T = std::decay_t<decltype(image)>;
-                if constexpr (std::is_same_v<T, sk_sp<SkSVGDOM>>) {
-                  SkSize intrinsicSize = image->containerSize();
-                  if (intrinsicSize.isEmpty()) {
-                    image->setContainerSize(SkSize::Make(width, height));
-                    intrinsicSize = SkSize::Make(width, height);
-                  }
-
-                  float scaleX = width / intrinsicSize.width();
-                  float scaleY = height / intrinsicSize.height();
-
-                  canvas->save();
-                  canvas->scale(scaleX, scaleY);
-                  image->render(canvas);
-                  canvas->restore();
-                } else {
-                  float intrinsicW = static_cast<float>(image->width());
-                  float intrinsicH = static_cast<float>(image->height());
-                  if (intrinsicW <= 0.f || intrinsicH <= 0.f)
-                    return;
-
-                  float scaleX = width / intrinsicW;
-                  float scaleY = height / intrinsicH;
-
-                  canvas->save();
-                  canvas->scale(scaleX, scaleY);
-                  SkSamplingOptions sampling(SkFilterMode::kLinear,
-                                             SkMipmapMode::kLinear);
-                  canvas->drawImage(image, 0.f, 0.f, sampling);
-                  canvas->restore();
-                }
-              },
-              imageIt->second);
-        } else {
-          auto lottieIt = _lottieCache.find(assetId);
-          if (lottieIt != _lottieCache.end() && lottieIt->second) {
-            auto &lottie = lottieIt->second;
-            lottie->seek(entity.progress.value_or(0.0));
-            SkRect dstBounds = SkRect::MakeWH(width, height);
-            lottie->render(canvas, &dstBounds);
-          }
-        }
+        AssetUtils::drawAsset(canvas, entity.asset.value(), width, height,
+                              entity.flipH.value_or(false),
+                              entity.flipV.value_or(false),
+                              entity.progress.value_or(0.0));
       }
     }
   }
