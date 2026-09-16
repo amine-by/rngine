@@ -1,7 +1,7 @@
 #include "GameRenderer.hpp"
-#include "Rect.hpp"
 #include "AssetUtils.hpp"
 #include "ColorUtils.hpp"
+#include "Rect.hpp"
 
 #include <android/log.h>
 #include <android/native_window.h>
@@ -135,15 +135,20 @@ void GameRenderer::render(const Screen &screen,
 
   float scale = std::min(scaleX, scaleY);
 
-  float offsetX = (static_cast<float>(_width) - (virtualWidth * scale)) * 0.5f;
-  float offsetY =
-      (static_cast<float>(_height) - (virtualHeight * scale)) * 0.5f;
+  float offsetX =
+      static_cast<float>(_width) * 0.5f - static_cast<float>(screen.px) * scale;
+  float offsetY = static_cast<float>(_height) * 0.5f -
+                  static_cast<float>(screen.py) * scale;
 
   canvas->save();
   canvas->translate(offsetX, offsetY);
   canvas->scale(scale, scale);
 
-  SkRect gameBounds = SkRect::MakeWH(virtualWidth, virtualHeight);
+  SkRect gameBounds =
+      SkRect::MakeXYWH(static_cast<float>(screen.px) - virtualWidth * 0.5f,
+                       static_cast<float>(screen.py) - virtualHeight * 0.5f,
+                       virtualWidth, virtualHeight);
+
   canvas->clipRect(gameBounds);
 
   if (screen.color.has_value()) {
@@ -151,6 +156,8 @@ void GameRenderer::render(const Screen &screen,
   }
 
   if (screen.asset.has_value() && screen.asset.value() != 0) {
+    SkAutoCanvasRestore restore(canvas, true);
+    canvas->translate(gameBounds.left(), gameBounds.top());
     AssetUtils::drawAsset(canvas, screen.asset.value(), virtualWidth,
                           virtualHeight, screen.flipH.value_or(false),
                           screen.flipV.value_or(false),
@@ -158,7 +165,7 @@ void GameRenderer::render(const Screen &screen,
   }
 
   for (const auto &[id, entity] : entities) {
-    if (!isEntityVisible(entity, virtualWidth, virtualHeight)) {
+    if (!isEntityVisible(entity, gameBounds)) {
       continue;
     }
 
@@ -225,15 +232,13 @@ void GameRenderer::render(const Screen &screen,
   __android_log_print(ANDROID_LOG_DEBUG, "GameRenderer", "render: complete");
 }
 
-bool GameRenderer::isEntityVisible(const Entity &entity, float screenWidth,
-                                   float screenHeight) {
-  float width = 0.f;
-  float height = 0.f;
+bool GameRenderer::isEntityVisible(const Entity &entity,
+                                   const SkRect &viewBounds) {
+  float width = 0.f, height = 0.f;
 
   std::visit(
       [&](const auto &shape) {
         using T = std::decay_t<decltype(shape)>;
-
         if constexpr (std::is_same_v<T, Rect>) {
           width = static_cast<float>(shape.width);
           height = static_cast<float>(shape.height);
@@ -248,8 +253,8 @@ bool GameRenderer::isEntityVisible(const Entity &entity, float screenWidth,
   float top = static_cast<float>(entity.py) - height / 2.f;
   float bottom = static_cast<float>(entity.py) + height / 2.f;
 
-  return right > 0.f && left < screenWidth && bottom > 0.f &&
-         top < screenHeight;
+  return right > viewBounds.left() && left < viewBounds.right() &&
+         bottom > viewBounds.top() && top < viewBounds.bottom();
 }
 
 bool GameRenderer::initializeEGL() {

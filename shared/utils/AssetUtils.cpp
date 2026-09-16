@@ -3,8 +3,8 @@
 #include <variant>
 
 namespace margelo::nitro::rngine::AssetUtils {
-void drawSVG(SkCanvas *canvas, const sk_sp<SkSVGDOM> &svg, float width,
-             float height) {
+static void drawSVG(SkCanvas *canvas, const sk_sp<SkSVGDOM> &svg, float width,
+                    float height) {
   SkSize intrinsicSize = svg->containerSize();
   if (intrinsicSize.isEmpty()) {
     svg->setContainerSize(SkSize::Make(width, height));
@@ -16,8 +16,8 @@ void drawSVG(SkCanvas *canvas, const sk_sp<SkSVGDOM> &svg, float width,
   svg->render(canvas);
 }
 
-void drawRaster(SkCanvas *canvas, const sk_sp<SkImage> &raster, float width,
-                float height) {
+static void drawRaster(SkCanvas *canvas, const sk_sp<SkImage> &raster,
+                       float width, float height) {
   float intrinsicW = static_cast<float>(raster->width());
   float intrinsicH = static_cast<float>(raster->height());
   if (intrinsicW <= 0.0f || intrinsicH <= 0.0f)

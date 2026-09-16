@@ -1,10 +1,11 @@
 #include "CollisionUtils.hpp"
 #include "Collision.hpp"
+#include "Overlap.hpp"
 #include <optional>
 
 namespace margelo::nitro::rngine::CollisionUtils {
-std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
-                               const Rect &b, double bx, double by) {
+static std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
+                                      const Rect &b, double bx, double by) {
 
   double aLeft = ax - a.width / 2.0, aRight = ax + a.width / 2.0;
   double aTop = ay - a.height / 2.0, aBottom = ay + a.height / 2.0;
@@ -26,8 +27,8 @@ std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
   }
 }
 
-std::optional<Overlap> overlap(const Circle &a, double ax, double ay,
-                               const Circle &b, double bx, double by) {
+static std::optional<Overlap> overlap(const Circle &a, double ax, double ay,
+                                      const Circle &b, double bx, double by) {
   double dx = bx - ax, dy = by - ay;
   double dist = std::sqrt(dx * dx + dy * dy);
   double depth = (a.radius + b.radius) - dist;
@@ -41,8 +42,8 @@ std::optional<Overlap> overlap(const Circle &a, double ax, double ay,
   return Overlap{depth, dx / dist, dy / dist};
 }
 
-std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
-                               const Circle &b, double bx, double by) {
+static std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
+                                      const Circle &b, double bx, double by) {
   double left = ax - a.width / 2.0, right = ax + a.width / 2.0;
   double top = ay - a.height / 2.0, bottom = ay + a.height / 2.0;
 
@@ -67,8 +68,8 @@ std::optional<Overlap> overlap(const Rect &a, double ax, double ay,
   return Overlap{b.radius - dist, dx / dist, dy / dist};
 }
 
-std::optional<Overlap> overlap(const Circle &a, double ax, double ay,
-                               const Rect &b, double bx, double by) {
+static std::optional<Overlap> overlap(const Circle &a, double ax, double ay,
+                                      const Rect &b, double bx, double by) {
   auto result = overlap(b, bx, by, a, ax, ay);
 
   if (!result.has_value()) {

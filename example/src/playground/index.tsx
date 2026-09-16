@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { GameEngine, configure, pause, resume, update } from 'rngine';
+import {
+  GameEngine,
+  configure,
+  pause,
+  resume,
+  updateEntity,
+  updateScreen,
+} from 'rngine';
 import { ControlButton } from './components/ControlButton';
 import { useAssets } from '../AssetsContext';
 import {
@@ -13,8 +20,19 @@ import {
   useSafeAreaInsets,
   type EdgeInsets,
 } from 'react-native-safe-area-context';
+import type { EntityUpdate, ScreenUpdate } from '../../../src/nativeTypes';
 
 const EPSILON = 1e-10;
+const SCREEN_WIDTH = 800;
+const SCREEN_HEIGHT = 800;
+const WORLD_WIDTH = SCREEN_WIDTH * 2;
+const WORLD_HEIGHT = SCREEN_HEIGHT * 2;
+const GROUND_HEIGHT = SCREEN_HEIGHT / 10;
+const CEIL_HEIGHT = SCREEN_HEIGHT / 10;
+const WALL_WIDTH = SCREEN_WIDTH / 10;
+const WALL_HEIGHT = WORLD_HEIGHT - GROUND_HEIGHT - CEIL_HEIGHT;
+const PLATFORM_WIDTH = WORLD_HEIGHT - WALL_WIDTH * 2 - SCREEN_WIDTH * 0.4;
+const PLATFORM_HEIGHT = SCREEN_HEIGHT / 10;
 
 function Playground() {
   return (
@@ -41,88 +59,160 @@ function PlaygroundContent() {
       paused: false,
       world: { tickRate: 60, gy: 2000 },
       screen: {
-        width: 800,
-        height: 800,
+        px: SCREEN_WIDTH / 2,
+        py: WORLD_HEIGHT - SCREEN_HEIGHT / 2,
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
         asset: Background_Test_Svg,
+        color: '#fff',
       },
       entities: [
         {
           id: 'player',
-          px: 120,
-          py: 640,
-          shape: { width: 92, height: 116 },
-          asset: Fall,
+          px: SCREEN_WIDTH / 4,
+          py: WORLD_HEIGHT - GROUND_HEIGHT - 116 / 2,
+          shape: { width: 84, height: 116 },
+          asset: Idle,
           speed: 1,
           mass: 5,
         },
         {
           id: 'ground',
-          px: 400,
-          py: 760,
-          shape: { width: 800, height: 80 },
+          px: WORLD_WIDTH / 2,
+          py: WORLD_HEIGHT - GROUND_HEIGHT / 2,
+          shape: { width: WORLD_WIDTH, height: GROUND_HEIGHT },
+          color: '#654321',
+        },
+        {
+          id: 'ceil',
+          px: WORLD_WIDTH / 2,
+          py: CEIL_HEIGHT / 2,
+          shape: { width: WORLD_WIDTH, height: CEIL_HEIGHT },
+          color: '#654321',
+        },
+        {
+          id: 'wall_left',
+          px: WALL_WIDTH / 2,
+          py: CEIL_HEIGHT + WALL_HEIGHT / 2,
+          shape: {
+            width: WALL_WIDTH,
+            height: WALL_HEIGHT,
+          },
+          color: '#654321',
+        },
+        {
+          id: 'wall_right',
+          px: WORLD_WIDTH - WALL_WIDTH / 2,
+          py: CEIL_HEIGHT + WALL_HEIGHT / 2,
+          shape: {
+            width: WALL_WIDTH,
+            height: WALL_HEIGHT,
+          },
           color: '#654321',
         },
         {
           id: 'platform_1',
-          px: 280,
-          py: 520,
-          shape: { width: 560, height: 80 },
+          px: WALL_WIDTH + PLATFORM_WIDTH / 2,
+          py:
+            WORLD_HEIGHT -
+            GROUND_HEIGHT -
+            SCREEN_HEIGHT * 0.2 -
+            PLATFORM_HEIGHT / 2,
+          shape: { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
           color: '#654321',
         },
         {
           id: 'platform_2',
-          px: 520,
-          py: 200,
-          shape: { width: 560, height: 80 },
+          px: WORLD_WIDTH - WALL_WIDTH - PLATFORM_WIDTH / 2,
+          py:
+            WORLD_HEIGHT -
+            GROUND_HEIGHT -
+            SCREEN_HEIGHT * 0.5 -
+            PLATFORM_HEIGHT / 2,
+          shape: { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
+          color: '#654321',
+        },
+        {
+          id: 'platform_3',
+          px: WALL_WIDTH + PLATFORM_WIDTH / 2,
+          py:
+            WORLD_HEIGHT -
+            GROUND_HEIGHT -
+            SCREEN_HEIGHT * 0.8 -
+            PLATFORM_HEIGHT,
+          shape: { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT * 2 },
           color: '#654321',
         },
       ],
       systems: [
         {
           entities: ['player'],
-          onTick: (entities) => {
+          onTick: ({ entities, screen }) => {
+            const player = entities[0];
+
+            if (!player) {
+              return;
+            }
+
+            let entityUpdate: EntityUpdate = { id: 'player' };
+            let screenUpdate: ScreenUpdate = {};
+
             if (
-              entities[0]?.vx === 0 &&
-              Math.abs(entities[0]?.vy ?? 0) < EPSILON &&
-              entities[0]?.asset !== Idle
+              player.vx === 0 &&
+              Math.abs(player?.vy ?? 0) < EPSILON &&
+              player?.asset !== Idle
             ) {
-              update({
-                id: 'player',
-                asset: Idle,
-                shape: { width: 84, height: 116 },
-              });
+              entityUpdate.asset = Idle;
+              entityUpdate.shape = { width: 84, height: 116 };
             } else if (
-              entities[0]?.vx !== 0 &&
-              Math.abs(entities[0]?.vy ?? 0) < EPSILON &&
-              entities[0]?.asset !== Run
+              player.vx !== 0 &&
+              Math.abs(player?.vy ?? 0) < EPSILON &&
+              player?.asset !== Run
             ) {
-              update({
-                id: 'player',
-                asset: Run,
-                shape: { width: 92, height: 120 },
-              });
+              entityUpdate.asset = Run;
+              entityUpdate.shape = { width: 92, height: 120 };
             } else if (
-              typeof entities[0]?.vy !== 'undefined' &&
-              !isNaN(entities[0]?.vy) &&
-              entities[0]?.vy < -EPSILON &&
-              entities[0]?.asset !== Jump
+              typeof player?.vy !== 'undefined' &&
+              !isNaN(player?.vy) &&
+              player?.vy < -EPSILON &&
+              player?.asset !== Jump
             ) {
-              update({
-                id: 'player',
-                asset: Jump,
-                shape: { width: 84, height: 124 },
-              });
+              entityUpdate.asset = Jump;
+              entityUpdate.shape = { width: 84, height: 124 };
             } else if (
-              typeof entities[0]?.vy !== 'undefined' &&
-              !isNaN(entities[0]?.vy) &&
-              entities[0]?.vy > EPSILON &&
-              entities[0]?.asset !== Fall
+              typeof player?.vy !== 'undefined' &&
+              !isNaN(player?.vy) &&
+              player?.vy > EPSILON &&
+              player?.asset !== Fall
             ) {
-              update({
-                id: 'player',
-                asset: Fall,
-                shape: { width: 92, height: 116 },
-              });
+              entityUpdate.asset = Fall;
+              entityUpdate.shape = { width: 92, height: 116 };
+            }
+
+            if (player.px > SCREEN_WIDTH && screen.px < SCREEN_WIDTH) {
+              screenUpdate.px = SCREEN_WIDTH * 1.5;
+            } else if (player.px < SCREEN_WIDTH && screen.px > SCREEN_WIDTH) {
+              screenUpdate.px = SCREEN_WIDTH * 0.5;
+            }
+
+            if (player.py > SCREEN_HEIGHT && screen.py < SCREEN_HEIGHT) {
+              screenUpdate.py = SCREEN_HEIGHT * 1.5;
+            } else if (player.py < SCREEN_HEIGHT && screen.py > SCREEN_HEIGHT) {
+              screenUpdate.py = SCREEN_HEIGHT * 0.5;
+            }
+
+            if (
+              typeof entityUpdate.asset !== 'undefined' ||
+              typeof entityUpdate.shape !== 'undefined'
+            ) {
+              updateEntity(entityUpdate);
+            }
+
+            if (
+              typeof screenUpdate.px !== 'undefined' ||
+              typeof screenUpdate.py !== 'undefined'
+            ) {
+              updateScreen(screenUpdate);
             }
           },
         },
@@ -143,12 +233,12 @@ function PlaygroundContent() {
 
   const jump = () => {
     if (isPaused) return;
-    update({ id: 'player', vy: -1200 });
+    updateEntity({ id: 'player', vy: -1300 });
   };
 
   const moveLeft = () => {
     if (isPaused) return;
-    update({
+    updateEntity({
       id: 'player',
       vx: -500,
       flipH: true,
@@ -157,7 +247,7 @@ function PlaygroundContent() {
 
   const moveRight = () => {
     if (isPaused) return;
-    update({
+    updateEntity({
       id: 'player',
       vx: 500,
       flipH: false,
@@ -165,7 +255,7 @@ function PlaygroundContent() {
   };
 
   const stop = () => {
-    update({
+    updateEntity({
       id: 'player',
       vx: 0,
     });

@@ -1,5 +1,5 @@
 import { gameMethods } from './GameMethods.nitro';
-import type { Entity, EntityUpdate, System } from './nativeTypes';
+import type { Entity, EntityUpdate, ScreenUpdate, System } from './nativeTypes';
 import type { Config } from './types';
 import { Image } from 'react-native';
 
@@ -17,9 +17,9 @@ export const configure = ({
     nativeSystems.push({
       entities: system.entities,
       collisions: system.collisions,
-      onTick: (e, c) => {
+      onTick: (systemContext) => {
         const start = Date.now();
-        system.onTick(e, c);
+        system.onTick(systemContext);
         const finish = Date.now();
         return finish - start;
       },
@@ -49,13 +49,22 @@ export const spawn = (entities: Entity | Entity[]) => {
   gameMethods.spawn(entityArray);
 };
 
-/** Removes an entity or all entities matching the given id prefix from the world. */
+/** Removes an entity or all entities matching the given id prefix from the world. Only the provided fields are changed. */
 export const despawn = (id: string) => gameMethods.despawn(id);
 
-/** Updates one or more entities. Only the provided fields are changed. */
-export const update = (updates: EntityUpdate | EntityUpdate[]) => {
-  const entityUpdateArray = Array.isArray(updates) ? updates : [updates];
-  gameMethods.update(entityUpdateArray);
+/** Fires one update, applied to entities matching the given id prefix from the world. Only the provided fields are changed. */
+export const updateEntity = (entityUpdate: EntityUpdate) => {
+  gameMethods.updateEntities([entityUpdate]);
+};
+
+/** Fires multiple updates, each applied to entities matching the given id prefix from the world. */
+export const updateEntities = (entityUpdates: EntityUpdate[]) => {
+  gameMethods.updateEntities(entityUpdates);
+};
+
+/** Updates the screen. Only the provided fields are changed. */
+export const updateScreen = (screenUpdate: ScreenUpdate) => {
+  gameMethods.updateScreen(screenUpdate);
 };
 
 const assetCache = new WeakMap<object, number>();
@@ -99,6 +108,9 @@ const loadAsset = async (asset: unknown) => {
   throw new Error(`loadAssets: unsupported asset type "${typeof asset}"`);
 };
 
+/** Preloads one or more SVG, PNG or Lottie assets ahead of time.
+ * Takes an object mapping names to `require(...)` sources (SVG/PNG) or imported JSON (Lottie),
+ * and resolves to an object of the same shape with numeric asset ids. */
 export const loadAssets = async <T extends Record<string, unknown>>(
   assets: T
 ): Promise<{ [K in keyof T]: number }> => {
