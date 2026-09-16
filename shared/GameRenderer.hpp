@@ -2,6 +2,7 @@
 #include "Entity.hpp"
 #include "Screen.hpp"
 #include "include/core/SkImage.h"
+#include "include/core/SkRect.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/ganesh/GrDirectContext.h"
 #include "modules/skottie/include/Skottie.h"
@@ -58,8 +59,7 @@ private:
   std::map<double, sk_sp<skottie::Animation>> _lottieCache;
   std::map<double, std::variant<sk_sp<SkSVGDOM>, sk_sp<SkImage>>> _imageCache;
 
-  bool isEntityVisible(const Entity &entity, float screenWidth,
-                       float screenHeight);
+  bool isEntityVisible(const Entity &entity, const SkRect &viewBounds);
 
   bool initializeEGL();
   bool createEGLSurface();

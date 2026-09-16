@@ -14,10 +14,10 @@ import {
 import {
   configure,
   GameEngine,
-  update,
   pause,
   resume,
   spawn,
+  updateEntities,
   type EntityUpdate,
 } from 'rngine';
 import { useAssets } from '../AssetsContext';
@@ -62,7 +62,13 @@ function SnakeContent() {
   const start = useCallback(() => {
     configure({
       world: { tickRate: 8 },
-      screen: { width: CELL * COLS, height: CELL * ROWS, color: '#1a1a1a' },
+      screen: {
+        px: (CELL * COLS) / 2,
+        py: (CELL * ROWS) / 2,
+        width: CELL * COLS,
+        height: CELL * ROWS,
+        color: '#1a1a1a',
+      },
       entities: [
         {
           id: 'food',
@@ -100,7 +106,7 @@ function SnakeContent() {
       systems: [
         {
           entities: ['food', 'snake_head', 'snake_body'],
-          onTick: (entities) => {
+          onTick: ({ entities }) => {
             const updates: (Omit<EntityUpdate, 'px' | 'py'> & {
               px: number;
               py: number;
@@ -179,12 +185,12 @@ function SnakeContent() {
                 isSensor: true,
               });
             }
-            update(updates);
+            updateEntities(updates);
           },
         },
         {
           entities: ['snake_head', 'snake_body'],
-          onTick: (entities) => {
+          onTick: ({ entities }) => {
             const updates: EntityUpdate[] = [];
             const HEAD_ASSET_MAP = {
               UP: { asset: head_up, flipH: false, flipV: false },
@@ -307,7 +313,7 @@ function SnakeContent() {
               ...TAIL_ASSET_MAP[tailKey],
             });
 
-            update(updates);
+            updateEntities(updates);
 
             return;
           },

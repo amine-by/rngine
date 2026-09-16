@@ -1,14 +1,14 @@
 import type {
   System as NativeSystem,
-  Collision,
   Screen,
   Entity,
   World,
+  SystemContext,
 } from './nativeTypes';
 
 export type System = Omit<NativeSystem, 'onTick'> & {
   /** Called every tick with the resolved entities and collisions. */
-  onTick: (entities: Entity[], collisions: Collision[]) => void;
+  onTick: (systemContext: SystemContext) => void;
 };
 
 export type Config = {

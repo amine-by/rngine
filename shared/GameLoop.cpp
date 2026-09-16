@@ -4,6 +4,7 @@
 #include "CollisionUtils.hpp"
 #include "Entity.hpp"
 #include "GameRenderer.hpp"
+#include "SystemContext.hpp"
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
@@ -106,14 +107,15 @@ void GameLoop::runGameLoop() {
 void GameLoop::runSystems() {
   for (size_t systemIndex = 0; systemIndex < _systems.size(); ++systemIndex) {
     auto &system = _systems[systemIndex];
-    std::vector<Entity> entities;
-    std::vector<Collision> collisions;
+    SystemContext systemContext;
+
+    systemContext.screen = _screen;
 
     if (system.entities.has_value()) {
       for (const auto &id : system.entities.value()) {
         auto resolvedEntitiesInternal = resolveEntitiesInternal(id);
         for (auto *entity : resolvedEntitiesInternal)
-          entities.push_back(*entity);
+          systemContext.entities.push_back(*entity);
       }
     }
 
@@ -125,7 +127,7 @@ void GameLoop::runSystems() {
           bool matchesReverse =
               entityIdMatches(c.a, pair.b) && entityIdMatches(c.b, pair.a);
           if (matchesForward || matchesReverse) {
-            collisions.push_back(c);
+            systemContext.collisions.push_back(c);
           }
         }
       }
@@ -134,10 +136,10 @@ void GameLoop::runSystems() {
     __android_log_print(
         ANDROID_LOG_DEBUG, "GameLoop",
         "System Index: %zu, Entities: %zu, Collisions: %zu, Calling onTick",
-        systemIndex, entities.size(), collisions.size());
+        systemIndex, systemContext.entities.size(),
+        systemContext.collisions.size());
 
-    std::shared_ptr<Promise<double>> promise =
-        system.onTick(entities, collisions);
+    std::shared_ptr<Promise<double>> promise = system.onTick(systemContext);
     std::future<double> future = promise->await();
     double duration = future.get();
 

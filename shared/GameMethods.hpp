@@ -24,7 +24,9 @@ public:
 
   void despawn(const std::string &id) override;
 
-  void update(const std::vector<EntityUpdate> &updates) override;
+  void updateEntities(const std::vector<EntityUpdate> &entityUpdates) override;
+
+  void updateScreen(const ScreenUpdate &screenUpdate) override;
 
   bool isAssetLoaded(double id) override;
 

@@ -106,47 +106,69 @@ void GameMethods::despawn(const std::string &id) {
   }
 }
 
-void GameMethods::update(const std::vector<EntityUpdate> &updates) {
+static void patch(const auto &field, auto &target) {
+  if (field.has_value()) {
+    target = field.value();
+  }
+}
+
+void GameMethods::updateEntities(
+    const std::vector<EntityUpdate> &entityUpdates) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  for (const auto &update : updates) {
+  for (const auto &entityUpdate : entityUpdates) {
     auto resolvedEntitiesInternals =
-        instance.resolveEntitiesInternal(update.id);
+        instance.resolveEntitiesInternal(entityUpdate.id);
     if (resolvedEntitiesInternals.empty()) {
       __android_log_print(ANDROID_LOG_WARN, "GameMethods",
-                          "update: no entity found for id=%s",
-                          update.id.c_str());
+                          "entityUpdate: no entity found for id=%s",
+                          entityUpdate.id.c_str());
       continue;
     }
 
-    auto patch = [](const auto &field, auto &target) {
-      if (field.has_value()) {
-        target = field.value();
-      }
-    };
-
     for (auto *entity : resolvedEntitiesInternals) {
-      patch(update.px, entity->px);
-      patch(update.py, entity->py);
-      patch(update.shape, entity->shape);
-      patch(update.isSensor, entity->isSensor);
-      patch(update.asset, entity->asset);
-      patch(update.progress, entity->progress);
-      patch(update.speed, entity->speed);
-      patch(update.color, entity->color);
-      patch(update.flipH, entity->flipH);
-      patch(update.flipV, entity->flipV);
-      patch(update.vx, entity->vx);
-      patch(update.vy, entity->vy);
-      patch(update.ax, entity->ax);
-      patch(update.ay, entity->ay);
-      patch(update.mass, entity->mass);
+      patch(entityUpdate.px, entity->px);
+      patch(entityUpdate.py, entity->py);
+      patch(entityUpdate.shape, entity->shape);
+      patch(entityUpdate.isSensor, entity->isSensor);
+      patch(entityUpdate.asset, entity->asset);
+      patch(entityUpdate.progress, entity->progress);
+      patch(entityUpdate.speed, entity->speed);
+      patch(entityUpdate.color, entity->color);
+      patch(entityUpdate.flipH, entity->flipH);
+      patch(entityUpdate.flipV, entity->flipV);
+      patch(entityUpdate.vx, entity->vx);
+      patch(entityUpdate.vy, entity->vy);
+      patch(entityUpdate.ax, entity->ax);
+      patch(entityUpdate.ay, entity->ay);
+      patch(entityUpdate.mass, entity->mass);
     }
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                        "update: patched %zu entities for id=%s",
-                        resolvedEntitiesInternals.size(), update.id.c_str());
+                        "entityUpdateEntities: patched %zu entities for id=%s",
+                        resolvedEntitiesInternals.size(),
+                        entityUpdate.id.c_str());
   }
+}
+
+void GameMethods::updateScreen(const ScreenUpdate &screenUpdate) {
+  auto &instance = GameLoop::getInstance();
+  std::lock_guard<std::mutex> lock(instance.getMutexInternal());
+  auto &screen = instance.getScreenInternal();
+
+  patch(screenUpdate.px, screen.px);
+  patch(screenUpdate.py, screen.py);
+  patch(screenUpdate.width, screen.width);
+  patch(screenUpdate.height, screen.height);
+  patch(screenUpdate.asset, screen.asset);
+  patch(screenUpdate.progress, screen.progress);
+  patch(screenUpdate.speed, screen.speed);
+  patch(screenUpdate.color, screen.color);
+  patch(screenUpdate.flipH, screen.flipH);
+  patch(screenUpdate.flipV, screen.flipV);
+
+  __android_log_print(ANDROID_LOG_INFO, "GameMethods",
+                      "updateScreen: patched screen");
 }
 
 bool GameMethods::isAssetLoaded(double id) {

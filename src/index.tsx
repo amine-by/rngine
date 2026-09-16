@@ -9,5 +9,6 @@ export type {
   CollisionPair,
   Collision,
   EntityUpdate,
+  SystemContext,
 } from './nativeTypes';
 export { GameEngine };

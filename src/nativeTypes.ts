@@ -61,7 +61,7 @@ export interface World {
   gy?: number;
 }
 
-export interface Screen extends Rect, Renderable {}
+export interface Screen extends Positioned, Rect, Renderable {}
 
 export interface Entity extends Positioned, Shaped, Renderable, Kinematic {
   /** Unique identifier. Use `_` as a separator for group queries e.g. `'enemy_1'`. */
@@ -74,6 +74,8 @@ export interface EntityUpdate extends Partial<
   /** Unique identifier or prefix of the entities to update. */
   id: string;
 }
+
+export interface ScreenUpdate extends Partial<Screen> {}
 
 export interface CollisionPair {
   /** Entity id or prefix of the first entity to watch. */
@@ -95,11 +97,20 @@ export interface Collision {
   ny: number;
 }
 
+export interface SystemContext {
+  /** Current game screen state. */
+  screen: Screen;
+  /** Entities resolved from the system's entity subscriptions. */
+  entities: Entity[];
+  /** Collisions matching the system's collision subscriptions. */
+  collisions: Collision[];
+}
+
 export interface System {
   /** Entity ids or prefixes this system subscribes to. */
   entities?: string[];
   /** Collision pairs to watch for every tick. */
   collisions?: CollisionPair[];
   /** Called every tick with the resolved entities and collisions. */
-  onTick: (entities: Entity[], collisions: Collision[]) => number;
+  onTick: (systemContext: SystemContext) => number;
 }
