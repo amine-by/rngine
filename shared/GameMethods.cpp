@@ -106,11 +106,11 @@ void GameMethods::despawn(const std::string &id) {
   }
 }
 
-static auto patch(const auto &field, auto &target) {
+static void patch(const auto &field, auto &target) {
   if (field.has_value()) {
     target = field.value();
   }
-};
+}
 
 void GameMethods::updateEntities(
     const std::vector<EntityUpdate> &entityUpdates) {

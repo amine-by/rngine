@@ -17,7 +17,7 @@ import { GameEngine, configure, updateEntity } from 'rngine';
 
 configure({
   world: { tickRate: 60 },
-  screen: { width: 800, height: 800, color: '#1a1a1a' },
+  screen: { px: 400, py: 400, width: 800, height: 800, color: '#1a1a1a' },
   entities: [
     {
       id: 'player',
@@ -80,13 +80,13 @@ export default function App() {
 
 ## Rendering
 
-Rngine renders natively with [Skia](https://skia.org/) — every frame is drawn directly in C++ on the game loop thread, with no bridge round-trip per frame. SVG, PNG, and [Lottie](https://airbnb.io/lottie/) animations are all supported as entity/screen assets, decoded and cached natively.
+Rngine renders natively with [Skia](https://skia.org/): every frame is drawn directly in C++ on the game loop thread, with no bridge round-trip per frame. SVG, PNG, and [Lottie](https://airbnb.io/lottie/) animations are all supported as entity/screen assets, decoded and cached natively.
 
 ## Physics
 
-Entities with a `mass` are affected by the world's gravity (`world.gx`/`gy`) and participate in automatic collision resolution: overlapping entities are pushed apart and have their velocities updated via an impulse response. Entities without a `mass` (or `mass: 0`) are treated as immovable (infinite mass) when involved in a collision — useful for static geometry like a ground or walls.
+Entities with a `mass` are affected by the world's gravity (`world.gx`/`gy`) and participate in automatic collision resolution: overlapping entities are pushed apart and have their velocities updated via an impulse response. Entities without a `mass` (or `mass: 0`) are treated as immovable (infinite mass) when involved in a collision: useful for static geometry like a ground or walls.
 
-Set `isSensor: true` on an entity to still receive collision events (`Collision.depth`, `Collision.nx`/`ny`) without any physical response — the entity won't be pushed, and other entities won't be pushed by it. This is useful for pickups, triggers, or grid-based games where you want to detect overlap yourself without physics involved.
+Set `isSensor: true` on an entity to still receive collision events (`Collision.depth`, `Collision.nx`/`ny`) without any physical response: the entity won't be pushed, and other entities won't be pushed by it. This is useful for pickups, triggers, or grid-based games where you want to detect overlap yourself without physics involved.
 
 ## Entity Querying
 
@@ -108,11 +108,11 @@ This makes it easy to build entity groups naturally through naming. No extra con
 { collisions: [{ a: 'player', b: 'enemy' }], onTick: (_, collisions) => {} }
 ```
 
-Collision results include a normalized direction vector (`nx`/`ny`) pointing along the minimum separating axis, alongside the penetration `depth` — useful for resolving collisions manually or reacting to a specific direction of impact.
+Collision results include a normalized direction vector (`nx`/`ny`) pointing along the minimum separating axis, alongside the penetration `depth`: useful for resolving collisions manually or reacting to a specific direction of impact.
 
 ## Assets
 
-Assets (SVGs, PNGs, and Lottie animations) must be preloaded with `loadAssets` before being referenced by `id`, `px`/`py`, or any `configure`/`spawn`/`update` call. Loading happens off the JS thread and is cached — calling `loadAssets` again with the same source is a no-op.
+Assets (SVGs, PNGs, and Lottie animations) must be preloaded with `loadAssets` before being referenced by `id`, `px`/`py`, or any `configure`/`spawn`/`update` call. Loading happens off the JS thread and is cached. Calling `loadAssets` again with the same source is a no-op.
 
 ```ts
 import { loadAssets } from 'rngine';
