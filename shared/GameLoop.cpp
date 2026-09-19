@@ -71,6 +71,8 @@ void GameLoop::runGameLoop() {
   auto &gameRenderer = GameRenderer::getInstance();
 
   while (_isRunning) {
+    gameRenderer.processPendingTasks();
+
     double targetDeltaTime;
     {
       std::lock_guard<std::mutex> lock(_worldMutex);

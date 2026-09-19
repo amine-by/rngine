@@ -36,6 +36,7 @@ public:
   void onSurfaceChanged(int width, int height);
   void onSurfaceDestroyed();
 
+  void processPendingTasks();
   void render(const Screen &screen,
               const std::map<std::string, Entity> &entities);
 
@@ -58,6 +59,9 @@ private:
 
   std::map<double, sk_sp<skottie::Animation>> _lottieCache;
   std::map<double, std::variant<sk_sp<SkSVGDOM>, sk_sp<SkImage>>> _imageCache;
+
+  std::mutex _taskMutex;
+  std::queue<std::function<void()>> _taskQueue;
 
   bool isEntityVisible(const Entity &entity, const SkRect &viewBounds);
 
