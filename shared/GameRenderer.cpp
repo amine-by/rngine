@@ -43,73 +43,89 @@ GameRenderer::~GameRenderer() {
 }
 
 void GameRenderer::onSurfaceCreated(ANativeWindow *window) {
-  __android_log_print(ANDROID_LOG_INFO, "GameRenderer", "onSurfaceCreated");
 
-  _nativeWindow = window;
+  std::lock_guard<std::mutex> lock(_taskMutex);
+  _taskQueue.push([this, window]() {
+    __android_log_print(ANDROID_LOG_INFO, "GameRenderer", "onSurfaceCreated");
 
-  if (!_initialized) {
-    if (!initializeEGL()) {
-      __android_log_print(ANDROID_LOG_ERROR, "GameRenderer",
-                          "onSurfaceCreated: EGL initialization failed");
-      return;
+    _nativeWindow = window;
+
+    if (!_initialized) {
+      if (!initializeEGL()) {
+        __android_log_print(ANDROID_LOG_ERROR, "GameRenderer",
+                            "onSurfaceCreated: EGL initialization failed");
+        return;
+      }
+      _initialized = true;
     }
-    _initialized = true;
-  }
 
-  if (!createEGLSurface()) {
-    __android_log_print(ANDROID_LOG_ERROR, "GameRenderer",
-                        "onSurfaceCreated: EGL surface creation failed");
-  }
+    if (!createEGLSurface()) {
+      __android_log_print(ANDROID_LOG_ERROR, "GameRenderer",
+                          "onSurfaceCreated: EGL surface creation failed");
+    }
+  });
 }
 
 void GameRenderer::onSurfaceChanged(int width, int height) {
-  _width = width;
-  _height = height;
-  _surface = nullptr;
+  std::lock_guard<std::mutex> lock(_taskMutex);
+  _taskQueue.push([this, width, height]() {
+    _width = width;
+    _height = height;
+    _surface = nullptr;
 
-  __android_log_print(ANDROID_LOG_INFO, "GameRenderer",
-                      "onSurfaceChanged: Width: %d, Height: %d", _width,
-                      _height);
+    __android_log_print(ANDROID_LOG_INFO, "GameRenderer",
+                        "onSurfaceChanged: Width: %d, Height: %d", _width,
+                        _height);
+  });
 }
 
 void GameRenderer::onSurfaceDestroyed() {
-  if (_eglDisplay != EGL_NO_DISPLAY) {
-    eglMakeCurrent(_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  std::lock_guard<std::mutex> lock(_taskMutex);
+  _taskQueue.push([this]() {
+    if (_eglDisplay != EGL_NO_DISPLAY) {
+      eglMakeCurrent(_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                     EGL_NO_CONTEXT);
 
-    if (_eglSurface != EGL_NO_SURFACE) {
-      eglDestroySurface(_eglDisplay, _eglSurface);
-      _eglSurface = EGL_NO_SURFACE;
+      if (_eglSurface != EGL_NO_SURFACE) {
+        eglDestroySurface(_eglDisplay, _eglSurface);
+        _eglSurface = EGL_NO_SURFACE;
+      }
     }
+
+    if (_nativeWindow) {
+      ANativeWindow_release(_nativeWindow);
+      _nativeWindow = nullptr;
+    }
+
+    _surface = nullptr;
+    _width = 0;
+    _height = 0;
+
+    __android_log_print(ANDROID_LOG_INFO, "GameRenderer", "onSurfaceDestroyed");
+  });
+}
+
+void GameRenderer::processPendingTasks() {
+  std::queue<std::function<void()>> tasksToProcess;
+
+  {
+    std::lock_guard<std::mutex> lock(_taskMutex);
+    std::swap(tasksToProcess, _taskQueue);
   }
 
-  if (_nativeWindow) {
-    ANativeWindow_release(_nativeWindow);
-    _nativeWindow = nullptr;
+  while (!tasksToProcess.empty()) {
+    tasksToProcess.front()(); // Executes on the game loop thread
+    tasksToProcess.pop();
   }
-
-  _surface = nullptr;
-  _width = 0;
-  _height = 0;
-
-  __android_log_print(ANDROID_LOG_INFO, "GameRenderer", "onSurfaceDestroyed");
 }
 
 void GameRenderer::render(const Screen &screen,
                           const std::map<std::string, Entity> &entities) {
 
-  __android_log_print(ANDROID_LOG_DEBUG, "GameRenderer",
-                      "render: called, entities=%zu", entities.size());
-
   if (!_grContext || _eglSurface == EGL_NO_SURFACE || _width == 0 ||
       _height == 0) {
     __android_log_print(ANDROID_LOG_WARN, "GameRenderer",
                         "render: early-return: guard failed");
-    return;
-  }
-
-  if (!eglMakeCurrent(_eglDisplay, _eglSurface, _eglSurface, _eglContext)) {
-    __android_log_print(ANDROID_LOG_ERROR, "GameRenderer",
-                        "render: eglMakeCurrent failed: 0x%x", eglGetError());
     return;
   }
 
@@ -228,8 +244,6 @@ void GameRenderer::render(const Screen &screen,
 
   _grContext->flushAndSubmit(_surface.get());
   eglSwapBuffers(_eglDisplay, _eglSurface);
-
-  __android_log_print(ANDROID_LOG_DEBUG, "GameRenderer", "render: complete");
 }
 
 bool GameRenderer::isEntityVisible(const Entity &entity,
@@ -341,8 +355,6 @@ bool GameRenderer::createEGLSurface() {
       return false;
     }
   }
-
-  eglMakeCurrent(_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
   __android_log_print(ANDROID_LOG_INFO, "GameRenderer",
                       "createEGLSurface: EGL surface created");
