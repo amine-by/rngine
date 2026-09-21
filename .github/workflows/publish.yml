@@ -1,0 +1,44 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Select version bump level'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        run: yarn version --${{ inputs.version_type }}
+
+      - name: Push Git tag and commit
+        run: git push --follow-tags
+
+      - name: Publish to npm
+        run: npm publish --access public
