@@ -57,33 +57,33 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^20.5.0",
-    "@eslint/compat": "^2.0.3",
-    "@eslint/eslintrc": "^3.3.5",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/compat": "^2.1.1",
+    "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
-    "@react-native/babel-preset": "0.85.0",
-    "@react-native/eslint-config": "0.85.0",
-    "@types/react": "^19.2.0",
-    "commitlint": "^20.5.0",
+    "@react-native/babel-preset": "^0.87.1",
+    "@react-native/eslint-config": "^0.87.1",
+    "@types/react": "^19.3.0",
+    "commitlint": "^21.2.3",
     "del-cli": "^7.0.0",
-    "eslint": "^9.39.4",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-ft-flow": "^3.0.11",
-    "eslint-plugin-prettier": "^5.5.5",
-    "lefthook": "^2.1.4",
-    "nitrogen": "^0.35.3",
-    "prettier": "^3.8.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "lefthook": "^2.1.14",
+    "nitrogen": "^0.37.1",
+    "prettier": "^3.9.8",
     "react": "19.2.3",
-    "react-native": "0.85.0",
-    "react-native-builder-bob": "^0.41.0",
-    "react-native-nitro-modules": "^0.35.3",
-    "turbo": "^2.8.21",
+    "react-native": "0.85.3",
+    "react-native-builder-bob": "^0.43.1",
+    "react-native-nitro-modules": "^0.37.1",
+    "turbo": "^2.11.2",
     "typescript": "^6.0.2"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-nitro-modules": "^0.35.3"
+    "react-native-nitro-modules": "^0.37.1"
   },
   "workspaces": [
     "example"
@@ -136,6 +136,6 @@
     "version": "0.61.0"
   },
   "dependencies": {
-    "react-native-skia-android": "^152.0.0"
+    "react-native-skia-android": "^154.0.0"
   }
 }
