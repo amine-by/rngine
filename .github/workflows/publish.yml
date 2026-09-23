@@ -35,7 +35,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump version
-        run: yarn version --${{ inputs.version_type }}
+        run: yarn version ${{ inputs.version_type }}
 
       - name: Push Git tag and commit
         run: git push --follow-tags
