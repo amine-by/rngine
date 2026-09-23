@@ -263,10 +263,7 @@ function SnakeContent() {
                         : 'UP';
 
                 const pair = [dirTowardHead, dirTowardTail].sort().join('_') as
-                  | 'LEFT_UP'
-                  | 'DOWN_RIGHT'
-                  | 'DOWN_LEFT'
-                  | 'RIGHT_UP';
+                  'LEFT_UP' | 'DOWN_RIGHT' | 'DOWN_LEFT' | 'RIGHT_UP';
 
                 bodyKey = pair;
               }
