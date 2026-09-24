@@ -185,7 +185,7 @@ void GameLoop::updateStats(double deltaTime) {
 void GameLoop::updateScreen(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
   if (_screen.asset.has_value()) {
-    AssetUtils::updateProgress(_screen.progress, _screen.speed,
+    AssetUtils::updateProgress(_screen.progress, _screen.speed, _screen.loop,
                                _screen.asset.value(), deltaTime);
   }
 }
@@ -220,7 +220,7 @@ void GameLoop::updateEntities(double deltaTime) {
     }
 
     if (entity.asset.has_value()) {
-      AssetUtils::updateProgress(entity.progress, entity.speed,
+      AssetUtils::updateProgress(entity.progress, entity.speed, entity.loop,
                                  entity.asset.value(), deltaTime);
     }
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   GameEngine,
@@ -43,6 +43,8 @@ function Playground() {
 }
 
 function PlaygroundContent() {
+  const doubleJumpRef = useRef<boolean>(false);
+
   const [isPaused, setIsPaused] = useState(false);
   const { getAssets } = useAssets();
 
@@ -51,7 +53,7 @@ function PlaygroundContent() {
   const safeAreaInsets = useSafeAreaInsets();
   const styles = getStyles({ ...safeAreaInsets, isLandscape });
 
-  const { Background_Test_Svg, Idle, Run, Jump, Fall } =
+  const { Background_Test_Svg, Idle, Run, Jump, Double_Jump, Fall } =
     getAssets('Playground') ?? {};
 
   useEffect(() => {
@@ -74,6 +76,7 @@ function PlaygroundContent() {
           shape: { width: 84, height: 116 },
           asset: Idle,
           speed: 1,
+          loop: true,
           mass: 5,
         },
         {
@@ -154,7 +157,12 @@ function PlaygroundContent() {
               return;
             }
 
-            let entityUpdate: EntityUpdate = { id: 'player' };
+            let entityUpdate: EntityUpdate = {
+              id: 'player',
+              loop: true,
+              progress: 0,
+            };
+
             let screenUpdate: ScreenUpdate = {};
 
             if (
@@ -175,7 +183,8 @@ function PlaygroundContent() {
               typeof player?.vy !== 'undefined' &&
               !isNaN(player?.vy) &&
               player?.vy < -EPSILON &&
-              player?.asset !== Jump
+              player?.asset !== Jump &&
+              player?.asset !== Double_Jump
             ) {
               entityUpdate.asset = Jump;
               entityUpdate.shape = { width: 84, height: 124 };
@@ -183,10 +192,17 @@ function PlaygroundContent() {
               typeof player?.vy !== 'undefined' &&
               !isNaN(player?.vy) &&
               player?.vy > EPSILON &&
-              player?.asset !== Fall
+              player?.asset !== Fall &&
+              player?.asset !== Double_Jump
             ) {
               entityUpdate.asset = Fall;
               entityUpdate.shape = { width: 92, height: 116 };
+            } else if (
+              player?.asset === Double_Jump &&
+              player?.progress === 1
+            ) {
+              entityUpdate.asset = Jump;
+              entityUpdate.shape = { width: 84, height: 124 };
             }
 
             if (player.px > SCREEN_WIDTH && screen.px < SCREEN_WIDTH) {
@@ -218,7 +234,7 @@ function PlaygroundContent() {
         },
       ],
     });
-  }, [Background_Test_Svg, Fall, Idle, Run, Jump]);
+  }, [Background_Test_Svg, Fall, Idle, Run, Jump, Double_Jump]);
 
   const onTogglePause = () => {
     setIsPaused((prev) => {
@@ -233,7 +249,14 @@ function PlaygroundContent() {
 
   const jump = () => {
     if (isPaused) return;
-    updateEntity({ id: 'player', vy: -1300 });
+    updateEntity({
+      id: 'player',
+      vy: -1300,
+      asset: doubleJumpRef.current ? Double_Jump : undefined,
+      loop: !doubleJumpRef.current,
+      shape: doubleJumpRef.current ? { width: 104, height: 104 } : undefined,
+    });
+    doubleJumpRef.current = !doubleJumpRef.current;
   };
 
   const moveLeft = () => {

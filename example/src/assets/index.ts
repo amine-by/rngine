@@ -11,6 +11,7 @@ import Idle from './playground/idle.json';
 import Run from './playground/run.json';
 import Fall from './playground/fall.png';
 import Jump from './playground/jump.png';
+import Double_Jump from './playground/double_jump.json';
 
 const ASSETS = {
   Snake: {
@@ -29,6 +30,7 @@ const ASSETS = {
     Run,
     Fall,
     Jump,
+    Double_Jump,
   },
 };
 

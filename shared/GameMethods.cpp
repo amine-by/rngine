@@ -134,6 +134,7 @@ void GameMethods::updateEntities(
       patch(entityUpdate.asset, entity->asset);
       patch(entityUpdate.progress, entity->progress);
       patch(entityUpdate.speed, entity->speed);
+      patch(entityUpdate.loop, entity->loop);
       patch(entityUpdate.color, entity->color);
       patch(entityUpdate.flipH, entity->flipH);
       patch(entityUpdate.flipV, entity->flipV);
@@ -163,6 +164,7 @@ void GameMethods::updateScreen(const ScreenUpdate &screenUpdate) {
   patch(screenUpdate.asset, screen.asset);
   patch(screenUpdate.progress, screen.progress);
   patch(screenUpdate.speed, screen.speed);
+  patch(screenUpdate.loop, screen.loop);
   patch(screenUpdate.color, screen.color);
   patch(screenUpdate.flipH, screen.flipH);
   patch(screenUpdate.flipV, screen.flipV);
