@@ -73,16 +73,23 @@ void drawAsset(SkCanvas *canvas, double asset, float targetWidth,
 }
 
 void updateProgress(std::optional<double> &progress,
-                    std::optional<double> &speed, double asset,
-                    double deltaTime) {
+                    const std::optional<double> &speed,
+                    const std::optional<bool> &loop, const double asset,
+                    const double deltaTime) {
   if (asset < 0) {
     auto &lottieCache = GameRenderer::getInstance().getLottieCacheInternal();
     auto it = lottieCache.find(asset);
     if (it != lottieCache.end() && it->second) {
       if (speed.has_value() && speed.value() > 0) {
-        progress = fmod(progress.value_or(0.0) + (deltaTime * speed.value()) /
-                                                     it->second->duration(),
-                        1.0);
+        double newProgress =
+            progress.value_or(0.0) +
+            (deltaTime * speed.value()) / it->second->duration();
+
+        if (loop.value_or(false)) {
+          progress = std::fmod(newProgress, 1.0);
+        } else {
+          progress = std::min(newProgress, 1.0);
+        }
       }
     }
   } else if (progress.has_value()) {

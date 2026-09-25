@@ -35,8 +35,10 @@ interface Renderable {
   flipV?: boolean;
   /** Animation progress between 0 and 1, automatically advanced each tick for Lottie assets. */
   progress?: number;
-  /** Playback speed multiplier for animated assets (1 = normal speed). */
+  /** Playback speed multiplier for Lottie assets (1 = normal speed). */
   speed?: number;
+  /** Whether the Lottie animation should restart automatically upon completion. */
+  loop?: boolean;
 }
 
 interface Kinematic {
