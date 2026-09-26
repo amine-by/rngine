@@ -22,7 +22,6 @@ import {
 } from 'react-native-safe-area-context';
 import type { EntityUpdate, ScreenUpdate } from '../../../src/nativeTypes';
 
-const EPSILON = 1e-10;
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 800;
 const WORLD_WIDTH = SCREEN_WIDTH * 2;
@@ -43,7 +42,7 @@ function Playground() {
 }
 
 function PlaygroundContent() {
-  const doubleJumpRef = useRef<boolean>(false);
+  const availableJumpsRef = useRef<number>(2);
 
   const [isPaused, setIsPaused] = useState(false);
   const { getAssets } = useAssets();
@@ -80,7 +79,7 @@ function PlaygroundContent() {
           mass: 5,
         },
         {
-          id: 'ground',
+          id: 'platform_ground',
           px: WORLD_WIDTH / 2,
           py: WORLD_HEIGHT - GROUND_HEIGHT / 2,
           shape: { width: WORLD_WIDTH, height: GROUND_HEIGHT },
@@ -149,8 +148,9 @@ function PlaygroundContent() {
       ],
       systems: [
         {
+          collisions: [{ a: 'player', b: 'platform' }],
           entities: ['player'],
-          onTick: ({ entities, screen }) => {
+          onTick: ({ entities, collisions, screen }) => {
             const player = entities[0];
 
             if (!player) {
@@ -159,50 +159,49 @@ function PlaygroundContent() {
 
             let entityUpdate: EntityUpdate = {
               id: 'player',
-              loop: true,
               progress: 0,
             };
 
             let screenUpdate: ScreenUpdate = {};
 
-            if (
-              player.vx === 0 &&
-              Math.abs(player?.vy ?? 0) < EPSILON &&
-              player?.asset !== Idle
-            ) {
-              entityUpdate.asset = Idle;
-              entityUpdate.shape = { width: 84, height: 116 };
-            } else if (
-              player.vx !== 0 &&
-              Math.abs(player?.vy ?? 0) < EPSILON &&
-              player?.asset !== Run
-            ) {
-              entityUpdate.asset = Run;
-              entityUpdate.shape = { width: 92, height: 120 };
-            } else if (
-              typeof player?.vy !== 'undefined' &&
-              !isNaN(player?.vy) &&
-              player?.vy < -EPSILON &&
-              player?.asset !== Jump &&
-              player?.asset !== Double_Jump
-            ) {
-              entityUpdate.asset = Jump;
-              entityUpdate.shape = { width: 84, height: 124 };
-            } else if (
-              typeof player?.vy !== 'undefined' &&
-              !isNaN(player?.vy) &&
-              player?.vy > EPSILON &&
-              player?.asset !== Fall &&
-              player?.asset !== Double_Jump
-            ) {
-              entityUpdate.asset = Fall;
-              entityUpdate.shape = { width: 92, height: 116 };
-            } else if (
-              player?.asset === Double_Jump &&
-              player?.progress === 1
-            ) {
-              entityUpdate.asset = Jump;
-              entityUpdate.shape = { width: 84, height: 124 };
+            if (collisions[0] && collisions[0].ny > 0) {
+              if (availableJumpsRef.current < 2) {
+                availableJumpsRef.current = 2;
+              }
+              if (player.vx === 0 && player?.asset !== Idle) {
+                entityUpdate.asset = Idle;
+                entityUpdate.shape = { width: 84, height: 116 };
+              } else if (player.vx !== 0 && player?.asset !== Run) {
+                entityUpdate.asset = Run;
+                entityUpdate.shape = { width: 92, height: 120 };
+              }
+            } else {
+              if (
+                typeof player?.vy !== 'undefined' &&
+                !isNaN(player?.vy) &&
+                player?.vy < 0 &&
+                player?.asset !== Jump &&
+                player?.asset !== Double_Jump
+              ) {
+                entityUpdate.asset = Jump;
+                entityUpdate.shape = { width: 84, height: 124 };
+              } else if (
+                typeof player?.vy !== 'undefined' &&
+                !isNaN(player?.vy) &&
+                player?.vy > 0 &&
+                player?.asset !== Fall &&
+                player?.asset !== Double_Jump
+              ) {
+                entityUpdate.asset = Fall;
+                entityUpdate.shape = { width: 92, height: 116 };
+              } else if (
+                player?.asset === Double_Jump &&
+                player?.progress === 1
+              ) {
+                entityUpdate.asset = Jump;
+                entityUpdate.loop = true;
+                entityUpdate.shape = { width: 84, height: 124 };
+              }
             }
 
             if (player.px > SCREEN_WIDTH && screen.px < SCREEN_WIDTH) {
@@ -249,14 +248,19 @@ function PlaygroundContent() {
 
   const jump = () => {
     if (isPaused) return;
+    if (availableJumpsRef.current < 1) return;
+
+    const hasOneRemainingJump = availableJumpsRef.current === 1;
+
     updateEntity({
       id: 'player',
       vy: -1300,
-      asset: doubleJumpRef.current ? Double_Jump : undefined,
-      loop: !doubleJumpRef.current,
-      shape: doubleJumpRef.current ? { width: 104, height: 104 } : undefined,
+      asset: hasOneRemainingJump ? Double_Jump : undefined,
+      loop: !hasOneRemainingJump,
+      shape: hasOneRemainingJump ? { width: 104, height: 104 } : undefined,
+      progress: 0,
     });
-    doubleJumpRef.current = !doubleJumpRef.current;
+    availableJumpsRef.current -= 1;
   };
 
   const moveLeft = () => {
