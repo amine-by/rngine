@@ -124,12 +124,20 @@ void GameLoop::runSystems() {
     if (system.collisions.has_value()) {
       for (const auto &pair : system.collisions.value()) {
         for (const auto &c : _collisions) {
-          bool matchesForward =
-              entityIdMatches(c.a, pair.a) && entityIdMatches(c.b, pair.b);
-          bool matchesReverse =
-              entityIdMatches(c.a, pair.b) && entityIdMatches(c.b, pair.a);
-          if (matchesForward || matchesReverse) {
+
+          if (entityIdMatches(c.a, pair.a) && entityIdMatches(c.b, pair.b)) {
             systemContext.collisions.push_back(c);
+          } else if (entityIdMatches(c.a, pair.b) &&
+                     entityIdMatches(c.b, pair.a)) {
+            auto swappedCollision = c;
+
+            swappedCollision.a = c.b;
+            swappedCollision.b = c.a;
+
+            swappedCollision.nx = -c.nx;
+            swappedCollision.ny = -c.ny;
+
+            systemContext.collisions.push_back(swappedCollision);
           }
         }
       }
