@@ -38,7 +38,18 @@ jobs:
       - name: Bump version
         run: yarn version ${{ inputs.version_type }}
 
-      - name: Push Git tag and commit
+      - name: Commit version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git add package.json
+          git commit -m "chore: release v${VERSION}"
+
+      - name: Create Git tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git tag "v${VERSION}"
+
+      - name: Push commit and tag
         run: git push origin HEAD:${{ github.ref_name }} --follow-tags
 
       - name: Publish to npm
