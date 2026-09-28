@@ -1,11 +1,13 @@
 #include "GameRenderer.hpp"
 #include "AssetUtils.hpp"
 #include "ColorUtils.hpp"
+#include "ObjectFit.hpp"
 #include "Rect.hpp"
 
 #include <android/log.h>
 #include <android/native_window.h>
 
+#include "Repeat.hpp"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorSpace.h"
@@ -174,10 +176,12 @@ void GameRenderer::render(const Screen &screen,
   if (screen.asset.has_value() && screen.asset.value() != 0) {
     SkAutoCanvasRestore restore(canvas, true);
     canvas->translate(gameBounds.left(), gameBounds.top());
-    AssetUtils::drawAsset(canvas, screen.asset.value(), virtualWidth,
-                          virtualHeight, screen.flipH.value_or(false),
-                          screen.flipV.value_or(false),
-                          screen.progress.value_or(0.0));
+    AssetUtils::drawAsset(
+        canvas, screen.asset.value(), virtualWidth, virtualHeight,
+        screen.flipH.value_or(false), screen.flipV.value_or(false),
+        screen.objectFit.value_or(ObjectFit::FILL), screen.clip.value_or(false),
+        screen.repeat.value_or(Repeat::NO_REPEAT),
+        screen.progress.value_or(0.0));
   }
 
   for (const auto &[id, entity] : entities) {
@@ -235,6 +239,9 @@ void GameRenderer::render(const Screen &screen,
         AssetUtils::drawAsset(canvas, entity.asset.value(), width, height,
                               entity.flipH.value_or(false),
                               entity.flipV.value_or(false),
+                              entity.objectFit.value_or(ObjectFit::FILL),
+                              entity.clip.value_or(false),
+                              entity.repeat.value_or(Repeat::NO_REPEAT),
                               entity.progress.value_or(0.0));
       }
     }

@@ -138,6 +138,9 @@ void GameMethods::updateEntities(
       patch(entityUpdate.color, entity->color);
       patch(entityUpdate.flipH, entity->flipH);
       patch(entityUpdate.flipV, entity->flipV);
+      patch(entityUpdate.objectFit, entity->objectFit);
+      patch(entityUpdate.clip, entity->clip);
+      patch(entityUpdate.repeat, entity->repeat);
       patch(entityUpdate.vx, entity->vx);
       patch(entityUpdate.vy, entity->vy);
       patch(entityUpdate.ax, entity->ax);
@@ -168,6 +171,9 @@ void GameMethods::updateScreen(const ScreenUpdate &screenUpdate) {
   patch(screenUpdate.color, screen.color);
   patch(screenUpdate.flipH, screen.flipH);
   patch(screenUpdate.flipV, screen.flipV);
+  patch(screenUpdate.objectFit, screen.objectFit);
+  patch(screenUpdate.clip, screen.clip);
+  patch(screenUpdate.repeat, screen.repeat);
 
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                       "updateScreen: patched screen");

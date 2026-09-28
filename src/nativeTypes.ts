@@ -24,6 +24,10 @@ interface Shaped {
   isSensor?: boolean;
 }
 
+export type ObjectFit = 'fill' | 'contain' | 'cover' | 'none';
+
+export type Repeat = 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y';
+
 interface Renderable {
   /** Fill color as a hex string e.g. `'#00ff00'`. */
   color?: string;
@@ -33,6 +37,12 @@ interface Renderable {
   flipH?: boolean;
   /** Whether to flip the rendered asset vertically. */
   flipV?: boolean;
+  /** How the asset should be scaled to fit its target dimensions. Defaults to `'fill'`. */
+  objectFit?: ObjectFit;
+  /** Explicitly clips content that overflows the target dimensions. Defaults to `false`. */
+  clip?: boolean;
+  /** Repeating/tiling mode for the asset across target bounds. Defaults to `'no-repeat'`. */
+  repeat?: Repeat;
   /** Animation progress between 0 and 1, automatically advanced each tick for Lottie assets. */
   progress?: number;
   /** Playback speed multiplier for Lottie assets (1 = normal speed). */
