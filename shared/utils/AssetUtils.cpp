@@ -1,6 +1,7 @@
 #include "AssetUtils.hpp"
 #include "FitTransform.hpp"
 #include "GameRenderer.hpp"
+#include "include/core/SkPictureRecorder.h"
 #include <variant>
 
 namespace margelo::nitro::rngine::AssetUtils {
@@ -84,7 +85,10 @@ static void drawSVG(SkCanvas *canvas, const sk_sp<SkSVGDOM> &svg,
 
   SkAutoCanvasRestore restore(canvas, true);
 
-  bool isRepeating = (repeat != Repeat::NO_REPEAT);
+  bool isRepeating = (repeat != Repeat::NO_REPEAT) &&
+                     (objectFit != ObjectFit::FILL) &&
+                     (objectFit != ObjectFit::COVER);
+
   bool shouldClip = clip && (objectFit == ObjectFit::COVER ||
                              objectFit == ObjectFit::NONE || isRepeating);
 
@@ -99,30 +103,35 @@ static void drawSVG(SkCanvas *canvas, const sk_sp<SkSVGDOM> &svg,
     return;
   }
 
-  float startX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                     ? computeCenteredTileStart(targetWidth, tileW)
-                     : tf.translateX;
+  SkPictureRecorder recorder;
+  SkCanvas *recordingCanvas =
+      recorder.beginRecording(intrinsicSize.width(), intrinsicSize.height());
+  svg->render(recordingCanvas);
+  sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
 
-  float startY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                     ? computeCenteredTileStart(targetHeight, tileH)
-                     : tf.translateY;
+  bool repX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X);
+  bool repY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y);
 
-  float endX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                   ? targetWidth
-                   : (startX + tileW);
+  SkTileMode tileX = repX ? SkTileMode::kRepeat : SkTileMode::kDecal;
+  SkTileMode tileY = repY ? SkTileMode::kRepeat : SkTileMode::kDecal;
 
-  float endY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                   ? targetHeight
-                   : (startY + tileH);
+  float offsetX =
+      repX ? computeCenteredTileStart(targetWidth, tileW) : tf.translateX;
+  float offsetY =
+      repY ? computeCenteredTileStart(targetHeight, tileH) : tf.translateY;
 
-  for (float y = startY; y < endY; y += tileH) {
-    for (float x = startX; x < endX; x += tileW) {
-      SkAutoCanvasRestore tileRestore(canvas, true);
-      canvas->translate(x, y);
-      canvas->scale(tf.scaleX, tf.scaleY);
-      svg->render(canvas);
-    }
-  }
+  SkMatrix localMatrix;
+  localMatrix.setScale(tf.scaleX, tf.scaleY);
+  localMatrix.postTranslate(offsetX, offsetY);
+
+  SkRect tileBounds =
+      SkRect::MakeWH(intrinsicSize.width(), intrinsicSize.height());
+  sk_sp<SkShader> shader = picture->makeShader(
+      tileX, tileY, SkFilterMode::kLinear, &localMatrix, &tileBounds);
+
+  SkPaint paint;
+  paint.setShader(shader);
+  canvas->drawRect(SkRect::MakeWH(targetWidth, targetHeight), paint);
 }
 
 static void drawRaster(SkCanvas *canvas, const sk_sp<SkImage> &raster,
@@ -138,7 +147,10 @@ static void drawRaster(SkCanvas *canvas, const sk_sp<SkImage> &raster,
 
   SkAutoCanvasRestore restore(canvas, true);
 
-  bool isRepeating = (repeat != Repeat::NO_REPEAT);
+  bool isRepeating = (repeat != Repeat::NO_REPEAT) &&
+                     (objectFit != ObjectFit::FILL) &&
+                     (objectFit != ObjectFit::COVER);
+
   bool shouldClip = clip && (objectFit == ObjectFit::COVER ||
                              objectFit == ObjectFit::NONE || isRepeating);
 
@@ -155,31 +167,25 @@ static void drawRaster(SkCanvas *canvas, const sk_sp<SkImage> &raster,
     return;
   }
 
-  SkTileMode tileX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                         ? SkTileMode::kRepeat
-                         : SkTileMode::kClamp;
-  SkTileMode tileY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                         ? SkTileMode::kRepeat
-                         : SkTileMode::kClamp;
+  bool repX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X);
+  bool repY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y);
+
+  SkTileMode tileX = repX ? SkTileMode::kRepeat : SkTileMode::kDecal;
+  SkTileMode tileY = repY ? SkTileMode::kRepeat : SkTileMode::kDecal;
 
   float tileW = intrinsicW * tf.scaleX;
   float tileH = intrinsicH * tf.scaleY;
 
+  float offsetX =
+      repX ? computeCenteredTileStart(targetWidth, tileW) : tf.translateX;
+  float offsetY =
+      repY ? computeCenteredTileStart(targetHeight, tileH) : tf.translateY;
+
   SkMatrix localMatrix = SkMatrix::Scale(tf.scaleX, tf.scaleY);
-
-  float offsetX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                      ? computeCenteredTileStart(targetWidth, tileW)
-                      : tf.translateX;
-  float offsetY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                      ? computeCenteredTileStart(targetHeight, tileH)
-                      : tf.translateY;
-
   localMatrix.postTranslate(offsetX, offsetY);
 
-  auto shader = raster->makeShader(tileX, tileY, sampling, localMatrix);
-
   SkPaint paint;
-  paint.setShader(shader);
+  paint.setShader(raster->makeShader(tileX, tileY, sampling, localMatrix));
   canvas->drawRect(SkRect::MakeWH(targetWidth, targetHeight), paint);
 }
 
@@ -207,7 +213,10 @@ static void drawLottie(SkCanvas *canvas,
 
   SkAutoCanvasRestore restore(canvas, true);
 
-  bool isRepeating = (repeat != Repeat::NO_REPEAT);
+  bool isRepeating = (repeat != Repeat::NO_REPEAT) &&
+                     (objectFit != ObjectFit::FILL) &&
+                     (objectFit != ObjectFit::COVER);
+
   bool shouldClip = clip && (objectFit == ObjectFit::COVER ||
                              objectFit == ObjectFit::NONE || isRepeating);
 
@@ -224,28 +233,34 @@ static void drawLottie(SkCanvas *canvas,
     return;
   }
 
-  float startX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                     ? computeCenteredTileStart(targetWidth, tileW)
-                     : tf.translateX;
-  float startY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                     ? computeCenteredTileStart(targetHeight, tileH)
-                     : tf.translateY;
+  SkPictureRecorder recorder;
+  SkCanvas *recordingCanvas =
+      recorder.beginRecording(intrinsicWidth, intrinsicHeight);
+  lottie->render(recordingCanvas, &dstBounds);
+  sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
 
-  float endX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X)
-                   ? targetWidth
-                   : (startX + tileW);
-  float endY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y)
-                   ? targetHeight
-                   : (startY + tileH);
+  bool repX = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_X);
+  bool repY = (repeat == Repeat::REPEAT || repeat == Repeat::REPEAT_Y);
 
-  for (float y = startY; y < endY; y += tileH) {
-    for (float x = startX; x < endX; x += tileW) {
-      SkAutoCanvasRestore tileRestore(canvas, true);
-      canvas->translate(x, y);
-      canvas->scale(tf.scaleX, tf.scaleY);
-      lottie->render(canvas, &dstBounds);
-    }
-  }
+  SkTileMode tileX = repX ? SkTileMode::kRepeat : SkTileMode::kDecal;
+  SkTileMode tileY = repY ? SkTileMode::kRepeat : SkTileMode::kDecal;
+
+  float offsetX =
+      repX ? computeCenteredTileStart(targetWidth, tileW) : tf.translateX;
+  float offsetY =
+      repY ? computeCenteredTileStart(targetHeight, tileH) : tf.translateY;
+
+  SkMatrix localMatrix;
+  localMatrix.setScale(tf.scaleX, tf.scaleY);
+  localMatrix.postTranslate(offsetX, offsetY);
+
+  SkRect tileBounds = SkRect::MakeWH(intrinsicWidth, intrinsicHeight);
+  sk_sp<SkShader> shader = picture->makeShader(
+      tileX, tileY, SkFilterMode::kLinear, &localMatrix, &tileBounds);
+
+  SkPaint paint;
+  paint.setShader(shader);
+  canvas->drawRect(SkRect::MakeWH(targetWidth, targetHeight), paint);
 }
 
 void drawAsset(SkCanvas *canvas, double asset, float targetWidth,
