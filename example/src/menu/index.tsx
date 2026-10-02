@@ -1,9 +1,8 @@
 import { Button, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '../App';
-import { useAssets } from '../AssetsContext';
+import { loadAssetsFor } from '../assets/assetsManager';
 export default function Menu() {
-  const { loadAssetsFor } = useAssets();
   const navigation = useNavigation<NavigationProp>();
 
   return (

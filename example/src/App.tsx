@@ -8,7 +8,6 @@ import {
 } from '@react-navigation/native-stack';
 import Menu from './menu';
 import { lazy } from 'react';
-import { AssetsProvider } from './AssetsContext';
 
 const Playground = lazy(() => import('./playground'));
 const Snake = lazy(() => import('./snake'));
@@ -40,9 +39,5 @@ export type NavigationProp = NativeStackNavigationProp<
 >;
 
 export default function App() {
-  return (
-    <AssetsProvider>
-      <Navigation />
-    </AssetsProvider>
-  );
+  return <Navigation />;
 }
