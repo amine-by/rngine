@@ -1,10 +1,11 @@
 import {
   updateEntity,
   updateScreen,
+  type Entity,
   type EntityUpdate,
+  type ScreenUpdate,
   type System,
 } from 'rngine';
-import type { ScreenUpdate } from '../../../../src/nativeTypes';
 import { getAssets } from '../../assets/assetsManager';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from './consts';
 import { playerState } from './state';
@@ -14,14 +15,11 @@ const { Idle, Appearing, Run, Jump, Fall, Double_Jump } =
 
 export const systems: System[] = [
   {
+    screen: true,
     collisions: [{ a: 'player', b: 'platform' }],
     entities: ['player'],
     onTick: ({ entities, collisions, screen }) => {
-      const player = entities[0];
-
-      if (!player) {
-        return;
-      }
+      const player = entities![0] as Entity;
 
       let entityUpdate: EntityUpdate = {
         id: 'player',
@@ -31,8 +29,8 @@ export const systems: System[] = [
 
       let screenUpdate: ScreenUpdate = {};
 
-      if (collisions[0] && collisions[0].ny > 0) {
-        if (playerState.availableJumps < 2) {
+      if (collisions![0] && collisions![0].ny > 0) {
+        if (playerState.availableJumps < 2 && player.asset !== Appearing) {
           playerState.availableJumps = 2;
         }
         if (
@@ -71,15 +69,15 @@ export const systems: System[] = [
         }
       }
 
-      if (player.px > SCREEN_WIDTH && screen.px < SCREEN_WIDTH) {
+      if (player.px > SCREEN_WIDTH && screen!.px < SCREEN_WIDTH) {
         screenUpdate.px = SCREEN_WIDTH * 1.5;
-      } else if (player.px < SCREEN_WIDTH && screen.px > SCREEN_WIDTH) {
+      } else if (player.px < SCREEN_WIDTH && screen!.px > SCREEN_WIDTH) {
         screenUpdate.px = SCREEN_WIDTH * 0.5;
       }
 
-      if (player.py > SCREEN_HEIGHT && screen.py < SCREEN_HEIGHT) {
+      if (player.py > SCREEN_HEIGHT && screen!.py < SCREEN_HEIGHT) {
         screenUpdate.py = SCREEN_HEIGHT * 1.5;
-      } else if (player.py < SCREEN_HEIGHT && screen.py > SCREEN_HEIGHT) {
+      } else if (player.py < SCREEN_HEIGHT && screen!.py > SCREEN_HEIGHT) {
         screenUpdate.py = SCREEN_HEIGHT * 0.5;
       }
 

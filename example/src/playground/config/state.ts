@@ -1,3 +1,3 @@
 export const playerState = {
-  availableJumps: 2,
+  availableJumps: 0,
 };

@@ -1,5 +1,5 @@
 import { gameMethods } from './GameMethods.nitro';
-import type { Entity, EntityUpdate, ScreenUpdate, System } from './nativeTypes';
+import type { Entity, EntityUpdate, ScreenUpdate } from './types';
 import type { Config } from './types';
 import { Image } from 'react-native';
 
@@ -11,25 +11,10 @@ export const configure = ({
   systems = [],
   paused = true,
 }: Config) => {
-  let nativeSystems: System[] = [];
-
-  for (const system of systems) {
-    nativeSystems.push({
-      entities: system.entities,
-      collisions: system.collisions,
-      onTick: (systemContext) => {
-        const start = Date.now();
-        system.onTick(systemContext);
-        const finish = Date.now();
-        return finish - start;
-      },
-    });
-  }
-
   gameMethods.setWorld(world);
   gameMethods.setScreen(screen);
   gameMethods.setEntities(entities);
-  gameMethods.setSystems(nativeSystems);
+  gameMethods.setSystems(systems);
   if (paused) {
     gameMethods.pause();
   } else {

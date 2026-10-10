@@ -28,9 +28,9 @@ export const systems: System[] = [
         py: number;
       })[] = [
         {
-          id: entities[1]!.id,
-          px: entities[1]!.px,
-          py: entities[1]!.py,
+          id: entities![1]!.id,
+          px: entities![1]!.px,
+          py: entities![1]!.py,
         },
       ];
 
@@ -60,10 +60,10 @@ export const systems: System[] = [
         return;
       }
 
-      for (let i = 2; i < entities.length; i++) {
+      for (let i = 2; i < entities!.length; i++) {
         if (
-          updates[0]!.px === entities[i - 1]!.px &&
-          updates[0]!.py === entities[i - 1]!.py
+          updates[0]!.px === entities![i - 1]!.px &&
+          updates[0]!.py === entities![i - 1]!.py
         ) {
           pause();
           setGameState('OVER');
@@ -71,15 +71,15 @@ export const systems: System[] = [
         }
 
         updates.push({
-          id: entities[i]!.id,
-          px: entities[i - 1]!.px,
-          py: entities[i - 1]!.py,
+          id: entities![i]!.id,
+          px: entities![i - 1]!.px,
+          py: entities![i - 1]!.py,
         });
       }
 
       if (
-        entities[1]!.px === entities[0]!.px &&
-        entities[1]!.py === entities[0]!.py
+        entities![1]!.px === entities![0]!.px &&
+        entities![1]!.py === entities![0]!.py
       ) {
         updates.push({
           id: 'food',
@@ -89,14 +89,14 @@ export const systems: System[] = [
 
         spawn({
           id: `snake_body_${
-            entities.length - 1 < 10
+            entities!.length - 1 < 10
               ? '00'
-              : entities.length - 1 < 100
+              : entities!.length - 1 < 100
                 ? '0'
                 : ''
-          }${entities.length - 1}`,
-          px: entities[entities.length - 1]!.px,
-          py: entities[entities.length - 1]!.py,
+          }${entities!.length - 1}`,
+          px: entities![entities!.length - 1]!.px,
+          py: entities![entities!.length - 1]!.py,
           shape: { width: CELL, height: CELL },
           isSensor: true,
         });
@@ -116,7 +116,7 @@ export const systems: System[] = [
       };
 
       updates.push({
-        id: entities[0]!.id,
+        id: entities![0]!.id,
         ...HEAD_ASSET_MAP[snakeState.direction],
       });
 
@@ -147,13 +147,13 @@ export const systems: System[] = [
 
       let bodyKey: keyof typeof BODY_ASSET_MAP;
 
-      for (let i = 1; i < entities.length - 1; i++) {
-        const previousPx = entities[i - 1]!.px;
-        const previousPy = entities[i - 1]!.py;
-        const currentPx = entities[i]!.px;
-        const currentPy = entities[i]!.py;
-        const nextPx = entities[i + 1]!.px;
-        const nextPy = entities[i + 1]!.py;
+      for (let i = 1; i < entities!.length - 1; i++) {
+        const previousPx = entities![i - 1]!.px;
+        const previousPy = entities![i - 1]!.py;
+        const currentPx = entities![i]!.px;
+        const currentPy = entities![i]!.py;
+        const nextPx = entities![i + 1]!.px;
+        const nextPy = entities![i + 1]!.py;
 
         if (previousPx === currentPx && currentPx === nextPx) {
           bodyKey = 'VERTICAL';
@@ -185,7 +185,7 @@ export const systems: System[] = [
         }
 
         updates.push({
-          id: entities[i]!.id,
+          id: entities![i]!.id,
           ...BODY_ASSET_MAP[bodyKey],
         });
       }
@@ -200,10 +200,12 @@ export const systems: System[] = [
       let tailKey: keyof typeof TAIL_ASSET_MAP;
 
       if (
-        entities[entities.length - 1]!.px === entities[entities.length - 2]!.px
+        entities![entities!.length - 1]!.px ===
+        entities![entities!.length - 2]!.px
       ) {
         if (
-          entities[entities.length - 1]!.py > entities[entities.length - 2]!.py
+          entities![entities!.length - 1]!.py >
+          entities![entities!.length - 2]!.py
         ) {
           tailKey = 'DOWN';
         } else {
@@ -211,7 +213,8 @@ export const systems: System[] = [
         }
       } else {
         if (
-          entities[entities.length - 1]!.px > entities[entities.length - 2]!.px
+          entities![entities!.length - 1]!.px >
+          entities![entities!.length - 2]!.px
         ) {
           tailKey = 'RIGHT';
         } else {
@@ -219,7 +222,7 @@ export const systems: System[] = [
         }
       }
       updates.push({
-        id: entities[entities.length - 1]!.id,
+        id: entities![entities!.length - 1]!.id,
         ...TAIL_ASSET_MAP[tailKey],
       });
 
