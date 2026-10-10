@@ -8,6 +8,7 @@
 #include <android/log.h>
 #include <chrono>
 #include <cinttypes>
+#include <map>
 #include <mutex>
 
 namespace margelo::nitro::rngine {
@@ -111,22 +112,30 @@ void GameLoop::runSystems() {
     auto &system = _systems[systemIndex];
     SystemContext systemContext;
 
-    systemContext.screen = _screen;
+    if (system.world.value_or(false)) {
+      systemContext.world = _world;
+    }
+
+    if (system.screen.value_or(false)) {
+      systemContext.screen = _screen;
+    }
 
     if (system.entities.has_value()) {
+      systemContext.entities.emplace();
       for (const auto &id : system.entities.value()) {
         auto resolvedEntitiesInternal = resolveEntitiesInternal(id);
         for (auto *entity : resolvedEntitiesInternal)
-          systemContext.entities.push_back(*entity);
+          systemContext.entities->push_back(*entity);
       }
     }
 
     if (system.collisions.has_value()) {
+      systemContext.collisions.emplace();
       for (const auto &pair : system.collisions.value()) {
         for (const auto &c : _collisions) {
 
           if (entityIdMatches(c.a, pair.a) && entityIdMatches(c.b, pair.b)) {
-            systemContext.collisions.push_back(c);
+            systemContext.collisions.value().push_back(c);
           } else if (entityIdMatches(c.a, pair.b) &&
                      entityIdMatches(c.b, pair.a)) {
             auto swappedCollision = c;
@@ -137,25 +146,14 @@ void GameLoop::runSystems() {
             swappedCollision.nx = -c.nx;
             swappedCollision.ny = -c.ny;
 
-            systemContext.collisions.push_back(swappedCollision);
+            systemContext.collisions->push_back(swappedCollision);
           }
         }
       }
     }
 
-    __android_log_print(
-        ANDROID_LOG_DEBUG, "GameLoop",
-        "System Index: %zu, Entities: %zu, Collisions: %zu, Calling onTick",
-        systemIndex, systemContext.entities.size(),
-        systemContext.collisions.size());
-
-    std::shared_ptr<Promise<double>> promise = system.onTick(systemContext);
-    std::future<double> future = promise->await();
-    double duration = future.get();
-
-    __android_log_print(ANDROID_LOG_DEBUG, "GameLoop",
-                        "System Index: %zu, onTick Complete, Duration: %.2fms",
-                        systemIndex, duration);
+    std::shared_ptr<Promise<void>> promise = system.onTick(systemContext);
+    promise->await().get();
   }
 }
 

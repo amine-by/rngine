@@ -6,7 +6,7 @@ import type {
   Screen,
   World,
   ScreenUpdate,
-} from './nativeTypes';
+} from './types';
 import { NitroModules } from 'react-native-nitro-modules';
 
 interface GameMethods extends HybridObject<{

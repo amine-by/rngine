@@ -37,7 +37,7 @@ function PlaygroundContent() {
   const { Double_Jump } = getAssets('Playground') ?? {};
 
   useEffect(() => {
-    playerState.availableJumps = 2;
+    playerState.availableJumps = 0;
 
     configure({
       paused: true,
