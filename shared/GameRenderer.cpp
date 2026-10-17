@@ -8,6 +8,9 @@
 #include <android/native_window.h>
 
 #include "Repeat.hpp"
+
+#include <numbers>
+
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorSpace.h"
@@ -178,7 +181,7 @@ void GameRenderer::render(const Screen &screen,
     canvas->translate(gameBounds.left(), gameBounds.top());
     AssetUtils::drawAsset(
         canvas, screen.asset.value(), virtualWidth, virtualHeight,
-        screen.flipH.value_or(false), screen.flipV.value_or(false),
+        screen.flipH.value_or(false), screen.flipV.value_or(false), 0.0,
         screen.objectFit.value_or(ObjectFit::FILL), screen.clip.value_or(false),
         screen.repeat.value_or(Repeat::NO_REPEAT),
         screen.progress.value_or(0.0));
@@ -206,7 +209,17 @@ void GameRenderer::render(const Screen &screen,
               if constexpr (std::is_same_v<T, Rect>) {
                 float width = static_cast<float>(shape.width);
                 float height = static_cast<float>(shape.height);
-                SkRect rect = SkRect::MakeXYWH(px - width / 2, py - height / 2,
+
+                SkAutoCanvasRestore shapeRestore(canvas, true);
+
+                canvas->translate(px, py);
+
+                if (entity.angle.value_or(0.0) != 0.0) {
+                  canvas->rotate(static_cast<float>(
+                      entity.angle.value_or(0.0) * (180.0 / std::numbers::pi)));
+                }
+
+                SkRect rect = SkRect::MakeXYWH(-width / 2.0f, -height / 2.0f,
                                                width, height);
                 canvas->drawRect(rect, paint);
               } else {
@@ -239,6 +252,7 @@ void GameRenderer::render(const Screen &screen,
         AssetUtils::drawAsset(canvas, entity.asset.value(), width, height,
                               entity.flipH.value_or(false),
                               entity.flipV.value_or(false),
+                              entity.angle.value_or(0.0),
                               entity.objectFit.value_or(ObjectFit::FILL),
                               entity.clip.value_or(false),
                               entity.repeat.value_or(Repeat::NO_REPEAT),

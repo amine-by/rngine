@@ -2,6 +2,7 @@
 #include "FitTransform.hpp"
 #include "GameRenderer.hpp"
 #include "include/core/SkPictureRecorder.h"
+#include <numbers>
 #include <variant>
 
 namespace margelo::nitro::rngine::AssetUtils {
@@ -264,17 +265,25 @@ static void drawLottie(SkCanvas *canvas,
 }
 
 void drawAsset(SkCanvas *canvas, double asset, float targetWidth,
-               float targetHeight, bool flipH, bool flipV, ObjectFit objectFit,
-               bool clip, Repeat repeat, double progress) {
+               float targetHeight, bool flipH, bool flipV, double angle,
+               ObjectFit objectFit, bool clip, Repeat repeat, double progress) {
   if (asset == 0) {
     return;
   }
 
   SkAutoCanvasRestore restoreGuard(canvas, true);
 
-  if (flipH || flipV) {
+  if (flipH || flipV || angle != 0.0) {
     canvas->translate(targetWidth * 0.5f, targetHeight * 0.5f);
-    canvas->scale(flipH ? -1.0f : 1.0f, flipV ? -1.0f : 1.0f);
+
+    if (angle != 0.0) {
+      canvas->rotate(static_cast<float>(angle * (180.0 / std::numbers::pi)));
+    }
+
+    if (flipH || flipV) {
+      canvas->scale(flipH ? -1.0f : 1.0f, flipV ? -1.0f : 1.0f);
+    }
+
     canvas->translate(-targetWidth * 0.5f, -targetHeight * 0.5f);
   }
 

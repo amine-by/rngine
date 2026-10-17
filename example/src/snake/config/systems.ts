@@ -9,15 +9,7 @@ import { setGameState, snakeState } from './state';
 import { CELL, COLS, HALF_CELL, ROWS } from './consts';
 import { getAssets } from '../../assets/assetsManager';
 
-const {
-  Head_Up,
-  Head_Left,
-  Body_Up_Left,
-  Body_Horizontal,
-  Body_Vertical,
-  Tail_Up,
-  Tail_Right,
-} = getAssets('Snake') ?? {};
+const { Head, Body_Turning, Body, Tail } = getAssets('Snake') ?? {};
 
 export const systems: System[] = [
   {
@@ -109,10 +101,10 @@ export const systems: System[] = [
     onTick: ({ entities }) => {
       const updates: EntityUpdate[] = [];
       const HEAD_ASSET_MAP = {
-        UP: { asset: Head_Up, flipH: false, flipV: false },
-        DOWN: { asset: Head_Up, flipH: false, flipV: true },
-        LEFT: { asset: Head_Left, flipH: false, flipV: false },
-        RIGHT: { asset: Head_Left, flipH: true, flipV: false },
+        UP: { asset: Head, angle: Math.PI / 2 },
+        DOWN: { asset: Head, angle: -Math.PI / 2 },
+        LEFT: { asset: Head, angle: 0 },
+        RIGHT: { asset: Head, angle: Math.PI },
       };
 
       updates.push({
@@ -121,27 +113,23 @@ export const systems: System[] = [
       });
 
       const BODY_ASSET_MAP = {
-        LEFT_UP: { asset: Body_Up_Left, flipH: false, flipV: false },
+        LEFT_UP: { asset: Body_Turning, angle: 0 },
         DOWN_RIGHT: {
-          asset: Body_Up_Left,
-          flipH: true,
-          flipV: true,
+          asset: Body_Turning,
+          angle: Math.PI,
         },
         DOWN_LEFT: {
-          asset: Body_Up_Left,
-          flipH: false,
-          flipV: true,
+          asset: Body_Turning,
+          angle: -Math.PI / 2,
         },
-        RIGHT_UP: { asset: Body_Up_Left, flipH: true, flipV: false },
+        RIGHT_UP: { asset: Body_Turning, angle: Math.PI / 2 },
         HORIZONTAL: {
-          asset: Body_Horizontal,
-          flipH: false,
-          flipV: false,
+          asset: Body,
+          angle: 0,
         },
         VERTICAL: {
-          asset: Body_Vertical,
-          flipH: false,
-          flipV: false,
+          asset: Body,
+          angle: Math.PI / 2,
         },
       };
 
@@ -191,10 +179,10 @@ export const systems: System[] = [
       }
 
       const TAIL_ASSET_MAP = {
-        UP: { asset: Tail_Up, flipH: false, flipV: false },
-        DOWN: { asset: Tail_Up, flipH: false, flipV: true },
-        LEFT: { asset: Tail_Right, flipH: true, flipV: false },
-        RIGHT: { asset: Tail_Right, flipH: false, flipV: false },
+        UP: { asset: Tail, angle: -Math.PI / 2 },
+        DOWN: { asset: Tail, angle: Math.PI / 2 },
+        LEFT: { asset: Tail, angle: Math.PI },
+        RIGHT: { asset: Tail, angle: 0 },
       };
 
       let tailKey: keyof typeof TAIL_ASSET_MAP;

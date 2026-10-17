@@ -130,6 +130,7 @@ void GameMethods::updateEntities(
       patch(entityUpdate.px, entity->px);
       patch(entityUpdate.py, entity->py);
       patch(entityUpdate.shape, entity->shape);
+      patch(entityUpdate.angle, entity->angle);
       patch(entityUpdate.isSensor, entity->isSensor);
       patch(entityUpdate.asset, entity->asset);
       patch(entityUpdate.progress, entity->progress);

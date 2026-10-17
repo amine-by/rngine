@@ -6,8 +6,8 @@
 
 namespace margelo::nitro::rngine::AssetUtils {
 void drawAsset(SkCanvas *canvas, double asset, float targetWidth,
-               float targetHeight, bool flipH, bool flipV, ObjectFit objectFit,
-               bool clip, Repeat repeat, double progress);
+               float targetHeight, bool flipH, bool flipV, double angle,
+               ObjectFit objectFit, bool clip, Repeat repeat, double progress);
 void updateProgress(std::optional<double> &progress,
                     const std::optional<double> &speed,
                     const std::optional<bool> &loop, const double asset,
