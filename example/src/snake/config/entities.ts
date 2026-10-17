@@ -1,8 +1,7 @@
 import { getAssets } from '../../assets/assetsManager';
 import { CELL, COLS, HALF_CELL, ROWS } from './consts';
 
-const { Food, Head_Left, Body_Horizontal, Tail_Right } =
-  getAssets('Snake') ?? {};
+const { Food, Head, Body, Tail } = getAssets('Snake') ?? {};
 
 export const entities = [
   {
@@ -18,7 +17,7 @@ export const entities = [
     px: 10 * CELL + HALF_CELL,
     py: 10 * CELL + HALF_CELL,
     shape: { width: CELL, height: CELL },
-    asset: Head_Left,
+    asset: Head,
     isSensor: true,
   },
   {
@@ -26,7 +25,7 @@ export const entities = [
     px: 11 * CELL + HALF_CELL,
     py: 10 * CELL + HALF_CELL,
     shape: { width: CELL, height: CELL },
-    asset: Body_Horizontal,
+    asset: Body,
     isSensor: true,
   },
   {
@@ -34,7 +33,7 @@ export const entities = [
     px: 12 * CELL + HALF_CELL,
     py: 10 * CELL + HALF_CELL,
     shape: { width: CELL, height: CELL },
-    asset: Tail_Right,
+    asset: Tail,
     isSensor: true,
   },
 ];

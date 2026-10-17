@@ -22,6 +22,8 @@ interface Circle {
 interface Shaped {
   /** Shape of the entity. */
   shape: Rect | Circle;
+  /** Rotation angle in radians. */
+  angle?: number;
   /** Indicates whether the entity is a sensor. Sensors trigger collision events but don't react physically. */
   isSensor?: boolean;
 }
