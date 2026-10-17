@@ -47,10 +47,13 @@ jobs:
       - name: Create Git tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          git tag "v${VERSION}"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
 
       - name: Push commit and tag
-        run: git push origin HEAD:${{ github.ref_name }} --follow-tags
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin "v${VERSION}"
 
       - name: Publish to npm
         run: npm publish --access public
