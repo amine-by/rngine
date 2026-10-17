@@ -52,8 +52,7 @@ jobs:
       - name: Push commit and tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          git push origin HEAD:${{ github.ref_name }}
-          git push origin "v${VERSION}"
+          git push origin HEAD:${{ github.ref_name }} "v${VERSION}"
 
       - name: Publish to npm
         run: npm publish --access public
