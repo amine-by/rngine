@@ -173,7 +173,7 @@ void GameRenderer::render(const Screen &screen,
   canvas->clipRect(gameBounds);
 
   if (screen.color.has_value()) {
-    canvas->clear(ColorUtils::parseHexColor(screen.color.value()));
+    canvas->clear(ColorUtils::parseString(screen.color.value()));
   }
 
   if (screen.asset.has_value() && screen.asset.value() != 0) {
@@ -201,7 +201,7 @@ void GameRenderer::render(const Screen &screen,
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(ColorUtils::parseHexColor(entity.color.value()));
+        paint.setColor(ColorUtils::parseString(entity.color.value()));
 
         std::visit(
             [&](const auto &shape) {

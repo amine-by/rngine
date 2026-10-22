@@ -23,28 +23,41 @@ export const systems: System[] = [
 
       let entityUpdate: EntityUpdate = {
         id: 'player',
-        loop: true,
-        progress: 0,
       };
+
+      if (playerState.targetVx !== player?.vx) {
+        entityUpdate.vx = playerState.targetVx;
+      }
 
       let screenUpdate: ScreenUpdate = {};
 
-      if (collisions![0] && collisions![0].ny > 0) {
-        if (playerState.availableJumps < 2 && player.asset !== Appearing) {
+      if (!!collisions![0] && collisions![0].ny > 0) {
+        if (
+          playerState.canRefillJumps &&
+          playerState.availableJumps < 2 &&
+          player.asset !== Appearing
+        ) {
           playerState.availableJumps = 2;
         }
+
         if (
-          player.vx === 0 &&
+          playerState.targetVx === 0 &&
           ((player?.asset !== Idle && player.asset !== Appearing) ||
             (player?.asset === Appearing && player?.progress === 1))
         ) {
           entityUpdate.asset = Idle;
           entityUpdate.shape = { width: 21, height: 29 };
-        } else if (player.vx !== 0 && player?.asset !== Run) {
+          entityUpdate.loop = true;
+          entityUpdate.progress = 0;
+        } else if (playerState.targetVx !== 0 && player?.asset !== Run) {
           entityUpdate.asset = Run;
           entityUpdate.shape = { width: 23, height: 30 };
+          entityUpdate.loop = true;
+          entityUpdate.progress = 0;
         }
       } else {
+        playerState.canRefillJumps = true;
+
         if (
           typeof player?.vy !== 'undefined' &&
           !isNaN(player?.vy) &&
@@ -54,6 +67,8 @@ export const systems: System[] = [
         ) {
           entityUpdate.asset = Jump;
           entityUpdate.shape = { width: 21, height: 31 };
+          entityUpdate.loop = true;
+          entityUpdate.progress = 0;
         } else if (
           typeof player?.vy !== 'undefined' &&
           !isNaN(player?.vy) &&
@@ -63,9 +78,13 @@ export const systems: System[] = [
         ) {
           entityUpdate.asset = Fall;
           entityUpdate.shape = { width: 23, height: 29 };
+          entityUpdate.loop = true;
+          entityUpdate.progress = 0;
         } else if (player?.asset === Double_Jump && player?.progress === 1) {
           entityUpdate.asset = Jump;
           entityUpdate.shape = { width: 23, height: 31 };
+          entityUpdate.loop = true;
+          entityUpdate.progress = 0;
         }
       }
 
@@ -82,6 +101,7 @@ export const systems: System[] = [
       }
 
       if (
+        typeof entityUpdate.vx !== 'undefined' ||
         typeof entityUpdate.asset !== 'undefined' ||
         typeof entityUpdate.shape !== 'undefined'
       ) {

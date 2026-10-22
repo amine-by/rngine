@@ -30,14 +30,14 @@ export const entities = [
     px: WORLD_WIDTH / 2,
     py: WORLD_HEIGHT - GROUND_HEIGHT / 2,
     shape: { width: WORLD_WIDTH, height: GROUND_HEIGHT },
-    color: '#654321',
+    color: 'saddlebrown',
   },
   {
     id: 'ceil',
     px: WORLD_WIDTH / 2,
     py: CEIL_HEIGHT / 2,
     shape: { width: WORLD_WIDTH, height: CEIL_HEIGHT },
-    color: '#654321',
+    color: 'saddlebrown',
   },
   {
     id: 'wall_left',
@@ -47,7 +47,7 @@ export const entities = [
       width: WALL_WIDTH,
       height: WALL_HEIGHT,
     },
-    color: '#654321',
+    color: 'saddlebrown',
   },
   {
     id: 'wall_right',
@@ -57,7 +57,7 @@ export const entities = [
       width: WALL_WIDTH,
       height: WALL_HEIGHT,
     },
-    color: '#654321',
+    color: 'saddlebrown',
   },
   {
     id: 'platform_1',
@@ -65,13 +65,13 @@ export const entities = [
     py:
       WORLD_HEIGHT - GROUND_HEIGHT - SCREEN_HEIGHT * 0.5 - PLATFORM_HEIGHT / 2,
     shape: { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
-    color: '#654321',
+    color: 'saddlebrown',
   },
   {
     id: 'platform_2',
     px: WALL_WIDTH + PLATFORM_WIDTH / 2,
     py: WORLD_HEIGHT - GROUND_HEIGHT - SCREEN_HEIGHT * 0.8 - PLATFORM_HEIGHT,
     shape: { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT * 2 },
-    color: '#654321',
+    color: 'saddlebrown',
   },
 ];
