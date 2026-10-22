@@ -38,6 +38,8 @@ function PlaygroundContent() {
 
   useEffect(() => {
     playerState.availableJumps = 0;
+    playerState.canRefillJumps = true;
+    playerState.targetVx = 0;
 
     configure({
       paused: true,
@@ -75,10 +77,12 @@ function PlaygroundContent() {
     });
 
     playerState.availableJumps -= 1;
+    playerState.canRefillJumps = false;
   };
 
   const moveLeft = () => {
     if (isPaused) return;
+    playerState.targetVx = -100;
     updateEntity({
       id: 'player',
       vx: -100,
@@ -88,6 +92,7 @@ function PlaygroundContent() {
 
   const moveRight = () => {
     if (isPaused) return;
+    playerState.targetVx = 100;
     updateEntity({
       id: 'player',
       vx: 100,
@@ -96,6 +101,7 @@ function PlaygroundContent() {
   };
 
   const stop = () => {
+    playerState.targetVx = 0;
     updateEntity({
       id: 'player',
       vx: 0,
