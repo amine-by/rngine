@@ -21,7 +21,6 @@ export const entities = [
     py: WORLD_HEIGHT - GROUND_HEIGHT - 96 / 2,
     shape: { width: 96, height: 96 },
     asset: Appearing,
-    speed: 1,
     loop: false,
     mass: 5,
   },

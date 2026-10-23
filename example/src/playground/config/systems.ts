@@ -59,8 +59,6 @@ export const systems: System[] = [
         playerState.canRefillJumps = true;
 
         if (
-          typeof player?.vy !== 'undefined' &&
-          !isNaN(player?.vy) &&
           player?.vy < 0 &&
           player?.asset !== Jump &&
           player?.asset !== Double_Jump
@@ -70,8 +68,6 @@ export const systems: System[] = [
           entityUpdate.loop = true;
           entityUpdate.progress = 0;
         } else if (
-          typeof player?.vy !== 'undefined' &&
-          !isNaN(player?.vy) &&
           player?.vy > 0 &&
           player?.asset !== Fall &&
           player?.asset !== Double_Jump

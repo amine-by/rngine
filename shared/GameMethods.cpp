@@ -1,41 +1,95 @@
 #include "GameMethods.hpp"
+#include "EntityInitializer.hpp"
 #include "EntityUpdate.hpp"
 #include "GameLoop.hpp"
 #include "GameRenderer.hpp"
+#include "ObjectFit.hpp"
+#include "Repeat.hpp"
+#include "ScreenInitializer.hpp"
+#include "WorldInitializer.hpp"
 #include "include/core/SkImage.h"
 #include "include/core/SkStream.h"
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 
 namespace margelo::nitro::rngine {
-void GameMethods::setWorld(const World &world) {
+void GameMethods::setWorld(const WorldInitializer &worldInitializer) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getWorldMutexInternal());
-  instance.getWorldInternal() = world;
+  auto &worldInternal = instance.getWorldInternal();
+
+  worldInternal.tickRate = worldInitializer.tickRate;
+  worldInternal.gx = worldInitializer.gx.value_or(0.0);
+  worldInternal.gy = worldInitializer.gy.value_or(0.0);
+
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setWorld: tickRate=%.1f", world.tickRate);
+                      "setWorld: tickRate=%.1f", worldInternal.tickRate);
 }
 
-void GameMethods::setScreen(const Screen &screen) {
+void GameMethods::setScreen(const ScreenInitializer &screenInitializer) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
-  instance.getScreenInternal() = screen;
+  auto &screenInternal = instance.getScreenInternal();
+
+  screenInternal.px = screenInitializer.px;
+  screenInternal.py = screenInitializer.py;
+  screenInternal.width = screenInitializer.width;
+  screenInternal.height = screenInitializer.height;
+  screenInternal.color = screenInitializer.color.value_or("transparent");
+  screenInternal.asset = screenInitializer.asset.value_or(0.0);
+  screenInternal.flipH = screenInitializer.flipH.value_or(false);
+  screenInternal.flipV = screenInitializer.flipV.value_or(false);
+  screenInternal.objectFit =
+      screenInitializer.objectFit.value_or(ObjectFit::FILL);
+  screenInternal.clip = screenInitializer.clip.value_or(false);
+  screenInternal.repeat = screenInitializer.repeat.value_or(Repeat::NO_REPEAT);
+  screenInternal.progress = screenInitializer.progress.value_or(0.0);
+  screenInternal.speed = screenInitializer.speed.value_or(1.0);
+  screenInternal.loop = screenInitializer.loop.value_or(false);
 
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setScreen: width=%.0f height=%.0f", screen.width,
-                      screen.height);
+                      "setScreen: width=%.0f height=%.0f", screenInternal.width,
+                      screenInternal.height);
 }
 
-void GameMethods::setEntities(const std::vector<Entity> &entities) {
+void GameMethods::setEntities(
+    const std::vector<EntityInitializer> &entitiesInitializer) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
+
   entitiesInternal.clear();
-  for (auto &entity : entities) {
-    entitiesInternal[entity.id] = entity;
+  for (const auto &entityInitializer : entitiesInitializer) {
+    auto &entityInternal = entitiesInternal[entityInitializer.id];
+
+    entityInternal.id = entityInitializer.id;
+    entityInternal.px = entityInitializer.px;
+    entityInternal.py = entityInitializer.py;
+    entityInternal.shape = entityInitializer.shape;
+    entityInternal.angle = entityInitializer.angle.value_or(0.0);
+    entityInternal.isSensor = entityInitializer.isSensor.value_or(false);
+    entityInternal.color = entityInitializer.color.value_or("transparent");
+    entityInternal.asset = entityInitializer.asset.value_or(0.0);
+    entityInternal.flipH = entityInitializer.flipH.value_or(false);
+    entityInternal.flipV = entityInitializer.flipV.value_or(false);
+    entityInternal.objectFit =
+        entityInitializer.objectFit.value_or(ObjectFit::FILL);
+    entityInternal.clip = entityInitializer.clip.value_or(false);
+    entityInternal.repeat =
+        entityInitializer.repeat.value_or(Repeat::NO_REPEAT);
+    entityInternal.progress = entityInitializer.progress.value_or(0.0);
+    entityInternal.speed = entityInitializer.speed.value_or(1.0);
+    entityInternal.loop = entityInitializer.loop.value_or(false);
+    entityInternal.vx = entityInitializer.vx.value_or(0.0);
+    entityInternal.vy = entityInitializer.vy.value_or(0.0);
+    entityInternal.ax = entityInitializer.ax.value_or(0.0);
+    entityInternal.ay = entityInitializer.ay.value_or(0.0);
+    entityInternal.mass = entityInitializer.mass.value_or(0.0);
   }
+
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                      "setEntities: loaded %zu entities", entities.size());
+                      "setEntities: loaded %zu entities",
+                      entitiesInternal.size());
 }
 
 void GameMethods::setSystems(const std::vector<System> &systems) {
@@ -69,21 +123,49 @@ void GameMethods::resume() {
   isPaused.store(false);
 }
 
-void GameMethods::spawn(const std::vector<Entity> &entities) {
+void GameMethods::spawn(
+    const std::vector<EntityInitializer> &entitiesInitializer) {
   auto &instance = GameLoop::getInstance();
   std::lock_guard<std::mutex> lock(instance.getMutexInternal());
   auto &entitiesInternal = instance.getEntitiesInternal();
 
-  for (const auto &entity : entities) {
-    if (entitiesInternal.count(entity.id)) {
+  for (const auto &entityInitializer : entitiesInitializer) {
+    if (entitiesInternal.count(entityInitializer.id)) {
       __android_log_print(ANDROID_LOG_WARN, "GameMethods",
                           "spawn: entity already exists for id=%s",
-                          entity.id.c_str());
+                          entityInitializer.id.c_str());
       continue;
     }
-    entitiesInternal[entity.id] = entity;
+
+    auto &entityInternal = entitiesInternal[entityInitializer.id];
+
+    entityInternal.id = entityInitializer.id;
+    entityInternal.px = entityInitializer.px;
+    entityInternal.py = entityInitializer.py;
+    entityInternal.shape = entityInitializer.shape;
+    entityInternal.angle = entityInitializer.angle.value_or(0.0);
+    entityInternal.isSensor = entityInitializer.isSensor.value_or(false);
+    entityInternal.color = entityInitializer.color.value_or("transparent");
+    entityInternal.asset = entityInitializer.asset.value_or(0.0);
+    entityInternal.flipH = entityInitializer.flipH.value_or(false);
+    entityInternal.flipV = entityInitializer.flipV.value_or(false);
+    entityInternal.objectFit =
+        entityInitializer.objectFit.value_or(ObjectFit::FILL);
+    entityInternal.clip = entityInitializer.clip.value_or(false);
+    entityInternal.repeat =
+        entityInitializer.repeat.value_or(Repeat::NO_REPEAT);
+    entityInternal.progress = entityInitializer.progress.value_or(0.0);
+    entityInternal.speed = entityInitializer.speed.value_or(1.0);
+    entityInternal.loop = entityInitializer.loop.value_or(false);
+    entityInternal.vx = entityInitializer.vx.value_or(0.0);
+    entityInternal.vy = entityInitializer.vy.value_or(0.0);
+    entityInternal.ax = entityInitializer.ax.value_or(0.0);
+    entityInternal.ay = entityInitializer.ay.value_or(0.0);
+    entityInternal.mass = entityInitializer.mass.value_or(0.0);
+
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",
-                        "spawn: spawned entity id=%s", entity.id.c_str());
+                        "spawn: spawned entity id=%s",
+                        entityInternal.id.c_str());
   }
 }
 
@@ -183,13 +265,13 @@ void GameMethods::updateScreen(const ScreenUpdate &screenUpdate) {
 bool GameMethods::isAssetLoaded(double id) {
   auto &gameRenderer = GameRenderer::getInstance();
 
-  if (id > 0) {
+  if (id > 0.0) {
     auto &imageCache = gameRenderer.getImageCacheInternal();
     auto it = imageCache.find(id);
     return it != imageCache.end();
   }
 
-  if (id < 0) {
+  if (id < 0.0) {
     auto &lottieCache = gameRenderer.getLottieCacheInternal();
     auto it = lottieCache.find(id);
     return it != lottieCache.end();

@@ -189,9 +189,9 @@ void GameLoop::updateStats(double deltaTime) {
 
 void GameLoop::updateScreen(double deltaTime) {
   std::lock_guard<std::mutex> lock(_mutex);
-  if (_screen.asset.has_value()) {
+  if (_screen.asset != 0) {
     AssetUtils::updateProgress(_screen.progress, _screen.speed, _screen.loop,
-                               _screen.asset.value(), deltaTime);
+                               _screen.asset, deltaTime);
   }
 }
 
@@ -201,33 +201,19 @@ void GameLoop::updateEntities(double deltaTime) {
 
   for (auto &[id, entity] : _entities) {
 
-    if (entity.mass.has_value() && entity.mass.value() > 0.0) {
-      if (_world.gx.has_value()) {
-        entity.vx = entity.vx.value_or(0.0) + _world.gx.value() * deltaTime;
-      }
-      if (_world.gy.has_value()) {
-        entity.vy = entity.vy.value_or(0.0) + _world.gy.value() * deltaTime;
-      }
+    if (entity.mass > 0.0) {
+      entity.vx = entity.vx + _world.gx * deltaTime;
+      entity.vy = entity.vy + _world.gy * deltaTime;
     }
 
-    if (entity.ax.has_value()) {
-      entity.vx = entity.vx.value_or(0.0) + entity.ax.value() * deltaTime;
-    }
-    if (entity.ay.has_value()) {
-      entity.vy = entity.vy.value_or(0.0) + entity.ay.value() * deltaTime;
-    }
+    entity.vx = entity.vx + entity.ax * deltaTime;
+    entity.vy = entity.vy + entity.ay * deltaTime;
 
-    if (entity.vx.has_value()) {
-      entity.px += entity.vx.value() * deltaTime;
-    }
-    if (entity.vy.has_value()) {
-      entity.py += entity.vy.value() * deltaTime;
-    }
+    entity.px += entity.vx * deltaTime;
+    entity.py += entity.vy * deltaTime;
 
-    if (entity.asset.has_value()) {
-      AssetUtils::updateProgress(entity.progress, entity.speed, entity.loop,
-                                 entity.asset.value(), deltaTime);
-    }
+    AssetUtils::updateProgress(entity.progress, entity.speed, entity.loop,
+                               entity.asset, deltaTime);
   }
 }
 
@@ -266,15 +252,11 @@ void GameLoop::resolveCollisions() {
     Entity &a = itA->second;
     Entity &b = itB->second;
 
-    if (a.isSensor.value_or(false) || b.isSensor.value_or(false))
+    if (a.isSensor || b.isSensor)
       continue;
 
-    double inverseMassA = (a.mass.has_value() && a.mass.value() > 0.0)
-                              ? 1.0 / a.mass.value()
-                              : 0.0;
-    double inverseMassB = (b.mass.has_value() && b.mass.value() > 0.0)
-                              ? 1.0 / b.mass.value()
-                              : 0.0;
+    double inverseMassA = a.mass > 0.0 ? 1.0 / a.mass : 0.0;
+    double inverseMassB = b.mass > 0.0 ? 1.0 / b.mass : 0.0;
     double totalInverseMass = inverseMassA + inverseMassB;
     if (totalInverseMass == 0.0)
       continue;
@@ -286,8 +268,8 @@ void GameLoop::resolveCollisions() {
     b.px += c.nx * correction * inverseMassB;
     b.py += c.ny * correction * inverseMassB;
 
-    double avx = a.vx.value_or(0.0), avy = a.vy.value_or(0.0);
-    double bvx = b.vx.value_or(0.0), bvy = b.vy.value_or(0.0);
+    double avx = a.vx, avy = a.vy;
+    double bvx = b.vx, bvy = b.vy;
     double relativeVx = bvx - avx, relativeVy = bvy - avy;
     double velocityAlongNormal = relativeVx * c.nx + relativeVy * c.ny;
     if (velocityAlongNormal > 0)

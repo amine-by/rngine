@@ -1,5 +1,5 @@
 import { gameMethods } from './GameMethods.nitro';
-import type { Entity, EntityUpdate, ScreenUpdate } from './types';
+import type { EntityInitializer, EntityUpdate, ScreenUpdate } from './types';
 import type { Config } from './types';
 import { Image } from 'react-native';
 
@@ -29,7 +29,7 @@ export const pause = () => gameMethods.pause();
 export const resume = () => gameMethods.resume();
 
 /** Spawns one or more entities into the world. Skips duplicates by id. */
-export const spawn = (entities: Entity | Entity[]) => {
+export const spawn = (entities: EntityInitializer | EntityInitializer[]) => {
   const entityArray = Array.isArray(entities) ? entities : [entities];
   gameMethods.spawn(entityArray);
 };

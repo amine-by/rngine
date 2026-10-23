@@ -68,7 +68,7 @@ interface Kinematic {
   mass?: number;
 }
 
-export interface World {
+export interface WorldInitializer {
   /** Number of game logic updates per second. */
   tickRate: number;
   /** Horizontal gravitational acceleration in game units per second squared. */
@@ -77,12 +77,33 @@ export interface World {
   gy?: number;
 }
 
-export interface Screen extends Positioned, Rect, Renderable {}
+export type World = CustomType<
+  Required<WorldInitializer>,
+  'margelo::nitro::rngine::World',
+  { include: 'World.hpp' }
+>;
 
-export interface Entity extends Positioned, Shaped, Renderable, Kinematic {
+export interface ScreenInitializer extends Positioned, Rect, Renderable {}
+
+export type Screen = CustomType<
+  Required<ScreenInitializer>,
+  'margelo::nitro::rngine::Screen',
+  { include: 'Screen.hpp' }
+>;
+
+export interface ScreenUpdate extends Partial<ScreenInitializer> {}
+
+export interface EntityInitializer
+  extends Positioned, Shaped, Renderable, Kinematic {
   /** Unique identifier. Use `_` as a separator for group queries e.g. `'enemy_1'`. */
   id: string;
 }
+
+export type Entity = CustomType<
+  Required<EntityInitializer>,
+  'margelo::nitro::rngine::Entity',
+  { include: 'Entity.hpp' }
+>;
 
 export interface EntityUpdate extends Partial<
   Positioned & Shaped & Renderable & Kinematic
@@ -90,8 +111,6 @@ export interface EntityUpdate extends Partial<
   /** Unique identifier or prefix of the entities to update. */
   id: string;
 }
-
-export interface ScreenUpdate extends Partial<Screen> {}
 
 export type CollisionPair = CustomType<
   {
@@ -155,11 +174,11 @@ export type System = CustomType<
 
 export type Config = {
   /** World settings: tick rate and gravity. */
-  world: World;
+  world: WorldInitializer;
   /** Screen dimensions and background. */
-  screen: Screen;
+  screen: ScreenInitializer;
   /** Entities to spawn when the game starts. */
-  entities?: Entity[];
+  entities?: EntityInitializer[];
   /** Systems that define game logic, each running every tick against its subscribed entities and collisions. */
   systems?: System[];
   /** Whether the game starts paused. Defaults to true. */
