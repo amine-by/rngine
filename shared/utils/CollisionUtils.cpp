@@ -128,9 +128,8 @@ std::optional<Collision> shapeOverlap(const Entity &entityA,
       [&](const auto &shapeA) -> std::optional<Overlap> {
         return std::visit(
             [&](const auto &shapeB) -> std::optional<Overlap> {
-              return overlap(shapeA, entityA.px, entityA.py,
-                             entityA.angle.value_or(0.0), shapeB, entityB.px,
-                             entityB.py, entityB.angle.value_or(0.0));
+              return overlap(shapeA, entityA.px, entityA.py, entityA.angle,
+                             shapeB, entityB.px, entityB.py, entityB.angle);
             },
             entityB.shape);
       },

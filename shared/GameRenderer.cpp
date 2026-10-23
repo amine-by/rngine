@@ -1,14 +1,12 @@
 #include "GameRenderer.hpp"
 #include "AssetUtils.hpp"
 #include "ColorUtils.hpp"
-#include "ObjectFit.hpp"
 #include "Rect.hpp"
 
 #include <android/log.h>
 #include <android/native_window.h>
 
-#include "Repeat.hpp"
-
+#include <cstdint>
 #include <numbers>
 
 #include "include/core/SkCanvas.h"
@@ -119,7 +117,7 @@ void GameRenderer::processPendingTasks() {
   }
 
   while (!tasksToProcess.empty()) {
-    tasksToProcess.front()(); // Executes on the game loop thread
+    tasksToProcess.front()();
     tasksToProcess.pop();
   }
 }
@@ -172,19 +170,17 @@ void GameRenderer::render(const Screen &screen,
 
   canvas->clipRect(gameBounds);
 
-  if (screen.color.has_value()) {
-    canvas->clear(ColorUtils::parseString(screen.color.value()));
+  const uint32_t parsedScreenColor = ColorUtils::parseString(screen.color);
+  if (parsedScreenColor != 0x00000000) {
+    canvas->clear(parsedScreenColor);
   }
 
-  if (screen.asset.has_value() && screen.asset.value() != 0) {
+  if (screen.asset != 0.0) {
     SkAutoCanvasRestore restore(canvas, true);
     canvas->translate(gameBounds.left(), gameBounds.top());
-    AssetUtils::drawAsset(
-        canvas, screen.asset.value(), virtualWidth, virtualHeight,
-        screen.flipH.value_or(false), screen.flipV.value_or(false), 0.0,
-        screen.objectFit.value_or(ObjectFit::FILL), screen.clip.value_or(false),
-        screen.repeat.value_or(Repeat::NO_REPEAT),
-        screen.progress.value_or(0.0));
+    AssetUtils::drawAsset(canvas, screen.asset, virtualWidth, virtualHeight,
+                          screen.flipH, screen.flipV, 0.0, screen.objectFit,
+                          screen.clip, screen.repeat, screen.progress);
   }
 
   for (const auto &[id, entity] : entities) {
@@ -192,16 +188,17 @@ void GameRenderer::render(const Screen &screen,
       continue;
     }
 
-    if (entity.color.has_value() ||
-        (entity.asset.has_value() && entity.asset.value() != 0)) {
+    const uint32_t parsedEntityColor = ColorUtils::parseString(entity.color);
+
+    if (parsedEntityColor != 0x00000000 || entity.asset != 0.0) {
       float px = static_cast<float>(entity.px);
       float py = static_cast<float>(entity.py);
 
-      if (entity.color.has_value()) {
+      if (parsedEntityColor) {
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(ColorUtils::parseString(entity.color.value()));
+        paint.setColor(parsedEntityColor);
 
         std::visit(
             [&](const auto &shape) {
@@ -214,9 +211,9 @@ void GameRenderer::render(const Screen &screen,
 
                 canvas->translate(px, py);
 
-                if (entity.angle.value_or(0.0) != 0.0) {
+                if (entity.angle != 0.0) {
                   canvas->rotate(static_cast<float>(
-                      entity.angle.value_or(0.0) * (180.0 / std::numbers::pi)));
+                      entity.angle * (180.0 / std::numbers::pi)));
                 }
 
                 SkRect rect = SkRect::MakeXYWH(-width / 2.0f, -height / 2.0f,
@@ -230,7 +227,7 @@ void GameRenderer::render(const Screen &screen,
             entity.shape);
       }
 
-      if ((entity.asset.has_value() && entity.asset.value() != 0)) {
+      if (entity.asset != 0.0) {
         float width = 0.f, height = 0.f;
         std::visit(
             [&](const auto &shape) {
@@ -249,14 +246,9 @@ void GameRenderer::render(const Screen &screen,
         SkAutoCanvasRestore autoRestore(canvas, true);
         canvas->translate(px - width / 2, py - height / 2);
 
-        AssetUtils::drawAsset(canvas, entity.asset.value(), width, height,
-                              entity.flipH.value_or(false),
-                              entity.flipV.value_or(false),
-                              entity.angle.value_or(0.0),
-                              entity.objectFit.value_or(ObjectFit::FILL),
-                              entity.clip.value_or(false),
-                              entity.repeat.value_or(Repeat::NO_REPEAT),
-                              entity.progress.value_or(0.0));
+        AssetUtils::drawAsset(canvas, entity.asset, width, height, entity.flipH,
+                              entity.flipV, entity.angle, entity.objectFit,
+                              entity.clip, entity.repeat, entity.progress);
       }
     }
   }

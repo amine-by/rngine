@@ -1,18 +1,21 @@
 #pragma once
 
+#include "EntityInitializer.hpp"
 #include "HybridGameMethodsSpec.hpp"
-#include "World.hpp"
+#include "ScreenInitializer.hpp"
+#include "WorldInitializer.hpp"
 
 namespace margelo::nitro::rngine {
 class GameMethods : public HybridGameMethodsSpec {
 public:
   GameMethods() : HybridObject(TAG) {}
 
-  void setWorld(const World &world) override;
+  void setWorld(const WorldInitializer &WorldInitializer) override;
 
-  void setScreen(const Screen &screen) override;
+  void setScreen(const ScreenInitializer &screenInitializer) override;
 
-  void setEntities(const std::vector<Entity> &entities) override;
+  void setEntities(
+      const std::vector<EntityInitializer> &entitiesInitializer) override;
 
   void setSystems(const std::vector<System> &systems) override;
 
@@ -20,7 +23,8 @@ public:
 
   void resume() override;
 
-  void spawn(const std::vector<Entity> &entities) override;
+  void
+  spawn(const std::vector<EntityInitializer> &entitiesInitializer) override;
 
   void despawn(const std::string &id) override;
 

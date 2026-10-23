@@ -1,11 +1,11 @@
 import type { HybridObject } from 'react-native-nitro-modules';
 import type {
-  Entity,
   EntityUpdate,
   System,
-  Screen,
-  World,
   ScreenUpdate,
+  WorldInitializer,
+  ScreenInitializer,
+  EntityInitializer,
 } from './types';
 import { NitroModules } from 'react-native-nitro-modules';
 
@@ -14,9 +14,9 @@ interface GameMethods extends HybridObject<{
   android: 'c++';
 }> {
   /** Configuration Methods */
-  setWorld(world: World): void;
-  setScreen(screen: Screen): void;
-  setEntities(entities: Entity[]): void;
+  setWorld(world: WorldInitializer): void;
+  setScreen(screen: ScreenInitializer): void;
+  setEntities(entities: EntityInitializer[]): void;
   setSystems(systems: System[]): void;
 
   /** Pause/Resume Methods */
@@ -24,7 +24,7 @@ interface GameMethods extends HybridObject<{
   resume(): void;
 
   /** Entity Update Methods */
-  spawn(entities: Entity[]): void;
+  spawn(entities: EntityInitializer[]): void;
   despawn(id: string): void;
   updateEntities(entityUpdates: EntityUpdate[]): void;
 
