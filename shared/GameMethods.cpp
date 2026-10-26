@@ -85,6 +85,7 @@ void GameMethods::setEntities(
     entityInternal.ax = entityInitializer.ax.value_or(0.0);
     entityInternal.ay = entityInitializer.ay.value_or(0.0);
     entityInternal.mass = entityInitializer.mass.value_or(0.0);
+    entityInternal.restitution = entityInitializer.restitution.value_or(0.0);
   }
 
   __android_log_print(ANDROID_LOG_INFO, "GameMethods",
@@ -162,6 +163,7 @@ void GameMethods::spawn(
     entityInternal.ax = entityInitializer.ax.value_or(0.0);
     entityInternal.ay = entityInitializer.ay.value_or(0.0);
     entityInternal.mass = entityInitializer.mass.value_or(0.0);
+    entityInternal.restitution = entityInitializer.restitution.value_or(0.0);
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",
                         "spawn: spawned entity id=%s",
@@ -229,6 +231,7 @@ void GameMethods::updateEntities(
       patch(entityUpdate.ax, entity->ax);
       patch(entityUpdate.ay, entity->ay);
       patch(entityUpdate.mass, entity->mass);
+      patch(entityUpdate.restitution, entity->restitution);
     }
 
     __android_log_print(ANDROID_LOG_INFO, "GameMethods",

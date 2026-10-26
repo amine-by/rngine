@@ -1,3 +1,4 @@
+import type { EntityInitializer } from 'rngine';
 import { getAssets } from '../../assets/assetsManager';
 import {
   CEIL_HEIGHT,
@@ -14,7 +15,7 @@ import {
 
 const { Appearing } = getAssets('Playground') ?? {};
 
-export const entities = [
+export const entities: EntityInitializer[] = [
   {
     id: 'player',
     px: SCREEN_WIDTH / 2,

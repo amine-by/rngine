@@ -31,6 +31,22 @@ export const systems: System[] = [
 
       let screenUpdate: ScreenUpdate = {};
 
+      const setShapeWithAnchor = (
+        newWidth: number,
+        newHeight: number,
+        newAsset?: number
+      ) => {
+        entityUpdate.asset = newAsset;
+        entityUpdate.shape = { width: newWidth, height: newHeight };
+        entityUpdate.loop = true;
+        entityUpdate.progress = 0;
+
+        if ('height' in player.shape) {
+          const heightDiff = newHeight - player.shape.height;
+          entityUpdate.py = player.py - heightDiff / 2;
+        }
+      };
+
       if (!!collisions![0] && collisions![0].ny > 0) {
         if (
           playerState.canRefillJumps &&
@@ -40,20 +56,17 @@ export const systems: System[] = [
           playerState.availableJumps = 2;
         }
 
-        if (
-          playerState.targetVx === 0 &&
-          ((player?.asset !== Idle && player.asset !== Appearing) ||
-            (player?.asset === Appearing && player?.progress === 1))
-        ) {
-          entityUpdate.asset = Idle;
-          entityUpdate.shape = { width: 21, height: 29 };
-          entityUpdate.loop = true;
-          entityUpdate.progress = 0;
-        } else if (playerState.targetVx !== 0 && player?.asset !== Run) {
-          entityUpdate.asset = Run;
-          entityUpdate.shape = { width: 23, height: 30 };
-          entityUpdate.loop = true;
-          entityUpdate.progress = 0;
+        if (playerState.targetVx === 0) {
+          if (player?.asset !== Idle && player.asset !== Appearing) {
+            setShapeWithAnchor(21, 29, Idle);
+          } else if (player?.asset === Appearing && player?.progress === 1) {
+            entityUpdate.asset = Idle;
+            entityUpdate.shape = { width: 21, height: 29 };
+            entityUpdate.loop = true;
+            entityUpdate.progress = 0;
+          }
+        } else if (player?.asset !== Run) {
+          setShapeWithAnchor(23, 30, Run);
         }
       } else {
         playerState.canRefillJumps = true;
@@ -63,24 +76,15 @@ export const systems: System[] = [
           player?.asset !== Jump &&
           player?.asset !== Double_Jump
         ) {
-          entityUpdate.asset = Jump;
-          entityUpdate.shape = { width: 21, height: 31 };
-          entityUpdate.loop = true;
-          entityUpdate.progress = 0;
+          setShapeWithAnchor(21, 31, Jump);
         } else if (
           player?.vy > 0 &&
           player?.asset !== Fall &&
           player?.asset !== Double_Jump
         ) {
-          entityUpdate.asset = Fall;
-          entityUpdate.shape = { width: 23, height: 29 };
-          entityUpdate.loop = true;
-          entityUpdate.progress = 0;
+          setShapeWithAnchor(23, 29, Fall);
         } else if (player?.asset === Double_Jump && player?.progress === 1) {
-          entityUpdate.asset = Jump;
-          entityUpdate.shape = { width: 23, height: 31 };
-          entityUpdate.loop = true;
-          entityUpdate.progress = 0;
+          setShapeWithAnchor(23, 31, Jump);
         }
       }
 
