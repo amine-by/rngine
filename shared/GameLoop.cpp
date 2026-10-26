@@ -275,9 +275,10 @@ void GameLoop::resolveCollisions() {
     if (velocityAlongNormal > 0)
       continue;
 
-    double restitution = 0.0;
+    double restitution = restitution = std::max(a.restitution, b.restitution);
+
     double impulse =
-        -(1 + restitution) * velocityAlongNormal / totalInverseMass;
+        -(1.0 + restitution) * velocityAlongNormal / totalInverseMass;
 
     a.vx = avx - impulse * c.nx * inverseMassA;
     a.vy = avy - impulse * c.ny * inverseMassA;

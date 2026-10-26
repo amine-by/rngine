@@ -52,6 +52,7 @@ public:
   double ax SWIFT_PRIVATE;
   double ay SWIFT_PRIVATE;
   double mass SWIFT_PRIVATE;
+  double restitution SWIFT_PRIVATE;
 
 public:
   Entity() = default;
@@ -60,11 +61,13 @@ public:
                   std::string color, double asset, bool flipH, bool flipV,
                   ObjectFit objectFit, bool clip, Repeat repeat,
                   double progress, double speed, bool loop, double vx,
-                  double vy, double ax, double ay, double mass)
+                  double vy, double ax, double ay, double mass,
+                  double restitution)
       : id(id), px(px), py(py), shape(shape), angle(angle), isSensor(isSensor),
         color(color), asset(asset), flipH(flipH), flipV(flipV),
         objectFit(objectFit), clip(clip), repeat(repeat), progress(progress),
-        speed(speed), loop(loop), vx(vx), vy(vy), ax(ax), ay(ay), mass(mass) {}
+        speed(speed), loop(loop), vx(vx), vy(vy), ax(ax), ay(ay), mass(mass),
+        restitution(restitution) {}
 
 public:
   friend bool operator==(const Entity &lhs, const Entity &rhs) = default;
@@ -141,7 +144,10 @@ template <> struct JSIConverter<rngine::Entity> final {
             obj.getProperty(runtime, PropNameIDCache::get(runtime, "ay"))),
         JSIConverter<double>::fromJSI(
             runtime,
-            obj.getProperty(runtime, PropNameIDCache::get(runtime, "mass"))));
+            obj.getProperty(runtime, PropNameIDCache::get(runtime, "mass"))),
+        JSIConverter<double>::fromJSI(
+            runtime, obj.getProperty(runtime, PropNameIDCache::get(
+                                                  runtime, "restitution"))));
   }
 
   static inline jsi::Value toJSI(jsi::Runtime &runtime,
@@ -192,6 +198,8 @@ template <> struct JSIConverter<rngine::Entity> final {
                     JSIConverter<double>::toJSI(runtime, arg.ay));
     obj.setProperty(runtime, PropNameIDCache::get(runtime, "mass"),
                     JSIConverter<double>::toJSI(runtime, arg.mass));
+    obj.setProperty(runtime, PropNameIDCache::get(runtime, "restitution"),
+                    JSIConverter<double>::toJSI(runtime, arg.restitution));
     return obj;
   }
 
@@ -287,6 +295,10 @@ template <> struct JSIConverter<rngine::Entity> final {
     if (!JSIConverter<double>::canConvert(
             runtime,
             obj.getProperty(runtime, PropNameIDCache::get(runtime, "mass"))))
+      return false;
+    if (!JSIConverter<double>::canConvert(
+            runtime, obj.getProperty(runtime, PropNameIDCache::get(
+                                                  runtime, "restitution"))))
       return false;
     return true;
   }

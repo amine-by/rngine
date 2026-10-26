@@ -66,6 +66,8 @@ interface Kinematic {
   ay?: number;
   /** Mass in arbitrary units. */
   mass?: number;
+  /** Coefficient of restitution (bounciness) from 0.0 to 1.0. Defaults to 0.0. */
+  restitution?: number;
 }
 
 export interface WorldInitializer {
